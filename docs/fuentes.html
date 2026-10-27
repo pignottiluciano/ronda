@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ronda · Fuentes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Figtree:wght@400;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Instrument+Sans:wght@400;600&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: light-dark(oklch(0.975 0.008 70), oklch(0.19 0.006 50));
+  --surface: light-dark(oklch(0.995 0.004 70), oklch(0.235 0.008 50));
+  --ink: light-dark(oklch(0.24 0.015 40), oklch(0.95 0.008 70));
+  --muted: light-dark(oklch(0.5 0.02 45), oklch(0.74 0.012 60));
+  --line: light-dark(oklch(0.89 0.012 60), oklch(0.34 0.01 50));
+  --accent: light-dark(oklch(0.55 0.16 33), oklch(0.74 0.14 38));
+  --accent-ink: light-dark(oklch(0.53 0.16 33), oklch(0.76 0.13 38));
+  --accent-soft: light-dark(oklch(0.94 0.04 40), oklch(0.32 0.05 38));
+  --on-accent: light-dark(oklch(0.99 0.005 60), oklch(0.2 0.02 40));
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s8: 64px;
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Instrument Sans", sans-serif; line-height: 1.5; }
+p, h1, h2, h3 { margin: 0; }
+.page { max-width: 1120px; margin: 0 auto; padding: var(--s6) var(--s4) var(--s8); }
+.intro h1 { font-size: clamp(1.75rem, 5vw, 2.2rem); letter-spacing: -0.03em; line-height: 1.1; }
+.intro p { margin-top: var(--s3); color: var(--muted); max-width: 62ch; }
+
+.opt { margin-top: var(--s8); }
+.opt-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2) var(--s4); }
+.opt-head .num { color: var(--muted); font-variant-numeric: tabular-nums; }
+.opt-head h2 { font-size: 1.44rem; letter-spacing: -0.02em; }
+.tag { font-size: 0.78rem; font-weight: 600; padding: 2px var(--s2); border: 1px solid var(--ink); border-radius: 999px; }
+.opt-desc { margin-top: var(--s2); color: var(--muted); max-width: 72ch; }
+
+/* Each option sets --head (titles, brand, group names) and --body (everything else). */
+.screen { --head: var(--body); margin-top: var(--s5); padding: var(--s5); border: 1px solid var(--line); border-radius: 16px; display: grid; gap: var(--s5); font-family: var(--body); font-size: 1rem; }
+@media (min-width: 800px) { .screen { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); padding: var(--s6); gap: var(--s6); } }
+.o1 { --body: "Instrument Sans", sans-serif; }
+.o2 { --body: "Bricolage Grotesque", sans-serif; }
+.o3 { --body: "Figtree", sans-serif; }
+.o4 { --body: "Plus Jakarta Sans", sans-serif; }
+.o5 { --body: "Figtree", sans-serif; --head: "Fraunces", serif; }
+
+.brand { font-family: var(--head); font-weight: 600; font-size: 1.2rem; letter-spacing: -0.02em; display: flex; align-items: center; gap: var(--s2); }
+.brand svg { width: 24px; height: 24px; color: var(--accent); }
+.title { font-family: var(--head); font-size: clamp(1.75rem, 4.5vw, 2.3rem); font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; margin-top: var(--s5); }
+.o2 .title { font-weight: 800; letter-spacing: -0.04em; }
+.o5 .title { font-weight: 500; letter-spacing: -0.02em; }
+.title em { font-style: normal; color: var(--accent-ink); }
+.o5 .title em { font-style: italic; }
+.lede { margin-top: var(--s3); color: var(--muted); max-width: 40ch; }
+.label { display: flex; justify-content: space-between; margin-top: var(--s5); font-weight: 600; font-size: 0.9375rem; }
+.label span { font-weight: 400; color: var(--muted); font-size: 0.833rem; }
+.area { margin-top: var(--s2); padding: var(--s3) var(--s4); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; line-height: 28px; }
+.btn { margin-top: var(--s4); display: grid; place-items: center; min-height: 44px; border-radius: 10px; background: var(--accent); color: var(--on-accent); font-weight: 600; }
+
+.results h3 { font-family: var(--head); font-size: 1.44rem; letter-spacing: -0.02em; }
+.groups { margin-top: var(--s4); display: grid; gap: var(--s3); grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.group { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: var(--s3) var(--s4) var(--s4); }
+.group header { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: var(--s2); margin-bottom: var(--s2); border-bottom: 1px solid var(--line); }
+.group b { font-family: var(--head); font-size: 1.2rem; font-weight: 600; letter-spacing: -0.02em; color: var(--accent-ink); }
+.group small { color: var(--muted); font-size: 0.78rem; }
+.group ul { list-style: none; margin: 0; padding: 0; }
+.order { list-style: none; margin: var(--s4) 0 0; padding: 0; display: grid; gap: var(--s2); counter-reset: n; }
+.order li { counter-increment: n; display: flex; align-items: center; gap: var(--s3); padding: var(--s2) var(--s3); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.order li::before { content: counter(n); display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--accent-soft); font-weight: 600; font-size: 0.9375rem; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="intro">
+    <h1>Ronda · cinco fuentes</h1>
+    <p>Misma pantalla, paleta coral. Cambia solo la tipografía. Todas son de Google Fonts, gratis y se pueden alojar en el propio sitio. Mirá sobre todo el título, los nombres de grupo y los números.</p>
+  </header>
+
+  <section class="opt">
+    <div class="opt-head"><span class="num">01</span><h2>Instrument Sans</h2><span class="tag">La actual</span></div>
+    <p class="opt-desc">Neutra, limpia, muy legible. Segura pero con poco carácter: no distingue a Ronda de otras herramientas.</p>
+    <div class="screen o1" data-screen></div>
+  </section>
+
+  <section class="opt">
+    <div class="opt-head"><span class="num">02</span><h2>Bricolage Grotesque</h2><span class="tag">Más personalidad</span></div>
+    <p class="opt-desc">Grotesca con rasgos juguetones y títulos muy gruesos. Combina con el coral y con la idea de juego y reunión. Contra: el título pide pesos altos, y en párrafos largos cansa más.</p>
+    <div class="screen o2" data-screen></div>
+  </section>
+
+  <section class="opt">
+    <div class="opt-head"><span class="num">03</span><h2>Figtree</h2><span class="tag">Amable y neutra</span></div>
+    <p class="opt-desc">Geométrica y cálida, con formas redondeadas. Muy legible en pantallas chicas. El punto medio entre la actual y algo con más simpatía.</p>
+    <div class="screen o3" data-screen></div>
+  </section>
+
+  <section class="opt">
+    <div class="opt-head"><span class="num">04</span><h2>Plus Jakarta Sans</h2><span class="tag">Más moderna</span></div>
+    <p class="opt-desc">Geométrica y algo más ancha, con aire de producto actual. Los números quedan bien marcados. Contra: es la más usada en landings de startups.</p>
+    <div class="screen o4" data-screen></div>
+  </section>
+
+  <section class="opt">
+    <div class="opt-head"><span class="num">05</span><h2>Fraunces + Figtree</h2><span class="tag">La más distinta</span></div>
+    <p class="opt-desc">Serif cálida para títulos y nombres de grupo, Figtree para el resto. Dos familias con roles distintos: es la que más identidad da y la que menos parece una app genérica. Contra: pesa un archivo más.</p>
+    <div class="screen o5" data-screen></div>
+  </section>
+</main>
+
+<template id="tpl">
+  <div>
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4"/></svg>
+      Ronda
+    </div>
+    <p class="title" role="presentation">Mezclá la lista, <em>armá la ronda.</em></p>
+    <p class="lede">Pegá un nombre por línea, elegí cuántos grupos querés y sorteá.</p>
+    <div class="label">Participantes <span>7 participantes</span></div>
+    <div class="area">Ana<br>Bruno<br>Carla<br>Diego<br>Emilia<br>Facundo<br>Irene</div>
+    <div class="btn">Sortear</div>
+  </div>
+  <div class="results">
+    <h3>Resultado</h3>
+    <div class="groups">
+      <div class="group"><header><b>Grupo 1</b><small>3 integrantes</small></header><ul><li>Diego</li><li>Ana</li><li>Irene</li></ul></div>
+      <div class="group"><header><b>Grupo 2</b><small>2 integrantes</small></header><ul><li>Carla</li><li>Facundo</li></ul></div>
+    </div>
+    <ol class="order"><li>Emilia</li><li>Bruno</li><li>Carla</li></ol>
+  </div>
+</template>
+
+<script>
+// ponytail: mock estático; el template evita repetir la pantalla cinco veces
+const tpl = document.getElementById('tpl');
+for (const el of document.querySelectorAll('[data-screen]')) el.append(tpl.content.cloneNode(true));
+</script>
+</body>
+</html>
