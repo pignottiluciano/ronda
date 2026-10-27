@@ -1,0 +1,134 @@
+---
+import { Font } from 'astro:assets';
+import '../styles/global.css';
+
+const description = 'Mezclá una lista para obtener un orden al azar o repartila en grupos parejos.';
+---
+
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#faf6f1" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#161311" media="(prefers-color-scheme: dark)" />
+    <script is:inline>
+      // Before paint, to avoid a flash of the wrong theme. Key shared with src/scripts/theme.ts.
+      try {
+        const theme = localStorage.getItem('ronda.theme');
+        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
+      } catch {}
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <Font cssVariable="--font-heading" preload />
+    <Font cssVariable="--font-body" preload />
+    <title>Ronda · Sorteos y grupos</title>
+  </head>
+  <body>
+    <div class="page">
+      <header class="top">
+        <div class="brand">
+          <svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor">
+            <circle cx="16" cy="5" r="3.2" /><circle cx="25.5" cy="10.5" r="3.2" /><circle cx="25.5" cy="21.5" r="3.2" />
+            <circle cx="16" cy="27" r="3.2" /><circle cx="6.5" cy="21.5" r="3.2" /><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4" />
+          </svg>
+          <span>Ronda</span>
+        </div>
+        <p class="kicker">Sorteos y grupos</p>
+
+        <button
+          type="button"
+          id="theme-toggle"
+          class="theme-toggle"
+          popovertarget="theme-menu"
+          aria-label="Cambiar tema"
+          data-current="system">
+          <svg class="icon-system" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" />
+          </svg>
+          <svg class="icon-light" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
+            <circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+          </svg>
+          <svg class="icon-dark" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round">
+            <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" />
+          </svg>
+        </button>
+        <div id="theme-menu" class="theme-menu" popover>
+          <fieldset>
+            <legend>Tema</legend>
+            <label><input type="radio" name="theme" value="system" /> Sistema</label>
+            <label><input type="radio" name="theme" value="light" /> Claro</label>
+            <label><input type="radio" name="theme" value="dark" /> Oscuro</label>
+          </fieldset>
+        </div>
+      </header>
+
+      <main class="layout">
+        <section class="panel" aria-labelledby="title">
+          <h1 id="title" class="title">Mezclá la lista, <em>armá la ronda.</em></h1>
+          <p class="lede">Pegá un nombre por línea, elegí cuántos grupos querés y sorteá. Con un solo grupo obtenés un orden.</p>
+
+          <form id="draw-form" class="form" novalidate>
+            <div class="field">
+              <div class="field-head">
+                <label class="label" for="names">Participantes</label>
+                <span id="count" class="count" aria-live="polite">0 participantes</span>
+              </div>
+              <textarea
+                id="names"
+                class="names"
+                rows="8"
+                spellcheck="false"
+                autocomplete="off"
+                aria-describedby="names-hint"
+                placeholder={'Ana\nBruno\nCarla\nDiego'}></textarea>
+              <p id="names-hint" class="hint">Uno por línea. Las líneas vacías no cuentan. No ingreses datos sensibles.</p>
+            </div>
+
+            <div class="field">
+              <label class="label" for="groups">Cantidad de grupos</label>
+              <div class="stepper">
+                <button type="button" data-step="-1" aria-label="Un grupo menos">−</button>
+                <input id="groups" type="number" inputmode="numeric" min="1" step="1" value="1" aria-describedby="groups-hint" />
+                <button type="button" data-step="1" aria-label="Un grupo más">+</button>
+              </div>
+              <p id="groups-hint" class="hint">1 grupo da un orden aleatorio.</p>
+            </div>
+
+            <p id="error" class="error" aria-live="polite" hidden></p>
+
+            <div class="actions">
+              <button type="submit" class="btn btn-primary">Sortear</button>
+              <button type="button" id="clear" class="btn btn-ghost">Limpiar lista</button>
+            </div>
+          </form>
+        </section>
+
+        <section id="results" class="results" aria-labelledby="results-title">
+          <div class="results-head">
+            <h2 id="results-title">Resultado</h2>
+            <div id="result-actions" class="result-actions" hidden>
+              <button type="button" id="again" class="btn btn-ghost">Sortear de nuevo</button>
+              <button type="button" id="share" class="btn btn-ghost">Compartir</button>
+            </div>
+          </div>
+          <div id="output" class="output">
+            <div class="empty">
+              <svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor">
+                <circle cx="16" cy="5" r="3.2" /><circle cx="25.5" cy="10.5" r="3.2" /><circle cx="25.5" cy="21.5" r="3.2" />
+                <circle cx="16" cy="27" r="3.2" /><circle cx="6.5" cy="21.5" r="3.2" /><circle cx="6.5" cy="10.5" r="3.2" />
+              </svg>
+              <p>Todavía no hay sorteo. Cuando sortees, el orden o los grupos aparecen acá.</p>
+            </div>
+          </div>
+          <p id="status" class="status" aria-live="polite"></p>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      import '../scripts/theme';
+      import '../scripts/app';
+    </script>
+  </body>
+</html>
