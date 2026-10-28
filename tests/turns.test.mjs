@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  cancelSession, emptyTurns, finish, nextId, parseTurnsStore, pause, queue, setAbsent, setBudgetMinutes, speak,
-  spokenMs, startSession, syncPeople,
+  cancelSession, emptyTurns, finish, nextId, parseTurnsStore, pause, queue, ranking, removeSession, resetSessions,
+  setAbsent, setBudgetMinutes, setMinDays, speak, spokenMs, startSession, syncPeople,
 } from '../src/lib/turns.ts';
 
 const MIN = 60_000;
@@ -123,4 +123,68 @@ test('parsing keeps valid lists, drops broken ones and ids that no list has any 
   assert.equal(parsed.L1.sessions.length, 1);
   assert.deepEqual(parseTurnsStore(null, []), {});
   assert.deepEqual(parseTurnsStore([], []), {});
+});
+
+// ---- Ranking ----
+const day = (id, budgetMin, entries) => ({ id, endedAt: 0, budgetMs: budgetMin * MIN, entries });
+const e = (personId, name, ms, absent = false) => ({ personId, name, spokenMs: ms, absent });
+const withDays = (...sessions) => ({ ...emptyTurns(), sessions });
+const ab = [{ id: 'a', name: 'Ana' }, { id: 'b', name: 'Bruno' }];
+const pct = (row) => Math.round(row.score * 100);
+
+test('ranking averages the share of the budget over the days each person was there', () => {
+  const t = withDays(
+    day('1', 5, [e('a', 'Ana', 2 * MIN), e('b', 'Bruno', 2.5 * MIN)]),
+    day('2', 5, [e('a', 'Ana', 1 * MIN), e('b', 'Bruno', 0, true)]),
+  );
+  const { rows, fewData } = ranking(t, ab);
+  assert.deepEqual(rows.map((r) => [r.name, pct(r), r.days, r.position]), [['Ana', 30, 2, 1], ['Bruno', 50, 1, 2]]);
+  assert.deepEqual(fewData, []);
+});
+
+test('an absent day counts for nobody, but being present and silent counts as 0%', () => {
+  const t = withDays(day('1', 5, [e('a', 'Ana', 0), e('b', 'Bruno', 0, true)]));
+  const { rows } = ranking(t, [...ab, { id: 'c', name: 'Carla' }]);
+  assert.deepEqual(rows.map((r) => [r.name, pct(r), r.days]), [['Ana', 0, 1]]); // Carla was never there: not listed
+});
+
+test('days with a different budget are weighed by their budget', () => {
+  const t = withDays(day('1', 5, [e('a', 'Ana', 5 * MIN)]), day('2', 10, [e('a', 'Ana', 0)]));
+  assert.equal(Math.round(ranking(t, ab).rows[0].score * 1000), 333);
+});
+
+test('going over the budget counts the real time', () => {
+  const t = withDays(day('1', 5, [e('a', 'Ana', 6 * MIN)]));
+  assert.equal(pct(ranking(t, ab).rows[0]), 120);
+});
+
+test('ties share a position and the next one skips', () => {
+  const people = [{ id: 'a', name: 'Ana' }, { id: 'b', name: 'Bruno' }, { id: 'c', name: 'Carla' }];
+  const t = withDays(day('1', 10, [e('a', 'Ana', 5 * MIN), e('b', 'Bruno', 4 * MIN), e('c', 'Carla', 4 * MIN)]));
+  assert.deepEqual(ranking(t, people).rows.map((r) => [r.name, r.position]), [['Bruno', 1], ['Carla', 1], ['Ana', 3]]);
+});
+
+test('people below the minimum days go to fewData and the minimum can be raised', () => {
+  const t = withDays(
+    day('1', 5, [e('a', 'Ana', MIN), e('b', 'Bruno', MIN)]),
+    day('2', 5, [e('a', 'Ana', MIN), e('b', 'Bruno', 0, true)]),
+  );
+  const { rows, fewData } = ranking(t, ab, 2);
+  assert.deepEqual(rows.map((r) => r.name), ['Ana']);
+  assert.deepEqual(fewData.map((r) => [r.name, r.days]), [['Bruno', 1]]);
+});
+
+test('ranking uses the names on the list now and skips people who left it, keeping their days', () => {
+  const t = withDays(day('1', 5, [e('a', 'Old name', MIN), e('b', 'Bruno', MIN)]));
+  assert.deepEqual(ranking(t, [{ id: 'a', name: 'New name' }]).rows.map((r) => r.name), ['New name']);
+  assert.equal(t.sessions.length, 1);
+});
+
+test('removing a day or resetting only touches the days; the minimum is validated', () => {
+  const t = { ...withDays(day('1', 5, []), day('2', 5, [])), minDays: 3, budgetMs: 7 * MIN };
+  assert.deepEqual(removeSession(t, '1').sessions.map((s) => s.id), ['2']);
+  const reset = resetSessions(t);
+  assert.deepEqual([reset.sessions.length, reset.minDays, reset.budgetMs], [0, 3, 7 * MIN]);
+  assert.equal(setMinDays(t, 2).minDays, 2);
+  for (const bad of [0, 100, 1.5, NaN]) assert.equal(setMinDays(t, bad), t);
 });

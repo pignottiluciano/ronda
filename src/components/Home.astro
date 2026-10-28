@@ -140,6 +140,7 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
             <legend class="sr-only">{t.modeLabel}</legend>
             <label><input type="radio" name="mode" value="draw" checked /><span>{t.modeDraw}</span></label>
             <label><input type="radio" name="mode" value="turns" /><span>{t.modeTurns}</span></label>
+            <label><input type="radio" name="mode" value="ranking" /><span>{t.modeRanking}</span></label>
           </fieldset>
 
           <form id="draw-form" class="form" novalidate>
@@ -251,6 +252,45 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
           </div>
           <p id="turns-announce" class="sr-only" aria-live="polite"></p>
         </section>
+
+        <section id="ranking" class="ranking ranking-only" aria-labelledby="ranking-title">
+          <div class="results-head">
+            <h2 id="ranking-title">{t.rankTitle}</h2>
+            <div class="result-actions">
+              <button type="button" id="rank-share" class="btn btn-ghost" hidden>{t.rankShare}</button>
+            </div>
+          </div>
+          <p id="rank-empty" class="hint">{t.rankEmpty}</p>
+          <div id="rank-body" class="rank-body" hidden>
+            <p id="rank-meta" class="count"></p>
+            <p class="hint">{t.rankHow}</p>
+            <div id="podium" class="podium" aria-hidden="true"></div>
+            <p id="rank-none" class="hint" hidden>{t.rankNoRows}</p>
+            <table id="rank-table" class="rank-table">
+              <caption class="sr-only">{t.rankTableLabel}</caption>
+              <thead>
+                <tr><th scope="col">{t.rankColPos}</th><th scope="col">{t.rankColPerson}</th><th scope="col">{t.rankColAvg}</th><th scope="col">{t.rankColDays}</th></tr>
+              </thead>
+              <tbody id="rank-rows"></tbody>
+            </table>
+            <div id="rank-few" class="rank-few" hidden>
+              <h3>{t.rankFewTitle}</h3>
+              <p id="rank-few-hint" class="hint"></p>
+              <ul id="rank-few-list" class="few"></ul>
+            </div>
+            <div class="rank-history">
+              <h3>{t.rankHistory}</h3>
+              <ul id="history" class="history"></ul>
+            </div>
+          </div>
+          <div class="rank-settings">
+            <label class="budget-custom" for="min-days">
+              {t.rankMinLabel}
+              <input id="min-days" type="number" inputmode="numeric" min="1" max="99" step="1" />
+            </label>
+            <button type="button" id="rank-reset" class="btn btn-ghost" hidden>{t.rankReset}</button>
+          </div>
+        </section>
       </main>
     </div>
 
@@ -265,13 +305,13 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
       </form>
     </dialog>
 
-    <dialog id="discard-dialog" class="dialog" aria-labelledby="discard-title">
+    <dialog id="confirm-dialog" class="dialog" aria-labelledby="confirm-title">
       <form method="dialog">
-        <h2 id="discard-title">{t.turnsDiscardTitle}</h2>
-        <p>{t.turnsDiscardBody}</p>
+        <h2 id="confirm-title"></h2>
+        <p id="confirm-body"></p>
         <div class="dialog-actions">
           <button value="cancel" class="btn btn-ghost">{t.cancel}</button>
-          <button value="discard" class="btn btn-danger">{t.turnsDiscardConfirm}</button>
+          <button id="confirm-ok" value="ok" class="btn btn-danger"></button>
         </div>
       </form>
     </dialog>

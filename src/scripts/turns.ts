@@ -7,6 +7,8 @@ import {
   BUDGET_PRESETS, MAX_BUDGET_MINUTES, cancelSession, emptyTurns, finish, isValidBudgetMinutes, nextId, pause, queue,
   setAbsent, setBudgetMinutes, speak, spokenMs, startSession, syncPeople, type ListTurns, type TurnsStore,
 } from '../lib/turns';
+import { confirmAction } from './confirm';
+import { initRanking } from './ranking';
 import { readTurns, writeTurns } from './storage';
 import { holdScreen, releaseScreen } from './wakelock';
 
@@ -20,7 +22,7 @@ export interface TurnsHost {
   absenceChanged(): void;
 }
 
-type Mode = 'draw' | 'turns';
+type Mode = 'draw' | 'turns' | 'ranking';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const t = messages[document.documentElement.lang === 'en' ? 'en' : 'es'];
@@ -52,7 +54,6 @@ export function initTurns(host: TurnsHost) {
   const nextButton = $<HTMLButtonElement>('turns-next');
   const tiles = $('tiles');
   const announce = $('turns-announce');
-  const discardDialog = $<HTMLDialogElement>('discard-dialog');
   const pageTitle = document.title;
 
   let store: TurnsStore = readTurns(host.listIds());
@@ -74,6 +75,8 @@ export function initTurns(host: TurnsHost) {
   function say(message: string) {
     announce.textContent = message;
   }
+
+  const rankingView = initRanking({ list: host.list, turns, update, say: host.say });
 
   // ---- Rendering ----
 
@@ -249,6 +252,7 @@ export function initTurns(host: TurnsHost) {
         paint(Date.now());
       }
     }
+    if (mode === 'ranking') rankingView.render();
     syncRuntime();
   }
 
@@ -292,7 +296,8 @@ export function initTurns(host: TurnsHost) {
   // ---- Events ----
 
   modes.addEventListener('change', (event) => {
-    mode = (event.target as HTMLInputElement).value === 'turns' ? 'turns' : 'draw';
+    const value = (event.target as HTMLInputElement).value;
+    mode = value === 'turns' || value === 'ranking' ? value : 'draw';
     render();
   });
 
@@ -346,16 +351,14 @@ export function initTurns(host: TurnsHost) {
 
   $('turns-finish').addEventListener('click', () => {
     const saved = finish(turns(), host.list().people, Date.now());
+    mode = 'ranking'; // the day just saved is in the score now
     update(saved);
     host.absenceChanged(); // a finished day clears today's absences
     host.say(t.turnsSaved(saved.sessions.length));
   });
 
-  $('turns-discard').addEventListener('click', () => discardDialog.showModal());
-  discardDialog.addEventListener('close', () => {
-    const confirmed = discardDialog.returnValue === 'discard';
-    discardDialog.returnValue = '';
-    if (!confirmed) return;
+  $('turns-discard').addEventListener('click', async () => {
+    if (!(await confirmAction({ title: t.turnsDiscardTitle, body: t.turnsDiscardBody, confirm: t.turnsDiscardConfirm }))) return;
     update(cancelSession(turns()));
     host.say(t.turnsDiscarded);
   });

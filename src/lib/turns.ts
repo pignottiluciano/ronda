@@ -146,6 +146,22 @@ export function finish(turns: ListTurns, people: readonly { id: string; name: st
   return { ...turns, sessions: [...turns.sessions, session], current: null, absent: [] };
 }
 
+export const MAX_MIN_DAYS = 99;
+
+/** Days needed before someone enters the ranking. Invalid values are ignored. */
+export function setMinDays(turns: ListTurns, days: number): ListTurns {
+  return Number.isInteger(days) && days >= 1 && days <= MAX_MIN_DAYS ? { ...turns, minDays: days } : turns;
+}
+
+export function removeSession(turns: ListTurns, sessionId: string): ListTurns {
+  return { ...turns, sessions: turns.sessions.filter((s) => s.id !== sessionId) };
+}
+
+/** Forgets every saved day; the budget, the minimum and the day in progress stay. */
+export function resetSessions(turns: ListTurns): ListTurns {
+  return { ...turns, sessions: [] };
+}
+
 export function cancelSession(turns: ListTurns): ListTurns {
   return { ...turns, current: null };
 }
@@ -169,6 +185,51 @@ export function syncPeople(turns: ListTurns, ids: readonly string[]): ListTurns 
       activeSince: dropActive ? null : current.activeSince,
     },
   };
+}
+
+// ---- Ranking ----
+
+export interface RankRow {
+  personId: string;
+  name: string;
+  score: number; // spoken / budget over the days present; 0.5 is half the time they were given
+  spokenMs: number;
+  days: number; // days present
+}
+
+export interface Ranking {
+  rows: (RankRow & { position: number })[]; // lowest score first; ties share a position
+  fewData: RankRow[]; // present fewer days than the minimum
+}
+
+/**
+ * Who speaks less, on average. Only the days a person was there count, and each day weighs by its own
+ * budget, so missing a day neither helps nor hurts. People who never came, or who left the list, are not listed.
+ */
+export function ranking(turns: ListTurns, people: readonly { id: string; name: string }[], minDays = turns.minDays): Ranking {
+  const totals = new Map<string, { spoken: number; budget: number; days: number }>();
+  for (const session of turns.sessions) {
+    for (const entry of session.entries) {
+      if (entry.absent) continue;
+      const total = totals.get(entry.personId) ?? { spoken: 0, budget: 0, days: 0 };
+      total.spoken += entry.spokenMs;
+      total.budget += session.budgetMs;
+      total.days += 1;
+      totals.set(entry.personId, total);
+    }
+  }
+  const all = people.flatMap((p): RankRow[] => {
+    const total = totals.get(p.id);
+    return total ? [{ personId: p.id, name: p.name, score: total.spoken / total.budget, spokenMs: total.spoken, days: total.days }] : [];
+  });
+  const byScore = (a: RankRow, b: RankRow) => a.score - b.score || a.name.localeCompare(b.name);
+  const rows: Ranking['rows'] = [];
+  for (const row of all.filter((r) => r.days >= minDays).sort(byScore)) {
+    const previous = rows.at(-1);
+    const tied = previous !== undefined && Math.abs(previous.score - row.score) < 1e-9;
+    rows.push({ ...row, position: tied ? previous.position : rows.length + 1 });
+  }
+  return { rows, fewData: all.filter((r) => r.days < minDays).sort(byScore) };
 }
 
 // ---- Validating what comes back from storage ----
