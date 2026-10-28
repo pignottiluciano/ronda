@@ -1,9 +1,11 @@
 // Browser-only. Never import from Astro frontmatter: localStorage does not exist at build time.
 import { parseParticipants } from '../lib/draw';
 import { createStore, parseStore, type ListStore } from '../lib/lists';
+import { parseTurnsStore, type TurnsStore } from '../lib/turns';
 
 const KEY = 'ronda.lists.v1';
 const LEGACY_KEY = 'ronda.preferences.v1'; // single list, before saved lists existed
+const TURNS_KEY = 'ronda.turns.v1';
 
 function readJson(key: string): unknown {
   const raw = localStorage.getItem(key);
@@ -35,6 +37,25 @@ export function readStore(defaultName: string): ListStore {
 export function writeStore(store: ListStore): boolean {
   try {
     localStorage.setItem(KEY, JSON.stringify(store));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Turn data of the lists in `listIds`; anything unreadable, or of a list that no longer exists, is dropped. */
+export function readTurns(listIds: readonly string[]): TurnsStore {
+  try {
+    return parseTurnsStore(readJson(TURNS_KEY), listIds);
+  } catch {
+    return {};
+  }
+}
+
+/** Returns false when the browser refuses to store. */
+export function writeTurns(turns: TurnsStore): boolean {
+  try {
+    localStorage.setItem(TURNS_KEY, JSON.stringify(turns));
     return true;
   } catch {
     return false;

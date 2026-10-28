@@ -1,11 +1,13 @@
 import { draw, formatResult, validateDraw, type DrawResult } from '../lib/draw';
 import { messages } from '../i18n/messages';
 import {
-  MAX_PEOPLE, activeList, addList, addPeople, clearPeople, removeList, removePerson, renameList, renamePerson, setActive, updateList,
+  MAX_PEOPLE, activeList, addList, addPeople, clearPeople, nameKey, removeList, removePerson, renameList, renamePerson, setActive,
+  setTurns, updateList,
   type ListStore, type Person,
 } from '../lib/lists';
 import { readStore, writeStore } from './storage';
 import { shareText } from './share';
+import { initTurns } from './turns';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -26,6 +28,7 @@ const listName = $('list-name');
 const listNameInput = $<HTMLInputElement>('list-name-input');
 const saved = $('saved');
 const deleteDialog = $<HTMLDialogElement>('delete-dialog');
+const turnsToggle = $<HTMLButtonElement>('turns-toggle');
 
 const t = messages[document.documentElement.lang === 'en' ? 'en' : 'es'];
 const emptyState = output.firstElementChild!.cloneNode(true);
@@ -33,6 +36,22 @@ let store = readStore(t.defaultListName(1));
 let last: DrawResult | null = null;
 let shown = new Set<string>(); // person ids already on screen, so only new badges animate
 let selectedId: string | null = null; // badge selected by the first Backspace
+
+const turns = initTurns({
+  list: () => activeList(store),
+  listIds: () => store.lists.map((list) => list.id),
+  drawOrder: () => {
+    if (last?.length !== 1) return [];
+    const byName = new Map(people().map((p) => [nameKey(p.name), p.id]));
+    return last[0]!.flatMap((name) => byName.get(nameKey(name)) ?? []);
+  },
+  say: (message) => setStatus(message),
+  absenceChanged: () => {
+    renderPeople();
+    updateCount();
+    markStale();
+  },
+});
 
 function setStatus(message: string) {
   status.textContent = message;
@@ -72,8 +91,11 @@ function save() {
   renderTabs();
 }
 
+const present = () => people().filter((p) => !turns.absent().has(p.id));
+
 function updateCount() {
-  count.textContent = t.participant(people().length);
+  const away = people().length - present().length;
+  count.textContent = away ? t.participantsAway(present().length, away) : t.participant(people().length);
 }
 
 /** Shows a problem under the box (and announces it), or restores the usual hint. */
@@ -86,7 +108,7 @@ function warn(message: string | null) {
 function showError(message: string | null) {
   error.textContent = message ?? '';
   error.hidden = !message;
-  personInput.setAttribute('aria-invalid', String(Boolean(message) && people().length < 2));
+  personInput.setAttribute('aria-invalid', String(Boolean(message) && present().length < 2));
 }
 
 // Names are set as text, never as HTML.
@@ -96,6 +118,8 @@ function chip(person: Person): HTMLElement {
   item.dataset.id = person.id;
   item.classList.toggle('is-new', !shown.has(person.id));
   item.classList.toggle('is-selected', person.id === selectedId);
+  const away = turns.absent().has(person.id);
+  item.classList.toggle('is-away', away);
   const name = document.createElement('button');
   name.type = 'button';
   name.className = 'person-name';
@@ -106,7 +130,15 @@ function chip(person: Person): HTMLElement {
   remove.className = 'person-x';
   remove.textContent = '×';
   remove.setAttribute('aria-label', t.personRemove(person.name));
-  item.append(name, remove);
+  if (activeList(store).turns) {
+    const toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.className = 'person-away';
+    toggle.setAttribute('aria-pressed', String(away));
+    toggle.setAttribute('aria-label', away ? t.awayBackToggle(person.name) : t.awayToggle(person.name));
+    toggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="8" /><path d="M6.3 6.3l11.4 11.4" /></svg>';
+    item.append(name, toggle, remove);
+  } else item.append(name, remove);
   return item;
 }
 
@@ -121,6 +153,7 @@ function commit(next: ListStore) {
   store = next;
   persist();
   renderTabs();
+  turns.refresh(); // drops people who left from the day in progress
   renderPeople();
   updateCount();
   markStale();
@@ -247,7 +280,7 @@ function render(result: DrawResult) {
 }
 
 function runDraw(): boolean {
-  const list = people().map((p) => p.name);
+  const list = present().map((p) => p.name);
   const groupCount = Number(groups.value);
   const problem = validateDraw(list.length, groupCount);
   showError(problem && (problem === 'max' ? t.errorMax(list.length) : problem === 'min' ? t.errorMin : t.errorInteger));
@@ -280,6 +313,8 @@ function loadActive() {
   selectedId = null;
   personInput.value = '';
   warn(null);
+  turnsToggle.setAttribute('aria-pressed', String(list.turns));
+  turns.open();
   renderPeople();
   groups.value = String(list.groups);
   listName.textContent = list.name;
@@ -375,7 +410,8 @@ personInput.addEventListener('paste', (event) => {
 tagbox.addEventListener('click', (event) => {
   const target = event.target as Element;
   const item = target.closest<HTMLElement>('.person');
-  if (target.closest('.person-x') && item) removeAt(item.dataset.id!);
+  if (target.closest('.person-away') && item) turns.toggleAbsent(item.dataset.id!);
+  else if (target.closest('.person-x') && item) removeAt(item.dataset.id!);
   else if (target.closest('.person-name') && item) startEdit(item);
   else if (!item) personInput.focus(); // clicking the empty part of the box
 });
@@ -386,7 +422,7 @@ groups.addEventListener('input', () => {
 
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-step]')) {
   button.addEventListener('click', () => {
-    const max = Math.max(1, people().length);
+    const max = Math.max(1, present().length);
     const current = parseInt(groups.value, 10) || 1;
     groups.value = String(Math.min(max, Math.max(1, current + Number(button.dataset.step))));
     save();
@@ -407,6 +443,17 @@ $('new-list').addEventListener('click', () => {
   persist();
   loadActive();
   startRename();
+});
+
+turnsToggle.addEventListener('click', () => {
+  const list = activeList(store);
+  store = setTurns(store, list.id, !list.turns);
+  persist();
+  turnsToggle.setAttribute('aria-pressed', String(!list.turns));
+  turns.refresh();
+  renderPeople();
+  updateCount();
+  setStatus(list.turns ? t.turnsOff : t.turnsOn);
 });
 
 $('rename').addEventListener('click', startRename);
@@ -433,6 +480,7 @@ deleteDialog.addEventListener('close', () => {
   if (!confirmed) return;
   const { id, name } = activeList(store);
   store = removeList(store, id, t.defaultListName(1));
+  turns.forget(id);
   persist();
   loadActive();
   setStatus(t.listDeleted(name));

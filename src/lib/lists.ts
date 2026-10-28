@@ -10,6 +10,7 @@ export interface SavedList {
   name: string;
   people: Person[];
   groups: number;
+  turns: boolean; // opt-in: the list also has speaking turns and a ranking
 }
 
 export interface ListStore {
@@ -50,7 +51,7 @@ function merge(people: readonly Person[], names: readonly string[]) {
 }
 
 export function createStore(name: string, names: readonly string[] = [], groups = 1): ListStore {
-  const list: SavedList = { id: newId(), name: clean(name), people: merge([], names).people, groups };
+  const list: SavedList = { id: newId(), name: clean(name), people: merge([], names).people, groups, turns: false };
   return { activeId: list.id, lists: [list] };
 }
 
@@ -64,7 +65,7 @@ export function setActive(store: ListStore, id: string): ListStore {
 
 /** Appends an empty list and makes it the active one. */
 export function addList(store: ListStore, name: string): ListStore {
-  const list: SavedList = { id: newId(), name: clean(name), people: [], groups: 1 };
+  const list: SavedList = { id: newId(), name: clean(name), people: [], groups: 1, turns: false };
   return { activeId: list.id, lists: [...store.lists, list] };
 }
 
@@ -83,6 +84,10 @@ const mapList = (store: ListStore, id: string, change: (list: SavedList) => Save
   ...store,
   lists: store.lists.map((list) => (list.id === id ? change(list) : list)),
 });
+
+export function setTurns(store: ListStore, id: string, turns: boolean): ListStore {
+  return mapList(store, id, (list) => ({ ...list, turns }));
+}
 
 export function addPeople(store: ListStore, listId: string, names: readonly string[]) {
   const target = store.lists.find((list) => list.id === listId);
@@ -155,7 +160,7 @@ export function parseStore(data: unknown): ListStore | null {
     if (!Number.isInteger(groups) || (groups as number) < 1) return null;
     const people = parsePeople(item as Record<string, unknown>);
     if (!people) return null;
-    valid.push({ id, name: clean(name), people, groups: groups as number });
+    valid.push({ id, name: clean(name), people, groups: groups as number, turns: (item as Record<string, unknown>).turns === true });
   }
   return { activeId: valid.some((l) => l.id === activeId) ? activeId : valid[0]!.id, lists: valid };
 }

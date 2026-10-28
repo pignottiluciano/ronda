@@ -116,13 +116,16 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
         <button type="button" id="new-list" class="tab add">+ {t.newList}</button>
       </nav>
 
-      <main class="layout">
+      <main id="layout" class="layout" data-mode="draw">
         <section class="panel" aria-labelledby="list-name">
           <h1 class="sr-only">{t.titleStart}{t.titleEm}</h1>
           <div class="listname">
             <h2 id="list-name" class="list-title">{t.defaultListName(1)}</h2>
             <input id="list-name-input" class="list-title-input" maxlength="40" autocomplete="off" aria-label={t.listNameLabel} hidden />
             <div class="list-tools">
+              <button type="button" id="turns-toggle" class="icon-btn" aria-pressed="false" aria-label={t.turnsToggle} title={t.turnsToggle}>
+                <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 2M9 2h6" /></svg>
+              </button>
               <button type="button" id="rename" class="icon-btn" aria-label={t.renameList} title={t.renameList}>
                 <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
               </button>
@@ -132,6 +135,12 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
             </div>
           </div>
           <p class="lede">{t.lede}</p>
+
+          <fieldset id="modes" class="seg" hidden>
+            <legend class="sr-only">{t.modeLabel}</legend>
+            <label><input type="radio" name="mode" value="draw" checked /><span>{t.modeDraw}</span></label>
+            <label><input type="radio" name="mode" value="turns" /><span>{t.modeTurns}</span></label>
+          </fieldset>
 
           <form id="draw-form" class="form" novalidate>
             <div class="field">
@@ -158,7 +167,7 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
               <p id="saved" class="saved">{t.savedHere}</p>
             </div>
 
-            <div class="field">
+            <div class="field draw-only">
               <label class="label" for="groups">{t.groupsLabel}</label>
               <div class="stepper">
                 <button type="button" data-step="-1" aria-label={t.groupsLess}>−</button>
@@ -168,9 +177,9 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
               <p id="groups-hint" class="hint">{t.groupsHint}</p>
             </div>
 
-            <p id="error" class="error" aria-live="polite" hidden></p>
+            <p id="error" class="error draw-only" aria-live="polite" hidden></p>
 
-            <div class="actions">
+            <div class="actions draw-only">
               <button type="submit" class="btn btn-primary">{t.draw}</button>
               <button type="button" id="clear" class="btn btn-ghost">{t.clear}</button>
             </div>
@@ -185,32 +194,6 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
               <button type="button" id="share" class="btn btn-ghost">{t.share}</button>
             </div>
           </div>
-          <section id="timer" class="timer" data-status="idle" aria-labelledby="timer-title">
-            <div class="timer-head">
-              <h3 id="timer-title" class="timer-title">
-                <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 2M9 2h6" /></svg>
-                {t.timerLabel}
-              </h3>
-              <span id="timer-of" class="timer-of"></span>
-            </div>
-            <p id="timer-done" class="timer-done" hidden>{t.timerDone}</p>
-            <p id="timer-time" class="timer-time" role="timer">30:00</p>
-            <div id="timer-bar" class="timer-bar" aria-hidden="true" hidden><i></i></div>
-            <div id="timer-setup" class="timer-setup">
-              <div id="timer-presets" class="chips" role="group" aria-label={t.timerLabel}></div>
-              <label class="timer-custom">
-                {t.timerCustom}
-                <input id="timer-custom" type="number" inputmode="numeric" min="1" max="180" step="1" aria-label={t.timerCustomLabel} />
-                {t.timerUnit}
-              </label>
-            </div>
-            <div class="timer-actions">
-              <button type="button" id="timer-start" class="btn btn-primary">{t.timerStart}</button>
-              <button type="button" id="timer-pause" class="btn btn-ghost" hidden>{t.timerPause}</button>
-              <button type="button" id="timer-reset" class="btn btn-ghost" hidden>{t.timerReset}</button>
-            </div>
-            <p id="timer-announce" class="sr-only" aria-live="polite"></p>
-          </section>
           <div id="output" class="output">
             <div class="empty">
               <svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor">
@@ -221,6 +204,52 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
             </div>
           </div>
           <p id="status" class="status" aria-live="polite"></p>
+        </section>
+
+        <section id="turns" class="turns turns-only" aria-labelledby="turns-title">
+          <div class="results-head">
+            <h2 id="turns-title">{t.turnsTitle}</h2>
+            <span id="turns-total" class="count" hidden></span>
+          </div>
+
+          <div id="turns-setup" class="turns-setup">
+            <div class="field">
+              <span id="budget-label" class="label">{t.turnsBudgetLabel}</span>
+              <div class="budget">
+                <div id="budget-presets" class="chips" role="group" aria-labelledby="budget-label"></div>
+                <label class="budget-custom">
+                  {t.turnsCustom}
+                  <input id="budget-custom" type="number" inputmode="numeric" min="1" max="60" step="1" aria-label={t.turnsCustomLabel(60)} />
+                  {t.turnsUnit}
+                </label>
+              </div>
+            </div>
+            <p id="turns-days" class="hint" hidden></p>
+            <p class="hint">{t.turnsStartHint}</p>
+            <div class="actions">
+              <button type="button" id="turns-start" class="btn btn-primary">{t.turnsStart}</button>
+            </div>
+          </div>
+
+          <div id="turns-live" class="turns-live" hidden>
+            <div id="now" class="now" data-state="idle">
+              <p id="now-label" class="now-label"></p>
+              <p id="now-name" class="now-name"></p>
+              <p id="now-clock" class="now-clock" role="timer" aria-live="off">00:00</p>
+              <p id="now-of" class="now-of"></p>
+              <div id="now-bar" class="bar" aria-hidden="true"><i></i></div>
+              <div class="actions">
+                <button type="button" id="turns-pause" class="btn btn-ghost" hidden>{t.turnsPause}</button>
+                <button type="button" id="turns-next" class="btn btn-primary"></button>
+              </div>
+            </div>
+            <ul id="tiles" class="tiles" role="list"></ul>
+            <div class="actions turns-end">
+              <button type="button" id="turns-finish" class="btn btn-ghost">{t.turnsFinish}</button>
+              <button type="button" id="turns-discard" class="btn btn-ghost">{t.turnsDiscard}</button>
+            </div>
+          </div>
+          <p id="turns-announce" class="sr-only" aria-live="polite"></p>
         </section>
       </main>
     </div>
@@ -236,10 +265,20 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
       </form>
     </dialog>
 
+    <dialog id="discard-dialog" class="dialog" aria-labelledby="discard-title">
+      <form method="dialog">
+        <h2 id="discard-title">{t.turnsDiscardTitle}</h2>
+        <p>{t.turnsDiscardBody}</p>
+        <div class="dialog-actions">
+          <button value="cancel" class="btn btn-ghost">{t.cancel}</button>
+          <button value="discard" class="btn btn-danger">{t.turnsDiscardConfirm}</button>
+        </div>
+      </form>
+    </dialog>
+
     <script>
       import '../scripts/theme';
       import '../scripts/app';
-      import '../scripts/timer';
       import '../scripts/pwa';
     </script>
   </body>

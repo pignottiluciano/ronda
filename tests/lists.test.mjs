@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   activeList, addList, addPeople, clearPeople, createStore, MAX_PEOPLE, nameKey, parseStore, removeList,
-  removePerson, renameList, renamePerson, setActive, updateList,
+  removePerson, renameList, renamePerson, setActive, setTurns, updateList,
 } from '../src/lib/lists.ts';
 
 const names = (store) => activeList(store).people.map((p) => p.name);
@@ -118,4 +118,23 @@ test('parseStore drops repeated stored people but keeps the first id', () => {
     lists: [{ id: 'a', name: 'A', groups: 1, people: [{ id: 'p1', name: 'Ana' }, { id: 'p2', name: 'ANA' }, { id: 'p3', name: 'Luz' }] }],
   });
   assert.deepEqual(activeList(store).people.map((p) => p.id), ['p1', 'p3']);
+});
+
+test('turns are off by default and are switched per list', () => {
+  const store = addList(createStore('A'), 'B');
+  const [a, b] = store.lists.map((l) => l.id);
+  assert.deepEqual(store.lists.map((l) => l.turns), [false, false]);
+  const on = setTurns(store, b, true);
+  assert.deepEqual(on.lists.map((l) => l.turns), [false, true]);
+  assert.deepEqual(setTurns(on, b, false).lists.map((l) => l.turns), [false, false]);
+  assert.equal(setTurns(on, 'nope', true).lists.length, 2);
+  assert.equal(on.lists[0].id, a);
+});
+
+test('parseStore reads the turns flag, defaulting to off for older data and for anything but true', () => {
+  const list = { id: 'a', name: 'A', people: [], groups: 1 };
+  const parse = (extra) => parseStore({ activeId: 'a', lists: [{ ...list, ...extra }] }).lists[0].turns;
+  assert.equal(parse({}), false);
+  assert.equal(parse({ turns: true }), true);
+  assert.equal(parse({ turns: 'yes' }), false);
 });

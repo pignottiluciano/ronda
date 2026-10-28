@@ -261,6 +261,11 @@ button, input, textarea { font: inherit; color: inherit; }
 .person-x { position: relative; }
 .person-x::after { content: ''; position: absolute; inset: -6px; } /* 32px glyph, 44px hit area: this one deletes */
 .person-x:hover { color: var(--ink); }
+.person-away { display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; }
+.person-away svg { width: 16px; height: 16px; }
+.person-away:hover, .person-away[aria-pressed='true'] { color: var(--accent-ink); }
+.person.is-away { background: transparent; border: 1px dashed var(--control); color: var(--muted); }
+.person.is-away .person-name { text-decoration: line-through; }
 .person-edit { min-width: 6ch; max-width: 100%; height: 32px; padding: 0 var(--s2); border: 0; border-radius: 999px; background: var(--surface); font-weight: inherit; outline: 2px solid var(--accent); }
 .person-new { flex: 1 1 8rem; display: flex; min-width: 8rem; }
 .person-input { flex: 1; min-width: 0; min-height: 32px; padding: 0 var(--s1); border: 0; background: transparent; outline: 0; }
@@ -376,49 +381,65 @@ button, input, textarea { font: inherit; color: inherit; }
 .group ul { list-style: none; margin: var(--s3) 0 0; padding: 0; display: grid; gap: var(--s1); }
 .group li { overflow-wrap: anywhere; }
 
-/* ---------- Timer ---------- */
-.timer { position: relative; overflow: hidden; display: grid; gap: var(--s3); margin-bottom: var(--s5); padding: var(--s4) var(--s5); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
-.timer > * { position: relative; }
-.timer-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
-.timer-title { display: flex; align-items: center; gap: var(--s2); font-family: var(--font); font-size: var(--t-sm); font-weight: 600; letter-spacing: 0; }
-.timer-title svg { width: 18px; height: 18px; }
-.timer-of { font-size: var(--t-xs); color: var(--muted); }
-.timer-time { font-family: var(--font-head); font-weight: 500; font-size: 3rem; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-.timer-bar { height: 8px; border-radius: 4px; background: var(--accent-soft); overflow: hidden; }
-.timer-bar i { display: block; height: 100%; width: 100%; background: var(--accent); border-radius: 4px; transform-origin: left; transition: transform 300ms linear; }
+/* ---------- Mode control ---------- */
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; margin: var(--s4) 0 0; padding: 3px; border: 1px solid var(--control); border-radius: var(--radius-sm); background: var(--surface); }
+.seg label { position: relative; }
+.seg input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.seg span { display: grid; place-items: center; min-height: 40px; border-radius: 7px; font-weight: 600; font-size: var(--t-sm); color: var(--muted); transition: background-color 150ms ease-out, color 150ms ease-out; }
+.seg input:checked + span { background: var(--accent); color: var(--on-accent); }
+.seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.icon-btn[aria-pressed='true'] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink); }
+
+/* Each mode owns its area; a list without turns never leaves "draw". */
+.layout[data-mode='turns'] .draw-only,
+.layout[data-mode='turns'] #results { display: none; }
+.layout:not([data-mode='turns']) .turns-only { display: none; }
+
+/* ---------- Turns ---------- */
+.turns { min-width: 0; scroll-margin-top: var(--s4); }
+.turns-setup { display: grid; gap: var(--s4); }
+.turns-live { display: grid; gap: var(--s5); }
 .chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
-.chip { min-height: 36px; padding: 0 var(--s3); border: 1px solid var(--line); border-radius: 999px; background: transparent; cursor: pointer; font-size: var(--t-sm); font-variant-numeric: tabular-nums; transition: border-color 150ms ease-out; }
+.chip { min-height: 36px; padding: 0 var(--s3); border: 1px solid var(--control); border-radius: 999px; background: transparent; cursor: pointer; font-size: var(--t-sm); font-variant-numeric: tabular-nums; transition: border-color 150ms ease-out; }
 .chip:hover { border-color: var(--muted); }
 .chip[aria-pressed='true'] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
-.timer-setup { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
-.timer-custom { display: inline-flex; align-items: center; gap: var(--s2); min-height: 36px; padding: 0 var(--s3); border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: var(--t-sm); }
-.timer-custom input { width: 3.5ch; min-width: 0; padding: 0; border: 0; background: transparent; text-align: center; font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield; }
-.timer-custom input::-webkit-inner-spin-button,
-.timer-custom input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-.timer-actions { display: flex; flex-wrap: wrap; gap: var(--s3); }
-.timer-actions .btn { flex: 1 1 auto; }
+.budget { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.budget-custom { display: inline-flex; align-items: center; gap: var(--s2); min-height: 36px; padding: 0 var(--s3); border: 1px solid var(--control); border-radius: var(--radius-sm); font-size: var(--t-sm); }
+.budget-custom input { width: 3.5ch; min-width: 0; padding: 0; border: 0; background: transparent; text-align: center; font-variant-numeric: tabular-nums; appearance: textfield; -moz-appearance: textfield; }
+.budget-custom input::-webkit-inner-spin-button,
+.budget-custom input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
-/* Finished: the card turns solid accent and waves spread from the clock. */
-.timer[data-status='done'] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); text-align: center; padding-block: var(--s5); }
-.timer[data-status='done'] .timer-head { display: none; }
-.timer[data-status='done'] .btn { background: var(--on-accent); color: var(--accent); border-color: transparent; }
-.timer-done { font-family: var(--font-head); font-size: var(--t-xl); font-weight: 600; letter-spacing: -0.02em; }
-.timer[data-status='done']::before,
-.timer[data-status='done']::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 12px;
-  height: 12px;
-  margin: -6px;
-  border: 2px solid var(--on-accent);
-  border-radius: 50%;
-  opacity: 0;
-  animation: wave 2.4s ease-out infinite;
-}
-.timer[data-status='done']::after { animation-delay: 1.2s; }
-@keyframes wave { from { transform: scale(1); opacity: 0.6; } to { transform: scale(48); opacity: 0; } }
+/* Who has the floor: name, clock counting up, and the share of the budget used. */
+.now { display: grid; gap: var(--s2); padding: var(--s4) var(--s5) var(--s5); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.now[data-state='speaking'], .now[data-state='paused'] { border-color: var(--accent); }
+.now-label { font-size: var(--t-xs); color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.now-name { font-family: var(--font-head); font-size: var(--t-xl); font-weight: 600; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+.now-clock { font-size: clamp(3rem, 14vw, 4rem); font-weight: 700; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.now[data-over='true'] .now-clock { color: var(--danger); }
+.now[data-state='idle'] .now-clock, .now[data-state='idle'] .now-of, .now[data-state='idle'] .bar { display: none; }
+.now-of { font-size: var(--t-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
+.bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 100%; background: var(--accent); border-radius: 4px; transform-origin: left; }
+.now[data-over='true'] .bar i { background: var(--danger); }
+.now .actions { margin-top: var(--s2); }
+
+.tiles { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.tile { --tile-bg: var(--surface); --arc: var(--accent); display: grid; background: var(--tile-bg); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.tile[data-state='speaking'], .tile[data-state='paused'] { --tile-bg: var(--accent-soft); border-color: var(--accent); }
+.tile[data-state='absent'] { --tile-bg: var(--bg); border-style: dashed; color: var(--muted); }
+.tile[data-over='true'] { --arc: var(--danger); }
+.tile-main { display: grid; justify-items: center; gap: var(--s1); padding: var(--s3) var(--s2) var(--s2); border: 0; background: transparent; cursor: pointer; text-align: center; }
+.tile-main:disabled { cursor: default; }
+.ring { width: 76px; height: 76px; border-radius: 50%; background: conic-gradient(var(--arc) calc(var(--p, 0) * 1%), var(--line) 0); display: grid; place-items: center; }
+.ring-time { width: 62px; height: 62px; border-radius: 50%; background: var(--tile-bg); display: grid; place-items: center; font-size: var(--t-sm); font-weight: 700; font-variant-numeric: tabular-nums; }
+.tile[data-over='true'] .ring-time { color: var(--danger); }
+.tile-name { font-weight: 600; font-size: var(--t-sm); overflow-wrap: anywhere; }
+.tile-state { font-size: var(--t-xs); color: var(--muted); }
+.tile[data-state='speaking'] .tile-state, .tile[data-state='paused'] .tile-state { color: var(--accent-ink); font-weight: 600; }
+.tile[data-over='true'] .tile-state { color: var(--danger); font-weight: 600; }
+.tile-away { min-height: var(--tap); border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--muted); font-size: var(--t-xs); cursor: pointer; }
+.tile-away:hover { color: var(--ink); background: var(--accent-soft); }
+.turns-end { margin-top: var(--s2); }
 
 /* ---------- Motion ---------- */
 .enter { animation: rise 400ms var(--ease-out) both; animation-delay: calc(min(var(--i), 6) * 40ms); }
@@ -429,7 +450,5 @@ button, input, textarea { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .enter { animation: fade 150ms ease-out both; }
   .person.is-new { animation: none; }
-  .timer[data-status='done']::before, .timer[data-status='done']::after { animation: none; }
-  .timer-bar i { transition: none; }
   .btn:active { transform: none; }
 }
