@@ -14,6 +14,7 @@ Use it to set speaking turns in a meeting, make teams in a class, pair people up
 - Several named lists, shown as tabs: create, switch, rename and delete them. Each keeps its own participants and number of groups. Everything is saved in the browser (`localStorage`) and restored on return. **Clear list** empties the current one.
 - System, Light or Dark theme from the menu at the top right; it is remembered.
 - Spanish (`/`) and English (`/en/`) with an ES/EN switch next to the theme menu. The choice is remembered; it starts in Spanish by default.
+- Installable (PWA) and works offline: a small service worker caches the app after the first visit. It is only registered in production builds.
 - Accessible: visible labels, keyboard support, visible focus, screen reader announcements and `prefers-reduced-motion` support.
 
 ## Development
@@ -37,6 +38,7 @@ src/
   i18n/messages.ts       All text in es and en
   lib/draw.ts            Draw logic, no DOM (parse, validate, shuffle, distribute)
   lib/lists.ts           Saved-lists logic, no DOM (add, rename, remove, validate stored data)
+  sw/worker.js           Service worker source; pages/sw.js.ts serves it as /sw.js with a build version
   scripts/
     app.ts               Events and UI updates
     storage.ts           Safe reading and writing of localStorage (migrates the old single list)
@@ -61,6 +63,15 @@ The draw logic touches neither the DOM nor storage, so it can be tested on its o
 
 ```sh
 for l in es en; do "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars --force-device-scale-factor=1 --window-size=1200,630 --virtual-time-budget=8000 --screenshot=public/og-$l.png "file://$PWD/docs/og.html?lang=$l"; done
+```
+
+## App icons
+
+`public/icon-192.png`, `icon-512.png` and `apple-touch-icon.png` come from `docs/icon.html`. To regenerate them with Chrome:
+
+```sh
+C="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+for spec in icon-192:192 icon-512:512 apple-touch-icon:180; do "$C" --headless=new --hide-scrollbars --force-device-scale-factor=1 --window-size=${spec##*:},${spec##*:} --screenshot=public/${spec%%:*}.png "file://$PWD/docs/icon.html"; done
 ```
 
 ## Privacy and limits

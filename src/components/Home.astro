@@ -42,6 +42,9 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
       });
     </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="Ronda" />
     <Font cssVariable="--font-heading" preload />
     <Font cssVariable="--font-body" preload />
     <title>{t.pageTitle}</title>
@@ -203,6 +206,7 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
     <script>
       import '../scripts/theme';
       import '../scripts/app';
+      import '../scripts/pwa';
     </script>
   </body>
 </html>
