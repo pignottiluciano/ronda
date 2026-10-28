@@ -333,6 +333,15 @@ button, input, textarea { font: inherit; color: inherit; }
 .results.is-stale .output { opacity: 0.45; }
 .status { margin-top: var(--s4); min-height: 1.5em; font-size: var(--t-sm); color: var(--muted); }
 
+/* Feedback that must be seen in every mode. In the draw mode the status line already shows it, so the toast is only announced. */
+.toast { position: fixed; left: 50%; bottom: var(--s5); z-index: 20; transform: translateX(-50%); width: max-content; max-width: min(92vw, 480px); padding: var(--s3) var(--s4); border-radius: var(--radius-sm); background: var(--ink); color: var(--bg); font-size: var(--t-sm); }
+.toast:empty { display: none; }
+.layout[data-mode='draw'] ~ .toast { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------- Backup ---------- */
+.data { display: grid; gap: var(--s3); margin-top: var(--s8); padding-top: var(--s5); border-top: 1px solid var(--line); }
+.data h2 { font-size: var(--t-lg); }
+
 .empty {
   display: grid;
   place-items: center;

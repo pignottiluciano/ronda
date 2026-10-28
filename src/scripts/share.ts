@@ -33,6 +33,11 @@ export async function shareImage(blob: Blob, filename: string, title: string): P
       // Any other failure falls through to the download.
     }
   }
+  return downloadBlob(blob, filename) ? 'downloaded' : 'failed';
+}
+
+/** Saves a file through the browser's download. Returns false when it could not start. */
+export function downloadBlob(blob: Blob, filename: string): boolean {
   try {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -40,8 +45,8 @@ export async function shareImage(blob: Blob, filename: string, title: string): P
     link.download = filename;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 10_000);
-    return 'downloaded';
+    return true;
   } catch {
-    return 'failed';
+    return false;
   }
 }

@@ -14,6 +14,7 @@ Use it to set speaking turns in a meeting, make teams in a class, pair people up
 - Several named lists, shown as tabs: create, switch, rename and delete them. Each keeps its own participants and number of groups. Everything is saved in the browser (`localStorage`) and restored on return. **Clear list** empties the current one.
 - Optional **turns** per list (switch it on with the clock button next to rename): everyone gets the same time (presets of 2 to 15 minutes, or 1 to 60), one person speaks at a time, and the clock counts up in silence. Tap a person to give them the floor, or use Next (it follows the draw order if you drew one). Mark someone as not here and they stay out of the draw and the turns. Going over the time is shown as `+mm:ss`, never cut off. The screen stays awake while someone speaks, a reload keeps the clock right, and the tab title shows who is speaking. Finish the day to save it in the list. It cannot alert you if the app is closed or the phone is locked, because there is no backend to push from.
 - **Ranking** per list, built from the saved days: who spoke less, on average. Each person's score is the share of the time they were given that they used, counted only over the days they were there (so missing a day neither helps nor hurts); the lowest wins and ties share a place. A podium shows the first three, then a table with the percentage and days present. You can set the minimum number of days to be ranked (1 by default), delete a single day, reset the score, and **share the ranking as a 4:5 image** (the share sheet on phones, a PNG download elsewhere). The image is drawn in the browser; nothing is uploaded.
+- **Backup** at the bottom of the page: *Export* downloads every list, its people and its saved days as one JSON file; *Import* reads one back after showing what it will do (lists with the same id are replaced by the file's version, the others are added, nothing is deleted). The day in progress and today's absences are not exported. The file is validated like stored data, a file from a newer version or over 5 MB is refused, and a browser that only has the empty default list gets it replaced.
 - System, Light or Dark theme from the menu at the top right; it is remembered.
 - Spanish (`/`) and English (`/en/`) with an ES/EN switch next to the theme menu. The choice is remembered; it starts in Spanish by default.
 - Installable (PWA) and works offline: a small service worker caches the app after the first visit. It is only registered in production builds.
@@ -28,7 +29,7 @@ npm install
 npm run dev      # server at http://localhost:4321
 npm run build    # static site in dist/
 npm run preview  # serves dist/
-npm test         # tests for the draw, lists, turns and clock logic
+npm test         # tests for the draw, lists, turns, clock and backup logic
 ```
 
 ## Structure
@@ -41,6 +42,7 @@ src/
   lib/draw.ts            Draw logic, no DOM (parse, validate, shuffle, distribute)
   lib/turns.ts           Turns and ranking logic, no DOM (start, speak, pause, absences, finish, score, validate stored data)
   lib/clock.ts           mm:ss formatting
+  lib/backup.ts          Backup format, validation and import rules, no DOM
   lib/lists.ts           Saved-lists logic, no DOM (lists, people with ids, validate and migrate stored data)
   sw/worker.js           Service worker source; pages/sw.js.ts serves it as /sw.js with a build version
   scripts/
@@ -52,9 +54,11 @@ src/
     ranking.ts           Ranking UI: podium, table, history, settings
     share-image.ts       Draws the ranking as a 4:5 PNG on a canvas
     confirm.ts           One confirmation dialog for destructive actions
+    backup.ts            Export and import UI
+    notify.ts            Short message shown in every mode and announced to screen readers
     wakelock.ts          Screen wake lock while someone speaks
   styles/global.css      Color, spacing and type tokens, and styles
-tests/                   Tests with node:test (draw, lists, turns and clock)
+tests/                   Tests with node:test (draw, lists, turns, clock and backup)
 docs/                    DESIGN.md (design decisions and tokens) and design mocks (proposals, palettes, fonts, share images)
 ```
 
@@ -85,6 +89,6 @@ for spec in icon-192:192 icon-512:512 apple-touch-icon:180; do "$C" --headless=n
 
 ## Privacy and limits
 
-- Your lists stay only in your browser and device. It is not synced, and it is lost if you clear the site's data or use private browsing. Do not store sensitive information in it.
+- Your lists stay only in your browser and device. It is not synced, and it is lost if you clear the site's data or use private browsing: use Export to keep a copy. Do not store sensitive information in it.
 - The result is not saved: when you reopen the app you get your list back and draw again.
 - Shuffling uses `Math.random()` (Fisher–Yates). It is fine for casual draws; it is not suitable for prizes or fairness audits.

@@ -6,6 +6,8 @@ import {
   type ListStore, type Person,
 } from '../lib/lists';
 import { readStore, writeStore } from './storage';
+import { NOTICE_KEY } from './backup';
+import { notify } from './notify';
 import { shareText } from './share';
 import { initTurns } from './turns';
 
@@ -55,6 +57,7 @@ const turns = initTurns({
 
 function setStatus(message: string) {
   status.textContent = message;
+  notify(message);
 }
 
 function persist() {
@@ -487,3 +490,11 @@ deleteDialog.addEventListener('close', () => {
 });
 
 loadActive();
+
+try {
+  const notice = sessionStorage.getItem(NOTICE_KEY);
+  sessionStorage.removeItem(NOTICE_KEY);
+  if (notice) setStatus(notice);
+} catch {
+  // Blocked storage: nothing to show.
+}

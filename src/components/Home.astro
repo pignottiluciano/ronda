@@ -204,7 +204,7 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
               <p>{t.empty}</p>
             </div>
           </div>
-          <p id="status" class="status" aria-live="polite"></p>
+          <p id="status" class="status"></p>
         </section>
 
         <section id="turns" class="turns turns-only" aria-labelledby="turns-title">
@@ -292,6 +292,17 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
           </div>
         </section>
       </main>
+
+      <section class="data" aria-labelledby="data-title">
+        <h2 id="data-title">{t.backupTitle}</h2>
+        <p class="hint">{t.backupHint}</p>
+        <div class="actions">
+          <button type="button" id="backup-export" class="btn btn-ghost">{t.backupExport}</button>
+          <button type="button" id="backup-import" class="btn btn-ghost">{t.backupImport}</button>
+          <input id="backup-file" type="file" accept="application/json,.json" hidden />
+        </div>
+      </section>
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
     </div>
 
     <dialog id="delete-dialog" class="dialog" aria-labelledby="delete-title">
