@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ronda · Listas A en desktop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: light-dark(oklch(0.975 0.008 70), oklch(0.19 0.006 50));
+  --surface: light-dark(oklch(0.995 0.004 70), oklch(0.235 0.008 50));
+  --ink: light-dark(oklch(0.24 0.015 40), oklch(0.95 0.008 70));
+  --muted: light-dark(oklch(0.5 0.02 45), oklch(0.74 0.012 60));
+  --line: light-dark(oklch(0.89 0.012 60), oklch(0.34 0.01 50));
+  --accent: light-dark(oklch(0.55 0.16 33), oklch(0.74 0.14 38));
+  --accent-ink: light-dark(oklch(0.53 0.16 33), oklch(0.76 0.13 38));
+  --accent-soft: light-dark(oklch(0.94 0.04 40), oklch(0.32 0.05 38));
+  --on-accent: light-dark(oklch(0.99 0.005 60), oklch(0.2 0.02 40));
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px;
+}
+* { box-sizing: border-box; margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: "Figtree", sans-serif; line-height: 1.55; }
+.page { max-width: 1120px; margin: 0 auto; padding: var(--s4) var(--s4) var(--s8); }
+.note { background: var(--accent-soft); padding: var(--s3) var(--s4); font-size: 0.9375rem; text-align: center; }
+
+.top { display: flex; align-items: center; gap: var(--s3); min-height: 52px; }
+.brand { display: flex; align-items: center; gap: var(--s2); font-family: "Fraunces", serif; font-weight: 600; font-size: 1.2rem; letter-spacing: -0.02em; }
+.brand svg { width: 28px; height: 28px; color: var(--accent); }
+.kicker { color: var(--muted); font-size: 0.9375rem; }
+.lang { margin-left: auto; display: flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font-size: 0.9375rem; font-weight: 600; }
+.lang span { display: grid; place-items: center; min-width: 44px; height: 42px; color: var(--muted); }
+.lang .on { background: var(--accent); color: var(--on-accent); }
+.tbtn { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 10px; }
+.tbtn svg { width: 20px; height: 20px; }
+
+/* Lists: a selector at the top of the left panel; its menu opens below it. */
+.sel-wrap { position: relative; }
+.sel { display: flex; align-items: center; gap: var(--s3); min-height: 48px; padding: 0 var(--s4); background: var(--surface); border: 1px solid var(--accent); border-radius: 10px; font-weight: 600; outline: 2px solid var(--accent-soft); }
+.sel small { margin-left: auto; font-weight: 400; color: var(--muted); }
+.sel .chev { color: var(--muted); transform: rotate(180deg); }
+.menu { position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 2; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: var(--s2); box-shadow: 0 12px 32px -12px rgba(0,0,0,.35); }
+.menu .item { display: flex; align-items: center; gap: var(--s3); min-height: 44px; padding: 0 var(--s3); border-radius: 10px; }
+.menu .item small { margin-left: auto; color: var(--muted); }
+.menu .item.on { background: var(--accent-soft); font-weight: 600; }
+.menu .item.on::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: -4px; }
+.menu hr { border: 0; border-top: 1px solid var(--line); margin: var(--s2) 0; }
+.menu .item.new { color: var(--accent-ink); font-weight: 600; }
+.menu .item.manage { color: var(--muted); }
+.title { font-family: "Fraunces", serif; font-weight: 500; font-size: 2.074rem; letter-spacing: -0.02em; line-height: 1.1; }
+.title em { font-style: italic; color: var(--accent-ink); }
+.lede { margin-top: var(--s3); max-width: 42ch; }
+
+.layout { display: grid; grid-template-columns: minmax(320px, 400px) minmax(0, 1fr); gap: var(--s8); align-items: start; margin-top: var(--s6); }
+.layout > section:first-child .form { margin-top: var(--s5); }
+.listname { display: flex; align-items: center; gap: var(--s3); }
+.listname h1 { font-family: "Fraunces", serif; font-weight: 500; font-size: 2.074rem; letter-spacing: -0.02em; line-height: 1.1; }
+.listname .edit { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); }
+.lede { margin-top: var(--s2); color: var(--muted); }
+
+.form { display: grid; gap: var(--s5); margin-top: var(--s5); }
+.field { display: grid; gap: var(--s2); }
+.row { display: flex; justify-content: space-between; align-items: baseline; }
+.label { font-weight: 600; font-size: 0.9375rem; }
+.row small, .hint { color: var(--muted); font-size: 0.833rem; }
+.area { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: var(--s3) var(--s4); line-height: 28px; min-height: 220px; }
+.saved { color: var(--muted); font-size: 0.833rem; display: flex; align-items: center; gap: 6px; }
+.saved::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.stepper { display: inline-grid; grid-template-columns: 44px 72px 44px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); text-align: center; line-height: 44px; width: max-content; }
+.stepper span:nth-child(2) { border-inline: 1px solid var(--line); }
+.actions { display: flex; gap: var(--s3); }
+.btn { display: grid; place-items: center; min-height: 44px; padding: 0 var(--s5); border-radius: 10px; font-weight: 600; border: 1px solid var(--line); }
+.btn.primary { flex: 1; background: var(--accent); color: var(--on-accent); border-color: transparent; }
+
+.results-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--s5); }
+.results-head h2 { font-family: "Fraunces", serif; font-size: 1.44rem; font-weight: 600; letter-spacing: -0.02em; }
+.results-head .acts { display: flex; gap: var(--s2); }
+.results-head .btn { font-size: 0.9375rem; padding: 0 var(--s4); }
+.groups { display: grid; gap: var(--s4); grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.group { padding: var(--s4) var(--s5) var(--s5); background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+.group header { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: var(--s3); border-bottom: 1px solid var(--line); }
+.group b { font-family: "Fraunces", serif; font-size: 1.2rem; font-weight: 600; letter-spacing: -0.02em; color: var(--accent-ink); }
+.group small { color: var(--muted); font-size: 0.833rem; }
+.group ul { list-style: none; padding: 0; margin: var(--s3) 0 0; display: grid; gap: var(--s1); }
+.ico { width: 18px; height: 18px; }
+</style>
+</head>
+<body>
+<div class="note">Propuesta A (Selector) en desktop. La pantalla actual no cambia: se suma un campo “Lista” arriba de los participantes, con su menú abierto.</div>
+<div class="page">
+  <header class="top">
+    <div class="brand"><svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4"/></svg>Ronda</div>
+    <p class="kicker">Sorteos y grupos</p>
+    <div class="lang"><span class="on">ES</span><span>EN</span></div>
+    <div class="tbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
+  </header>
+
+  <main class="layout">
+    <section>
+      <h1 class="title">Mezclá la lista, <em>armá la ronda.</em></h1>
+      <p class="lede">Pegá un nombre por línea, elegí cuántos grupos querés y sorteá. Con un solo grupo obtenés un orden.</p>
+      <div class="field" style="margin-top:32px">
+        <span class="label">Lista</span>
+        <div class="sel-wrap">
+          <div class="sel">Reunión de trabajo <small>6 personas</small><svg class="ico chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+          <div class="menu">
+            <div class="item on">Reunión de trabajo <small>6</small></div>
+            <div class="item">Tenis de los jueves <small>8</small></div>
+            <div class="item">Clase 4°B <small>24</small></div>
+            <hr>
+            <div class="item new"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Nueva lista</div>
+            <div class="item manage"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Renombrar o eliminar…</div>
+          </div>
+        </div>
+      </div>
+      <div class="form">
+        <div class="field">
+          <div class="row"><span class="label">Participantes</span><small>6 participantes</small></div>
+          <div class="area">Ana<br>Bruno<br>Carla<br>Diego<br>Emilia<br>Facundo</div>
+          
+        </div>
+        <div class="field">
+          <span class="label">Cantidad de grupos</span>
+          <div class="stepper"><span>−</span><span>2</span><span>+</span></div>
+        </div>
+        <div class="actions"><span class="btn primary">Sortear</span><span class="btn">Limpiar lista</span></div>
+      </div>
+    </section>
+
+    <section>
+      <div class="results-head">
+        <h2>Resultado</h2>
+        <div class="acts"><span class="btn">Sortear de nuevo</span><span class="btn">Compartir</span></div>
+      </div>
+      <div class="groups">
+        <article class="group"><header><b>Grupo 1</b><small>3 integrantes</small></header><ul><li>Diego</li><li>Ana</li><li>Facundo</li></ul></article>
+        <article class="group"><header><b>Grupo 2</b><small>3 integrantes</small></header><ul><li>Carla</li><li>Emilia</li><li>Bruno</li></ul></article>
+      </div>
+    </section>
+  </main>
+</div>
+</body>
+</html>

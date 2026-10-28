@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ronda · Guardar varias listas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: light-dark(oklch(0.975 0.008 70), oklch(0.19 0.006 50));
+  --surface: light-dark(oklch(0.995 0.004 70), oklch(0.235 0.008 50));
+  --ink: light-dark(oklch(0.24 0.015 40), oklch(0.95 0.008 70));
+  --muted: light-dark(oklch(0.5 0.02 45), oklch(0.74 0.012 60));
+  --line: light-dark(oklch(0.89 0.012 60), oklch(0.34 0.01 50));
+  --accent: light-dark(oklch(0.55 0.16 33), oklch(0.74 0.14 38));
+  --accent-ink: light-dark(oklch(0.53 0.16 33), oklch(0.76 0.13 38));
+  --accent-soft: light-dark(oklch(0.94 0.04 40), oklch(0.32 0.05 38));
+  --on-accent: light-dark(oklch(0.99 0.005 60), oklch(0.2 0.02 40));
+  --danger: light-dark(oklch(0.45 0.18 27), oklch(0.76 0.13 27));
+  --page: light-dark(#e9e4de, #0d0b0a);
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s8: 64px;
+}
+* { box-sizing: border-box; margin: 0; }
+body { background: var(--page); color: var(--ink); font-family: "Figtree", sans-serif; line-height: 1.5; padding: var(--s6) var(--s4) var(--s8); }
+main { max-width: 1240px; margin: 0 auto; }
+h1 { font-family: "Fraunces", serif; font-weight: 600; font-size: 2rem; letter-spacing: -0.02em; }
+.intro { margin-top: var(--s2); color: var(--muted); max-width: 72ch; }
+.opts { display: grid; gap: var(--s8) var(--s6); margin-top: var(--s6); }
+@media (min-width: 1000px) { .opts { grid-template-columns: repeat(3, 1fr); } }
+.opt-head h2 { font-family: "Fraunces", serif; font-size: 1.44rem; letter-spacing: -0.02em; }
+.opt-head h2 span { color: var(--muted); font-family: "Figtree", sans-serif; font-size: 1rem; margin-right: var(--s3); }
+.opt-head p { margin-top: 6px; color: var(--muted); font-size: 0.9375rem; }
+.opt-head p b { color: var(--ink); font-weight: 600; }
+
+/* Phone frame: a miniature of the real screen. */
+.phone { position: relative; margin-top: var(--s4); height: 640px; overflow: hidden; background: var(--bg); border: 1px solid var(--line); border-radius: 28px; padding: var(--s4); display: flex; flex-direction: column; gap: var(--s4); }
+.top { display: flex; align-items: center; gap: var(--s2); min-height: 44px; }
+.brand { display: flex; align-items: center; gap: var(--s2); font-family: "Fraunces", serif; font-weight: 600; font-size: 1.2rem; letter-spacing: -0.02em; }
+.brand svg { width: 24px; height: 24px; color: var(--accent); }
+.lang { margin-left: auto; display: flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font-size: 0.8rem; font-weight: 600; }
+.lang span { padding: 6px 10px; color: var(--muted); }
+.lang .on { background: var(--accent); color: var(--on-accent); }
+.tbtn { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; }
+.tbtn svg { width: 18px; height: 18px; }
+
+.label { font-weight: 600; font-size: 0.9375rem; }
+.row { display: flex; justify-content: space-between; align-items: baseline; }
+.row small { color: var(--muted); font-size: 0.833rem; }
+.area { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: var(--s3) var(--s4); line-height: 28px; font-size: 1rem; }
+.area.short { height: 150px; overflow: hidden; }
+.hint { color: var(--muted); font-size: 0.833rem; }
+.stepper { display: inline-grid; grid-template-columns: 40px 56px 40px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); text-align: center; line-height: 40px; width: max-content; }
+.stepper span:nth-child(2) { border-inline: 1px solid var(--line); }
+.btn { display: grid; place-items: center; min-height: 44px; border-radius: 10px; background: var(--accent); color: var(--on-accent); font-weight: 600; }
+
+.ico { width: 18px; height: 18px; flex: none; }
+
+/* A · Selector */
+.sel { display: flex; align-items: center; gap: var(--s3); min-height: 48px; padding: 0 var(--s4); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; font-weight: 600; }
+.sel small { margin-left: auto; font-weight: 400; color: var(--muted); }
+.sel .chev { color: var(--muted); }
+.menu { position: absolute; left: var(--s4); right: var(--s4); top: 182px; z-index: 2; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: var(--s2); box-shadow: 0 12px 32px -12px rgba(0,0,0,.35); }
+.menu .item { display: flex; align-items: center; gap: var(--s3); min-height: 44px; padding: 0 var(--s3); border-radius: 10px; }
+.menu .item small { margin-left: auto; color: var(--muted); }
+.menu .item.on { background: var(--accent-soft); font-weight: 600; }
+.menu .item.on::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); margin-right: -4px; }
+.menu hr { border: 0; border-top: 1px solid var(--line); margin: var(--s2) 0; }
+.menu .item.new { color: var(--accent-ink); font-weight: 600; }
+.menu .item.manage { color: var(--muted); }
+
+/* B · Chips */
+.chips { display: flex; gap: var(--s2); overflow: hidden; margin-inline: calc(var(--s4) * -1); padding-inline: var(--s4); }
+.chip { flex: none; display: inline-flex; align-items: center; min-height: 40px; padding: 0 var(--s4); border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-size: 0.9375rem; }
+.chip.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+.chip.add { color: var(--accent-ink); border-style: dashed; font-weight: 600; }
+.title-row { display: flex; align-items: center; gap: var(--s2); }
+.title-row .name { font-family: "Fraunces", serif; font-size: 1.44rem; font-weight: 500; letter-spacing: -0.02em; }
+.title-row .more { margin-left: auto; display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); }
+.saved { color: var(--muted); font-size: 0.833rem; display: flex; align-items: center; gap: 6px; }
+.saved::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+/* C · Hoja de listas */
+.openbtn { display: flex; align-items: center; gap: var(--s3); min-height: 44px; padding: 0 var(--s4); border: 1px solid var(--line); border-radius: 10px; font-weight: 600; background: transparent; }
+.openbtn small { margin-left: auto; font-weight: 400; color: var(--muted); }
+.scrim { position: absolute; inset: 0; background: rgba(0,0,0,.45); }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; height: 78%; background: var(--bg); border-top: 1px solid var(--line); border-radius: 24px 24px 0 0; padding: var(--s3) var(--s4) var(--s4); display: flex; flex-direction: column; gap: var(--s3); }
+.grab { width: 40px; height: 4px; border-radius: 2px; background: var(--line); align-self: center; }
+.sheet h3 { font-family: "Fraunces", serif; font-size: 1.44rem; font-weight: 600; letter-spacing: -0.02em; }
+.lists { display: grid; gap: var(--s2); }
+.card { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px var(--s3); padding: var(--s3) var(--s4); background: var(--surface); border: 1px solid var(--line); border-radius: 16px; }
+.card b { font-weight: 600; }
+.card small { color: var(--muted); font-size: 0.833rem; grid-column: 1; }
+.card .dots { grid-row: 1 / span 2; grid-column: 2; color: var(--muted); display: grid; place-items: center; width: 36px; height: 36px; }
+.card.on { border-color: var(--accent); background: var(--accent-soft); }
+.card.on b::after { content: " · en uso"; font-weight: 400; color: var(--accent-ink); }
+.newbtn { display: grid; place-items: center; min-height: 44px; border: 1px dashed var(--line); border-radius: 10px; color: var(--accent-ink); font-weight: 600; }
+.sheet .push { margin-top: auto; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Ronda · guardar varias listas</h1>
+  <p class="intro">Tres maneras de cambiar entre listas con nombre. En las tres se guarda todo en el navegador (<code>localStorage</code>), sin cuentas, y cada lista conserva sus nombres y su cantidad de grupos. Mock en mobile, que es el uso principal.</p>
+
+  <div class="opts">
+
+    <!-- A -->
+    <section>
+      <div class="opt-head">
+        <h2><span>A</span>Selector</h2>
+        <p>Un campo con la lista activa arriba de los participantes; al tocarlo se abre un menú con todas, <b>Nueva lista</b> y <b>Administrar</b>. Es el cambio más chico a la pantalla actual. Contra: las listas quedan escondidas hasta abrir el menú.</p>
+      </div>
+      <div class="phone">
+        <div class="top">
+          <div class="brand"><svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4"/></svg>Ronda</div>
+          <div class="lang"><span class="on">ES</span><span>EN</span></div>
+          <div class="tbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
+        </div>
+        <div style="display:grid;gap:8px">
+          <div class="label">Lista</div>
+          <div class="sel">Reunión de trabajo <small>6 personas</small><svg class="ico chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></div>
+        </div>
+        <div style="display:grid;gap:8px">
+          <div class="row"><span class="label">Participantes</span><small>6 participantes</small></div>
+          <div class="area short">Ana<br>Bruno<br>Carla<br>Diego</div>
+        </div>
+        <div style="display:grid;gap:8px">
+          <div class="label">Cantidad de grupos</div>
+          <div class="stepper"><span>−</span><span>2</span><span>+</span></div>
+        </div>
+        <div class="btn">Sortear</div>
+        <div class="menu">
+          <div class="item on">Reunión de trabajo <small>6</small></div>
+          <div class="item">Tenis de los jueves <small>8</small></div>
+          <div class="item">Clase 4°B <small>24</small></div>
+          <hr>
+          <div class="item new"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Nueva lista</div>
+          <div class="item manage"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Renombrar o eliminar…</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- B -->
+    <section>
+      <div class="opt-head">
+        <h2><span>B</span>Pestañas</h2>
+        <p>Las listas siempre a la vista como fichas con scroll horizontal y un <b>+</b> al final. Un toque para cambiar y la lista activa se nombra como título. Es la más rápida si alternás seguido; con muchas listas el scroll cansa.</p>
+      </div>
+      <div class="phone">
+        <div class="top">
+          <div class="brand"><svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4"/></svg>Ronda</div>
+          <div class="lang"><span class="on">ES</span><span>EN</span></div>
+          <div class="tbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
+        </div>
+        <div class="chips">
+          <span class="chip on">Reunión de trabajo</span>
+          <span class="chip">Tenis de los jueves</span>
+          <span class="chip">Clase 4°B</span>
+          <span class="chip add">+ Nueva</span>
+        </div>
+        <div class="title-row">
+          <span class="name">Reunión de trabajo</span>
+          <span class="more"><svg class="ico" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></span>
+        </div>
+        <div style="display:grid;gap:8px">
+          <div class="row"><span class="label">Participantes</span><small>6 participantes</small></div>
+          <div class="area short">Ana<br>Bruno<br>Carla<br>Diego</div>
+          <div class="saved">Guardada en este navegador</div>
+        </div>
+        <div style="display:grid;gap:8px">
+          <div class="label">Cantidad de grupos</div>
+          <div class="stepper"><span>−</span><span>2</span><span>+</span></div>
+        </div>
+        <div class="btn">Sortear</div>
+      </div>
+    </section>
+
+    <!-- C -->
+    <section>
+      <div class="opt-head">
+        <h2><span>C</span>Hoja “Mis listas”</h2>
+        <p>Un botón abre una hoja desde abajo con cada lista como tarjeta (nombre, cantidad de personas, último uso) y su menú de renombrar y eliminar. Es la más clara para administrar y para ver cuántas tenés; son dos toques para cambiar.</p>
+      </div>
+      <div class="phone">
+        <div class="top">
+          <div class="brand"><svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4"/></svg>Ronda</div>
+          <div class="lang"><span class="on">ES</span><span>EN</span></div>
+          <div class="tbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
+        </div>
+        <div class="openbtn"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Reunión de trabajo <small>Mis listas · 3</small></div>
+        <div style="display:grid;gap:8px">
+          <div class="row"><span class="label">Participantes</span><small>6 participantes</small></div>
+          <div class="area short">Ana<br>Bruno<br>Carla<br>Diego</div>
+        </div>
+        <div style="display:grid;gap:8px">
+          <div class="label">Cantidad de grupos</div>
+          <div class="stepper"><span>−</span><span>2</span><span>+</span></div>
+        </div>
+        <div class="btn">Sortear</div>
+        <div class="scrim"></div>
+        <div class="sheet">
+          <div class="grab"></div>
+          <h3>Mis listas</h3>
+          <div class="lists">
+            <div class="card on"><b>Reunión de trabajo</b><span class="dots"><svg class="ico" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></span><small>6 personas · 2 grupos</small></div>
+            <div class="card"><b>Tenis de los jueves</b><span class="dots"><svg class="ico" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></span><small>8 personas · 4 grupos · ayer</small></div>
+            <div class="card"><b>Clase 4°B</b><span class="dots"><svg class="ico" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></span><small>24 personas · 6 grupos · hace 3 días</small></div>
+          </div>
+          <div class="newbtn push">+ Nueva lista</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+</body>
+</html>
