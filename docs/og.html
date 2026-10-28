@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Ronda · imagen para compartir</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: oklch(0.975 0.008 70); --surface: oklch(0.995 0.004 70); --ink: oklch(0.24 0.015 40);
+  --muted: oklch(0.5 0.02 45); --line: oklch(0.89 0.012 60); --accent: oklch(0.55 0.16 33);
+  --accent-soft: oklch(0.94 0.04 40); --on-accent: oklch(0.99 0.005 60);
+  --night: oklch(0.19 0.006 50); --night-surface: oklch(0.235 0.008 50); --night-ink: oklch(0.95 0.008 70);
+  --night-muted: oklch(0.74 0.012 60); --night-line: oklch(0.34 0.01 50); --coral: oklch(0.74 0.14 38);
+}
+
+* { box-sizing: border-box; margin: 0; }
+html, body { width: 1200px; height: 630px; overflow: hidden; font-family: "Figtree", sans-serif; line-height: 1.5; }
+.card { width: 1200px; height: 630px; position: relative; overflow: hidden; }
+.brand { display: flex; align-items: center; gap: 16px; font-family: "Fraunces", serif; font-weight: 600; font-size: 44px; letter-spacing: -0.02em; }
+.brand svg { width: 56px; height: 56px; }
+
+/* C · Producto */
+.c { background: var(--accent); color: var(--on-accent); padding: 64px 80px; display: grid; grid-template-columns: 1fr 560px; gap: 56px; align-items: center; }
+.c .brand svg { color: var(--on-accent); }
+.c h3 { margin-top: 40px; font-family: "Fraunces", serif; font-weight: 500; font-size: 76px; line-height: 1.05; letter-spacing: -0.03em; }
+.c h3 em { font-style: italic; }
+.c .sub { margin-top: 20px; font-size: 30px; opacity: 0.9; }
+.groups { display: grid; gap: 20px; }
+.g { background: var(--surface); color: var(--ink); border-radius: 24px; padding: 24px 32px 28px; }
+.g header { display: flex; justify-content: space-between; align-items: baseline; padding-bottom: 14px; border-bottom: 2px solid var(--line); }
+.g b { font-family: "Fraunces", serif; font-size: 36px; font-weight: 600; color: var(--accent); letter-spacing: -0.02em; }
+.g small { font-size: 24px; color: var(--muted); }
+.g ul { list-style: none; padding: 0; margin-top: 14px; font-size: 30px; display: flex; gap: 12px 28px; flex-wrap: wrap; }
+
+</style>
+</head>
+<body>
+<!-- Source for public/og-es.png and public/og-en.png. Regenerate: see README ("Imagen para compartir"). Use ?lang=en for English. -->
+<div class="card c">
+  <div>
+    <div class="brand"><svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4"/></svg>Ronda</div>
+    <h3 data-k="title"></h3>
+    <p class="sub" data-k="sub"></p>
+  </div>
+  <div class="groups">
+    <div class="g"><header><b data-k="g1"></b><small data-k="size"></small></header><ul><li>Diego</li><li>Ana</li><li>Irene</li></ul></div>
+    <div class="g"><header><b data-k="g2"></b><small data-k="size"></small></header><ul><li>Carla</li><li>Facundo</li><li>Bruno</li></ul></div>
+  </div>
+</div>
+<script>
+const T = {
+  es: { title: 'Armá grupos <em>en un toque.</em>', sub: 'Pegá la lista y sorteá.', g1: 'Grupo 1', g2: 'Grupo 2', size: '3 integrantes' },
+  en: { title: 'Build groups <em>in a snap.</em>', sub: 'Paste the list and draw.', g1: 'Group 1', g2: 'Group 2', size: '3 members' },
+};
+const t = T[new URLSearchParams(location.search).get('lang') === 'en' ? 'en' : 'es'];
+for (const el of document.querySelectorAll('[data-k]')) el.innerHTML = t[el.dataset.k];
+</script>
+</body>
+</html>

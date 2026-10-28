@@ -11,6 +11,7 @@ Sirve para ordenar turnos en una reunión, armar equipos en una clase, hacer par
 - **Sortear de nuevo** y **Compartir** (menú de compartir del sistema o copia al portapapeles).
 - Guarda la lista y la cantidad de grupos en el navegador (`localStorage`) y los recupera al volver. **Limpiar lista** la vacía.
 - Tema Sistema, Claro u Oscuro desde el menú de arriba a la derecha; se recuerda.
+- Español (`/`) e inglés (`/en/`) con un selector ES/EN junto al tema. Se recuerda la elección; por defecto arranca en español.
 - Accesible: etiquetas visibles, teclado, foco visible, anuncios para lectores de pantalla y respeto por `prefers-reduced-motion`.
 
 ## Desarrollo
@@ -29,7 +30,9 @@ npm test         # tests de la lógica del sorteo
 
 ```text
 src/
-  pages/index.astro   Página única, HTML estático
+  pages/index.astro   Versión en español (/); pages/en/index.astro es la inglesa
+  components/Home.astro  La página, recibe el idioma
+  i18n/messages.ts    Todos los textos en es y en
   lib/draw.ts         Lógica del sorteo, sin DOM (parsear, validar, mezclar, repartir)
   scripts/
     app.ts            Eventos y actualización de la interfaz
@@ -48,6 +51,14 @@ La lógica del sorteo no toca el DOM ni el almacenamiento, así que se prueba so
 - **Estética:** propuesta "Sereno" (superficies con borde, sin sombras) con la paleta "Tinta y coral": neutros cálidos casi grises y color solo en el acento.
 - **Tipografía:** Fraunces para títulos y nombres de grupo, Figtree para el resto. Se descargan al compilar y se sirven desde el propio sitio (API de fuentes de Astro), sin pedir nada a Google.
 - **Colores:** cada token tiene su versión clara y oscura con `light-dark()`.
+
+## Imagen para compartir
+
+`public/og-es.png` y `public/og-en.png` (1200×630) se generan desde `docs/og.html`. Para regenerarlas con Chrome:
+
+```sh
+for l in es en; do "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars --force-device-scale-factor=1 --window-size=1200,630 --virtual-time-budget=8000 --screenshot=public/og-$l.png "file://$PWD/docs/og.html?lang=$l"; done
+```
 
 ## Privacidad y límites
 
