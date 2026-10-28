@@ -16,15 +16,13 @@ export function hasDuplicates(list: readonly string[]): boolean {
   return new Set(list).size !== list.length;
 }
 
-/** Returns a user-facing message, or null when the input is valid. */
-export function validateDraw(participants: number, groups: number): string | null {
-  if (participants < MIN_PARTICIPANTS) return 'Agregá al menos 2 participantes.';
-  if (!Number.isInteger(groups) || groups < 1) {
-    return 'La cantidad de grupos tiene que ser un número entero desde 1.';
-  }
-  if (groups > participants) {
-    return `Hay ${participants} participantes: elegí como máximo ${participants} grupos.`;
-  }
+export type DrawError = 'min' | 'integer' | 'max';
+
+/** Returns what is wrong with the input (the UI words it per language), or null when it is valid. */
+export function validateDraw(participants: number, groups: number): DrawError | null {
+  if (participants < MIN_PARTICIPANTS) return 'min';
+  if (!Number.isInteger(groups) || groups < 1) return 'integer';
+  if (groups > participants) return 'max';
   return null;
 }
 
@@ -50,9 +48,9 @@ export function draw(participants: readonly string[], groups: number, random?: (
 }
 
 /** Plain text for sharing: numbered list for one group, labelled blocks otherwise. */
-export function formatResult(result: DrawResult): string {
+export function formatResult(result: DrawResult, groupLabel: (n: number) => string): string {
   if (result.length === 1) return result[0]!.map((name, i) => `${i + 1}. ${name}`).join('\n');
   return result
-    .map((members, i) => [`Grupo ${i + 1}`, ...members.map((name) => `- ${name}`)].join('\n'))
+    .map((members, i) => [groupLabel(i + 1), ...members.map((name) => `- ${name}`)].join('\n'))
     .join('\n\n');
 }

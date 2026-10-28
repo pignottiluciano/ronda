@@ -6,6 +6,7 @@ import {
   validateDraw,
   type DrawResult,
 } from '../lib/draw';
+import { messages } from '../i18n/messages';
 import { readPreferences, writePreferences } from './storage';
 import { shareText } from './share';
 
@@ -22,10 +23,9 @@ const output = $('output');
 const resultActions = $('result-actions');
 const status = $('status');
 
-const NAMES_HINT = namesHint.textContent ?? '';
+const t = messages[document.documentElement.lang === 'en' ? 'en' : 'es'];
+const NAMES_HINT = t.namesHint;
 let last: DrawResult | null = null;
-
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
 function setStatus(message: string) {
   status.textContent = message;
@@ -33,14 +33,14 @@ function setStatus(message: string) {
 
 function save() {
   const ok = writePreferences({ names: names.value, groups: Math.max(1, parseInt(groups.value, 10) || 1) });
-  if (!ok) setStatus('No se pudo guardar la lista en este navegador. El sorteo funciona igual.');
+  if (!ok) setStatus(t.saveFailed);
 }
 
 function updateCount() {
   const list = parseParticipants(names.value);
-  count.textContent = plural(list.length, 'participante', 'participantes');
+  count.textContent = t.participant(list.length);
   const duplicated = hasDuplicates(list);
-  namesHint.textContent = duplicated ? 'Hay nombres repetidos: se sortean como entradas distintas.' : NAMES_HINT;
+  namesHint.textContent = duplicated ? t.duplicatesHint : NAMES_HINT;
   namesHint.classList.toggle('is-warning', duplicated);
 }
 
@@ -77,10 +77,10 @@ function renderGroups(result: DrawResult): HTMLElement {
     card.className = 'group';
     const header = document.createElement('header');
     const title = document.createElement('h3');
-    title.textContent = `Grupo ${i + 1}`;
+    title.textContent = t.group(i + 1);
     const size = document.createElement('span');
     size.className = 'group-size';
-    size.textContent = plural(members.length, 'integrante', 'integrantes');
+    size.textContent = t.member(members.length);
     header.append(title, size);
     const list = document.createElement('ul');
     for (const name of members) {
@@ -104,15 +104,13 @@ function render(result: DrawResult) {
 function runDraw(): boolean {
   const list = parseParticipants(names.value);
   const groupCount = Number(groups.value);
-  const message = validateDraw(list.length, groupCount);
-  showError(message);
-  if (message) return false;
+  const problem = validateDraw(list.length, groupCount);
+  showError(problem && (problem === 'max' ? t.errorMax(list.length) : problem === 'min' ? t.errorMin : t.errorInteger));
+  if (problem) return false;
   last = draw(list, groupCount);
   render(last);
   setStatus(
-    groupCount === 1
-      ? `Orden listo: ${plural(list.length, 'participante', 'participantes')}.`
-      : `${groupCount} grupos listos con ${list.length} participantes.`,
+    groupCount === 1 ? t.doneOrder(list.length) : t.doneGroups(groupCount, list.length),
   );
   return true;
 }
@@ -127,7 +125,7 @@ function scrollToResults() {
 function markStale() {
   if (!last || results.classList.contains('is-stale')) return;
   results.classList.add('is-stale');
-  setStatus('La lista cambió. Sorteá de nuevo para actualizar el resultado.');
+  setStatus(t.stale);
 }
 
 function onInputChange() {
@@ -145,9 +143,9 @@ $('again').addEventListener('click', runDraw);
 
 $('share').addEventListener('click', async () => {
   if (!last) return;
-  const outcome = await shareText(formatResult(last));
-  if (outcome === 'copied') setStatus('Resultado copiado al portapapeles.');
-  if (outcome === 'failed') setStatus('No se pudo compartir ni copiar. Seleccioná el resultado y copialo a mano.');
+  const outcome = await shareText(formatResult(last, t.group));
+  if (outcome === 'copied') setStatus(t.copied);
+  if (outcome === 'failed') setStatus(t.shareFailed);
 });
 
 $('clear').addEventListener('click', () => {

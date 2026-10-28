@@ -25,15 +25,16 @@ test('one group keeps a single ordered list', () => {
 });
 
 test('validation', () => {
-  assert.match(validateDraw(1, 1), /al menos 2/);
-  assert.match(validateDraw(3, 0), /entero/);
-  assert.match(validateDraw(3, 1.5), /entero/);
-  assert.match(validateDraw(3, Number.NaN), /entero/);
-  assert.match(validateDraw(3, 4), /como máximo 3/);
+  assert.equal(validateDraw(1, 1), 'min');
+  assert.equal(validateDraw(3, 0), 'integer');
+  assert.equal(validateDraw(3, 1.5), 'integer');
+  assert.equal(validateDraw(3, Number.NaN), 'integer');
+  assert.equal(validateDraw(3, 4), 'max');
   assert.equal(validateDraw(3, 3), null);
 });
 
 test('share text', () => {
-  assert.equal(formatResult([['Ana', 'Bruno']]), '1. Ana\n2. Bruno');
-  assert.equal(formatResult([['Ana'], ['Bruno']]), 'Grupo 1\n- Ana\n\nGrupo 2\n- Bruno');
+  const label = (n) => `Grupo ${n}`;
+  assert.equal(formatResult([['Ana', 'Bruno']], label), '1. Ana\n2. Bruno');
+  assert.equal(formatResult([['Ana'], ['Bruno']], label), 'Grupo 1\n- Ana\n\nGrupo 2\n- Bruno');
 });

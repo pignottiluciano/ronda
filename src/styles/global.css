@@ -60,13 +60,35 @@ button, input, textarea { font: inherit; color: inherit; }
 .brand svg { width: 28px; height: 28px; color: var(--accent); }
 .kicker { color: var(--muted); font-size: var(--t-sm); }
 
+/* ---------- Language switch ---------- */
+.lang {
+  display: flex;
+  margin-left: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.lang a {
+  display: grid;
+  place-items: center;
+  min-width: var(--tap);
+  height: calc(var(--tap) - 2px);
+  padding: 0 var(--s2);
+  color: var(--muted);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 150ms ease-out;
+}
+.lang a:hover { background: var(--accent-soft); }
+.lang a[aria-current='true'] { background: var(--accent); color: var(--on-accent); }
+
 /* ---------- Theme menu ---------- */
 .theme-toggle {
   display: grid;
   place-items: center;
   width: var(--tap);
   height: var(--tap);
-  margin-left: auto;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   background: transparent;
