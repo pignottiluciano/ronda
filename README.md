@@ -1,67 +1,69 @@
 # Ronda
 
-Pegá una lista, elegí cuántos grupos querés y sorteá. Con un solo grupo obtenés un orden al azar; con dos o más, grupos del tamaño más parejo posible (10 personas en 3 grupos dan 4, 3 y 3).
+Live at <https://ronda.lucianopignotti.workers.dev>.
 
-Sirve para ordenar turnos en una reunión, armar equipos en una clase, hacer parejas o repartir tareas. Es mobile first, no tiene backend y no envía tus datos a ningún lado.
+Paste a list, choose how many groups you want and draw. With one group you get a random order; with two or more, groups as even as possible (10 people in 3 groups gives 4, 3 and 3).
 
-## Qué hace
+Use it to set speaking turns in a meeting, make teams in a class, pair people up or hand out tasks. It is mobile first, has no backend and sends your data nowhere.
 
-- Un participante por línea, con contador en vivo. Ignora líneas vacías y espacios sobrantes; los nombres repetidos se permiten.
-- Orden numerado (1 grupo) o tarjetas por grupo con la cantidad de integrantes.
-- **Sortear de nuevo** y **Compartir** (menú de compartir del sistema o copia al portapapeles).
-- Guarda la lista y la cantidad de grupos en el navegador (`localStorage`) y los recupera al volver. **Limpiar lista** la vacía.
-- Tema Sistema, Claro u Oscuro desde el menú de arriba a la derecha; se recuerda.
-- Español (`/`) e inglés (`/en/`) con un selector ES/EN junto al tema. Se recuerda la elección; por defecto arranca en español.
-- Accesible: etiquetas visibles, teclado, foco visible, anuncios para lectores de pantalla y respeto por `prefers-reduced-motion`.
+## Features
 
-## Desarrollo
+- One participant per line, with a live count. Empty lines and extra spaces are ignored; repeated names are allowed.
+- Numbered order (1 group) or one card per group with its member count.
+- **Draw again** and **Share** (the system share sheet, or copy to the clipboard).
+- Saves the list and the number of groups in the browser (`localStorage`) and restores them on return. **Clear list** empties it.
+- System, Light or Dark theme from the menu at the top right; it is remembered.
+- Spanish (`/`) and English (`/en/`) with an ES/EN switch next to the theme menu. The choice is remembered; it starts in Spanish by default.
+- Accessible: visible labels, keyboard support, visible focus, screen reader announcements and `prefers-reduced-motion` support.
 
-Requiere Node 22.23.4 o superior.
+## Development
+
+Requires Node 22.23.4 or later.
 
 ```sh
 npm install
-npm run dev      # servidor en http://localhost:4321
-npm run build    # sitio estático en dist/
-npm run preview  # sirve dist/
-npm test         # tests de la lógica del sorteo
+npm run dev      # server at http://localhost:4321
+npm run build    # static site in dist/
+npm run preview  # serves dist/
+npm test         # tests for the draw logic
 ```
 
-## Estructura
+## Structure
 
 ```text
 src/
-  pages/index.astro   Versión en español (/); pages/en/index.astro es la inglesa
-  components/Home.astro  La página, recibe el idioma
-  i18n/messages.ts    Todos los textos en es y en
-  lib/draw.ts         Lógica del sorteo, sin DOM (parsear, validar, mezclar, repartir)
+  pages/index.astro      Spanish version (/); pages/en/index.astro is the English one
+  components/Home.astro  The page, takes the language as a prop
+  i18n/messages.ts       All text in es and en
+  lib/draw.ts            Draw logic, no DOM (parse, validate, shuffle, distribute)
   scripts/
-    app.ts            Eventos y actualización de la interfaz
-    storage.ts        Lectura y escritura segura de localStorage
-    share.ts          Compartir o copiar
-    theme.ts          Menú de tema y su persistencia
-  styles/global.css   Tokens de color, espacio y tipografía, y estilos
-tests/draw.test.mjs   Tests con node:test
-docs/                 Mocks de diseño (propuestas, paletas, fuentes)
+    app.ts               Events and UI updates
+    storage.ts           Safe reading and writing of localStorage
+    share.ts             Share or copy
+    theme.ts             Theme menu and its persistence
+  styles/global.css      Color, spacing and type tokens, and styles
+tests/draw.test.mjs      Tests with node:test
+docs/                    Design mocks (proposals, palettes, fonts, share images)
 ```
 
-La lógica del sorteo no toca el DOM ni el almacenamiento, así que se prueba sola. El único JavaScript del cliente es el de `src/scripts/`, sin ningún framework de UI.
+The draw logic touches neither the DOM nor storage, so it can be tested on its own. The only client-side JavaScript is in `src/scripts/`, with no UI framework.
 
-## Decisiones de diseño
+## Design decisions
 
-- **Estética:** propuesta "Sereno" (superficies con borde, sin sombras) con la paleta "Tinta y coral": neutros cálidos casi grises y color solo en el acento.
-- **Tipografía:** Fraunces para títulos y nombres de grupo, Figtree para el resto. Se descargan al compilar y se sirven desde el propio sitio (API de fuentes de Astro), sin pedir nada a Google.
-- **Colores:** cada token tiene su versión clara y oscura con `light-dark()`.
+- **Look:** the "Sereno" proposal (bordered surfaces, no shadows) with the "Tinta y coral" palette: warm, nearly grey neutrals and color only in the accent.
+- **Type:** Fraunces for titles and group names, Figtree for everything else. They are downloaded at build time and served from the site itself (Astro's fonts API), with no requests to Google.
+- **Color:** every token has a light and a dark value through `light-dark()`.
 
-## Imagen para compartir
+## Share image
 
-`public/og-es.png` y `public/og-en.png` (1200×630) se generan desde `docs/og.html`. Para regenerarlas con Chrome:
+`public/og-es.png` and `public/og-en.png` (1200×630) are generated from `docs/og.html`. To regenerate them with Chrome:
 
 ```sh
 for l in es en; do "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless=new --hide-scrollbars --force-device-scale-factor=1 --window-size=1200,630 --virtual-time-budget=8000 --screenshot=public/og-$l.png "file://$PWD/docs/og.html?lang=$l"; done
 ```
 
-## Privacidad y límites
+## Privacy and limits
 
-- La lista queda solo en tu navegador y dispositivo. No se sincroniza, y se pierde si borrás los datos del sitio o usás navegación privada. No guardes información sensible en ella.
-- El resultado no se guarda: al reabrir recuperás la lista y generás un sorteo nuevo.
-- La mezcla usa `Math.random()` (Fisher–Yates). Sirve para sorteos casuales; no es apta para premios ni para auditorías de imparcialidad.
+- The list stays only in your browser and device. It is not synced, and it is lost if you clear the site's data or use private browsing. Do not store sensitive information in it.
+- The result is not saved: when you reopen the app you get your list back and draw again.
+- Shuffling uses `Math.random()` (Fisher–Yates). It is fine for casual draws; it is not suitable for prizes or fairness audits.
