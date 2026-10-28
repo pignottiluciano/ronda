@@ -12,6 +12,7 @@ Use it to set speaking turns in a meeting, make teams in a class, pair people up
 - Numbered order (1 group) or one card per group with its member count.
 - **Draw again** and **Share** (the system share sheet, or copy to the clipboard).
 - Several named lists, shown as tabs: create, switch, rename and delete them. Each keeps its own participants and number of groups. Everything is saved in the browser (`localStorage`) and restored on return. **Clear list** empties the current one.
+- A silent countdown timer above the result: presets of 5 to 60 minutes or your own value (1 to 180), start, pause and reset. It keeps the screen awake while it runs, survives a reload, shows the time in the tab title, and ends with an animation (a still color change with reduced motion). It cannot alert you if the app is closed or the phone is locked, because there is no backend to push from.
 - System, Light or Dark theme from the menu at the top right; it is remembered.
 - Spanish (`/`) and English (`/en/`) with an ES/EN switch next to the theme menu. The choice is remembered; it starts in Spanish by default.
 - Installable (PWA) and works offline: a small service worker caches the app after the first visit. It is only registered in production builds.
@@ -26,7 +27,7 @@ npm install
 npm run dev      # server at http://localhost:4321
 npm run build    # static site in dist/
 npm run preview  # serves dist/
-npm test         # tests for the draw and lists logic
+npm test         # tests for the draw, lists and timer logic
 ```
 
 ## Structure
@@ -37,6 +38,7 @@ src/
   components/Home.astro  The page, takes the language as a prop
   i18n/messages.ts       All text in es and en
   lib/draw.ts            Draw logic, no DOM (parse, validate, shuffle, distribute)
+  lib/timer.ts           Timer logic, no DOM (start, pause, settle, format)
   lib/lists.ts           Saved-lists logic, no DOM (add, rename, remove, validate stored data)
   sw/worker.js           Service worker source; pages/sw.js.ts serves it as /sw.js with a build version
   scripts/
@@ -44,8 +46,9 @@ src/
     storage.ts           Safe reading and writing of localStorage (migrates the old single list)
     share.ts             Share or copy
     theme.ts             Theme menu and its persistence
+    timer.ts             Timer UI, tick, screen wake lock
   styles/global.css      Color, spacing and type tokens, and styles
-tests/                   Tests with node:test (draw and lists)
+tests/                   Tests with node:test (draw, lists and timer)
 docs/                    Design mocks (proposals, palettes, fonts, share images)
 ```
 

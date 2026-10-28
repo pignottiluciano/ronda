@@ -178,6 +178,32 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
               <button type="button" id="share" class="btn btn-ghost">{t.share}</button>
             </div>
           </div>
+          <section id="timer" class="timer" data-status="idle" aria-labelledby="timer-title">
+            <div class="timer-head">
+              <h3 id="timer-title" class="timer-title">
+                <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 2M9 2h6" /></svg>
+                {t.timerLabel}
+              </h3>
+              <span id="timer-of" class="timer-of"></span>
+            </div>
+            <p id="timer-done" class="timer-done" hidden>{t.timerDone}</p>
+            <p id="timer-time" class="timer-time" role="timer">30:00</p>
+            <div id="timer-bar" class="timer-bar" aria-hidden="true" hidden><i></i></div>
+            <div id="timer-setup" class="timer-setup">
+              <div id="timer-presets" class="chips" role="group" aria-label={t.timerLabel}></div>
+              <label class="timer-custom">
+                {t.timerCustom}
+                <input id="timer-custom" type="number" inputmode="numeric" min="1" max="180" step="1" aria-label={t.timerCustomLabel} />
+                {t.timerUnit}
+              </label>
+            </div>
+            <div class="timer-actions">
+              <button type="button" id="timer-start" class="btn btn-primary">{t.timerStart}</button>
+              <button type="button" id="timer-pause" class="btn btn-ghost" hidden>{t.timerPause}</button>
+              <button type="button" id="timer-reset" class="btn btn-ghost" hidden>{t.timerReset}</button>
+            </div>
+            <p id="timer-announce" class="sr-only" aria-live="polite"></p>
+          </section>
           <div id="output" class="output">
             <div class="empty">
               <svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor">
@@ -206,6 +232,7 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
     <script>
       import '../scripts/theme';
       import '../scripts/app';
+      import '../scripts/timer';
       import '../scripts/pwa';
     </script>
   </body>
