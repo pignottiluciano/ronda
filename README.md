@@ -8,7 +8,7 @@ Use it to set speaking turns in a meeting, make teams in a class, pair people up
 
 ## Features
 
-- One participant per line, with a live count. Empty lines and extra spaces are ignored; repeated names are allowed.
+- Participants are badges: type a name and press Enter, paste several lines to add them at once, tap a name to edit it, press × (or Backspace twice in the empty field) to remove one. A name can only appear once per list (case-insensitive), with a limit of 200 people and a live count. Each person has a stable id, so renaming keeps their identity.
 - Numbered order (1 group) or one card per group with its member count.
 - **Draw again** and **Share** (the system share sheet, or copy to the clipboard).
 - Several named lists, shown as tabs: create, switch, rename and delete them. Each keeps its own participants and number of groups. Everything is saved in the browser (`localStorage`) and restored on return. **Clear list** empties the current one.
@@ -39,7 +39,7 @@ src/
   i18n/messages.ts       All text in es and en
   lib/draw.ts            Draw logic, no DOM (parse, validate, shuffle, distribute)
   lib/timer.ts           Timer logic, no DOM (start, pause, settle, format)
-  lib/lists.ts           Saved-lists logic, no DOM (add, rename, remove, validate stored data)
+  lib/lists.ts           Saved-lists logic, no DOM (lists, people with ids, validate and migrate stored data)
   sw/worker.js           Service worker source; pages/sw.js.ts serves it as /sw.js with a build version
   scripts/
     app.ts               Events and UI updates
@@ -49,7 +49,7 @@ src/
     timer.ts             Timer UI, tick, screen wake lock
   styles/global.css      Color, spacing and type tokens, and styles
 tests/                   Tests with node:test (draw, lists and timer)
-docs/                    Design mocks (proposals, palettes, fonts, share images)
+docs/                    DESIGN.md (design decisions and tokens) and design mocks (proposals, palettes, fonts, share images)
 ```
 
 The draw logic touches neither the DOM nor storage, so it can be tested on its own. The only client-side JavaScript is in `src/scripts/`, with no UI framework.

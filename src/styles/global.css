@@ -23,6 +23,8 @@
   --accent-soft: light-dark(oklch(0.94 0.04 40), oklch(0.32 0.05 38));
   --on-accent: light-dark(oklch(0.99 0.005 60), oklch(0.2 0.02 40));
   --danger: light-dark(oklch(0.45 0.18 27), oklch(0.76 0.13 27));
+  /* Border of editable controls: 3:1 against --bg and --surface in both themes (--line is only 1.4:1, fine for dividers). */
+  --control: light-dark(oklch(0.62 0.02 50), oklch(0.55 0.015 55));
 
   --radius: 16px;
   --radius-sm: 10px;
@@ -220,20 +222,50 @@ button, input, textarea { font: inherit; color: inherit; }
 .hint { font-size: var(--t-xs); color: var(--muted); }
 .hint.is-warning { color: var(--ink); }
 
-.names {
-  width: 100%;
-  min-height: 220px;
-  resize: vertical;
-  padding: var(--s3) var(--s4);
+/* Tag box: person badges and the input share one bordered box. */
+.tagbox {
+  list-style: none;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 6px;
+  min-height: 96px;
+  padding: var(--s3);
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1px solid var(--control);
   border-radius: var(--radius-sm);
-  line-height: 28px;
-  transition: border-color 150ms ease-out;
+  cursor: text;
+  transition: border-color 150ms ease-out, outline-color 150ms ease-out;
 }
-.names::placeholder { color: var(--muted); opacity: 0.8; }
-.names:hover, .stepper:hover { border-color: var(--muted); }
-.names[aria-invalid='true'] { border-color: var(--danger); }
+.tagbox:hover { border-color: var(--muted); }
+.tagbox:focus-within { border-color: var(--accent); outline: 3px solid var(--accent-soft); }
+.tagbox:has([aria-invalid='true']) { border-color: var(--danger); }
+.person {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 32px;
+  padding-left: var(--s1);
+  border-radius: 999px;
+  background: var(--accent-soft);
+  font-weight: 600;
+  font-size: var(--t-sm);
+  cursor: default;
+}
+.person.is-new { animation: pop 150ms var(--ease-out) both; }
+.person.is-selected { outline: 2px solid var(--accent); }
+.person-name, .person-x { border: 0; background: transparent; cursor: pointer; }
+.person-name { min-height: 32px; padding: 0 var(--s2) 0 var(--s2); border-radius: 999px; font-weight: inherit; overflow-wrap: anywhere; text-align: left; }
+.person-x { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; color: var(--muted); font-size: 1.1rem; line-height: 1; }
+.person-x { position: relative; }
+.person-x::after { content: ''; position: absolute; inset: -6px; } /* 32px glyph, 44px hit area: this one deletes */
+.person-x:hover { color: var(--ink); }
+.person-edit { min-width: 6ch; max-width: 100%; height: 32px; padding: 0 var(--s2); border: 0; border-radius: 999px; background: var(--surface); font-weight: inherit; outline: 2px solid var(--accent); }
+.person-new { flex: 1 1 8rem; display: flex; min-width: 8rem; }
+.person-input { flex: 1; min-width: 0; min-height: 32px; padding: 0 var(--s1); border: 0; background: transparent; outline: 0; }
+.person-input::placeholder { color: var(--muted); opacity: 0.9; }
+.stepper:hover { border-color: var(--muted); }
 
 .stepper {
   display: inline-grid;
@@ -392,9 +424,11 @@ button, input, textarea { font: inherit; color: inherit; }
 .enter { animation: rise 400ms var(--ease-out) both; animation-delay: calc(min(var(--i), 6) * 40ms); }
 @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pop { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {
   .enter { animation: fade 150ms ease-out both; }
+  .person.is-new { animation: none; }
   .timer[data-status='done']::before, .timer[data-status='done']::after { animation: none; }
   .timer-bar i { transition: none; }
   .btn:active { transform: none; }

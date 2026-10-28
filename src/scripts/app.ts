@@ -1,20 +1,18 @@
-import {
-  draw,
-  formatResult,
-  hasDuplicates,
-  parseParticipants,
-  validateDraw,
-  type DrawResult,
-} from '../lib/draw';
+import { draw, formatResult, validateDraw, type DrawResult } from '../lib/draw';
 import { messages } from '../i18n/messages';
-import { activeList, addList, removeList, renameList, setActive, updateList } from '../lib/lists';
+import {
+  MAX_PEOPLE, activeList, addList, addPeople, clearPeople, removeList, removePerson, renameList, renamePerson, setActive, updateList,
+  type ListStore, type Person,
+} from '../lib/lists';
 import { readStore, writeStore } from './storage';
 import { shareText } from './share';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 
 const form = $<HTMLFormElement>('draw-form');
-const names = $<HTMLTextAreaElement>('names');
+const tagbox = $('people');
+const personInput = $<HTMLInputElement>('person-input');
+const inputItem = personInput.parentElement!;
 const groups = $<HTMLInputElement>('groups');
 const count = $('count');
 const namesHint = $('names-hint');
@@ -30,10 +28,11 @@ const saved = $('saved');
 const deleteDialog = $<HTMLDialogElement>('delete-dialog');
 
 const t = messages[document.documentElement.lang === 'en' ? 'en' : 'es'];
-const NAMES_HINT = t.namesHint;
 const emptyState = output.firstElementChild!.cloneNode(true);
 let store = readStore(t.defaultListName(1));
 let last: DrawResult | null = null;
+let shown = new Set<string>(); // person ids already on screen, so only new badges animate
+let selectedId: string | null = null; // badge selected by the first Backspace
 
 function setStatus(message: string) {
   status.textContent = message;
@@ -49,7 +48,7 @@ function persist() {
 function renderTabs(scrollToActive = false) {
   tabs.replaceChildren(
     ...store.lists.map((list) => {
-      const count = parseParticipants(list.names).length;
+      const count = list.people.length;
       const tab = document.createElement('button');
       tab.type = 'button';
       tab.className = 'tab';
@@ -65,27 +64,135 @@ function renderTabs(scrollToActive = false) {
   if (scrollToActive) tabs.querySelector('[aria-current]')?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
 }
 
+const people = () => activeList(store).people;
+
 function save() {
-  store = updateList(store, activeList(store).id, {
-    names: names.value,
-    groups: Math.max(1, parseInt(groups.value, 10) || 1),
-  });
+  store = updateList(store, activeList(store).id, { groups: Math.max(1, parseInt(groups.value, 10) || 1) });
   persist();
   renderTabs();
 }
 
 function updateCount() {
-  const list = parseParticipants(names.value);
-  count.textContent = t.participant(list.length);
-  const duplicated = hasDuplicates(list);
-  namesHint.textContent = duplicated ? t.duplicatesHint : NAMES_HINT;
-  namesHint.classList.toggle('is-warning', duplicated);
+  count.textContent = t.participant(people().length);
+}
+
+/** Shows a problem under the box (and announces it), or restores the usual hint. */
+function warn(message: string | null) {
+  namesHint.textContent = message ?? t.peopleHint;
+  namesHint.classList.toggle('is-warning', Boolean(message));
+  if (message) setStatus(message);
 }
 
 function showError(message: string | null) {
   error.textContent = message ?? '';
   error.hidden = !message;
-  names.setAttribute('aria-invalid', String(Boolean(message) && parseParticipants(names.value).length < 2));
+  personInput.setAttribute('aria-invalid', String(Boolean(message) && people().length < 2));
+}
+
+// Names are set as text, never as HTML.
+function chip(person: Person): HTMLElement {
+  const item = document.createElement('li');
+  item.className = 'person';
+  item.dataset.id = person.id;
+  item.classList.toggle('is-new', !shown.has(person.id));
+  item.classList.toggle('is-selected', person.id === selectedId);
+  const name = document.createElement('button');
+  name.type = 'button';
+  name.className = 'person-name';
+  name.textContent = person.name;
+  name.setAttribute('aria-label', t.personEdit(person.name));
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.className = 'person-x';
+  remove.textContent = '×';
+  remove.setAttribute('aria-label', t.personRemove(person.name));
+  item.append(name, remove);
+  return item;
+}
+
+// Badges are replaced around the input, never the input itself, so it keeps focus.
+function renderPeople() {
+  tagbox.querySelectorAll('.person').forEach((node) => node.remove());
+  inputItem.before(...people().map(chip));
+  shown = new Set(people().map((p) => p.id));
+}
+
+function commit(next: ListStore) {
+  store = next;
+  persist();
+  renderTabs();
+  renderPeople();
+  updateCount();
+  markStale();
+}
+
+function select(id: string | null) {
+  selectedId = id;
+  renderPeople();
+}
+
+/** Adds what is new, reports what was skipped. Returns whether anything was added. */
+function addNames(raw: string[]): boolean {
+  const { store: next, added, skipped } = addPeople(store, activeList(store).id, raw);
+  const single = raw.length === 1 ? (people().length >= MAX_PEOPLE ? t.peopleFull(MAX_PEOPLE) : t.personExists(skipped[0] ?? raw[0]!)) : null;
+  const problem = skipped.length ? (single ?? t.peopleSkipped(skipped.length)) : null;
+  if (added.length) commit(next);
+  warn(problem);
+  if (added.length) {
+    const done = added.length === 1 ? t.personAdded(added[0]!) : t.peopleAdded(added.length);
+    setStatus(problem ? `${done} ${problem}` : done); // one announcement, not two that cut each other off
+  }
+  return added.length > 0;
+}
+
+function startEdit(item: HTMLElement) {
+  const person = people().find((p) => p.id === item.dataset.id);
+  if (!person) return;
+  const input = document.createElement('input');
+  input.className = 'person-edit';
+  input.value = person.name;
+  input.maxLength = 40;
+  input.size = Math.max(6, person.name.length + 1);
+  input.setAttribute('aria-label', t.personEditLabel(person.name));
+  item.replaceChildren(input);
+  input.focus();
+  input.select();
+  let finished = false; // Enter re-renders, and removing the focused input fires blur too
+  const finish = (apply: boolean) => {
+    if (finished) return;
+    finished = true;
+    const value = input.value.trim();
+    if (apply && value && value !== person.name) {
+      const result = renamePerson(store, activeList(store).id, person.id, value);
+      if (result.error === 'duplicate') warn(t.personExists(value));
+      else {
+        commit(result.store);
+        setStatus(t.personRenamed(person.name, value));
+        return;
+      }
+    }
+    renderPeople();
+  };
+  input.addEventListener('blur', () => finish(true));
+  input.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== 'Escape') return;
+    event.preventDefault();
+    finish(event.key === 'Enter');
+    tagbox.querySelector<HTMLElement>(`[data-id="${person.id}"] .person-name`)?.focus();
+  });
+}
+
+/** `fromInput`: removed with Backspace, so the focus stays in the input for the next one. */
+function removeAt(id: string, fromInput = false) {
+  const index = people().findIndex((p) => p.id === id);
+  const person = people()[index];
+  if (!person) return;
+  selectedId = null;
+  commit(removePerson(store, activeList(store).id, id));
+  setStatus(t.personRemoved(person.name));
+  const nextPerson = people()[Math.min(index, people().length - 1)];
+  const target = !fromInput && nextPerson && tagbox.querySelector<HTMLElement>(`[data-id="${nextPerson.id}"] .person-name`);
+  (target || personInput).focus();
 }
 
 function staggered<T extends HTMLElement>(node: T, index: number): T {
@@ -140,7 +247,7 @@ function render(result: DrawResult) {
 }
 
 function runDraw(): boolean {
-  const list = parseParticipants(names.value);
+  const list = people().map((p) => p.name);
   const groupCount = Number(groups.value);
   const problem = validateDraw(list.length, groupCount);
   showError(problem && (problem === 'max' ? t.errorMax(list.length) : problem === 'min' ? t.errorMin : t.errorInteger));
@@ -169,7 +276,11 @@ function markStale() {
 // Switching lists drops the previous result: it belonged to another list.
 function loadActive() {
   const list = activeList(store);
-  names.value = list.names;
+  shown = new Set(list.people.map((p) => p.id)); // switching lists is not an entrance
+  selectedId = null;
+  personInput.value = '';
+  warn(null);
+  renderPeople();
   groups.value = String(list.groups);
   listName.textContent = list.name;
   last = null;
@@ -201,12 +312,6 @@ function finishRename(apply: boolean) {
   renderTabs(true);
 }
 
-function onInputChange() {
-  updateCount();
-  save();
-  markStale();
-}
-
 form.addEventListener('submit', (event) => {
   event.preventDefault();
   if (runDraw()) scrollToResults();
@@ -222,13 +327,58 @@ $('share').addEventListener('click', async () => {
 });
 
 $('clear').addEventListener('click', () => {
-  names.value = '';
   showError(null);
-  onInputChange();
-  names.focus();
+  selectedId = null;
+  commit(clearPeople(store, activeList(store).id));
+  personInput.focus();
 });
 
-names.addEventListener('input', onInputChange);
+personInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault(); // inside the form, Enter would draw
+    const value = personInput.value.trim();
+    if (value && addNames([value])) personInput.value = '';
+  } else if (event.key === 'Backspace' && !personInput.value) {
+    const lastPerson = people().at(-1);
+    if (!lastPerson) return;
+    event.preventDefault();
+    if (selectedId) removeAt(selectedId, true);
+    else {
+      select(lastPerson.id);
+      setStatus(t.personSelected(lastPerson.name));
+    }
+  } else if (event.key === 'Escape') {
+    personInput.value = '';
+    warn(null);
+  } else if (selectedId && event.key !== 'Shift') {
+    select(null);
+  }
+});
+
+personInput.addEventListener('input', () => {
+  if (namesHint.classList.contains('is-warning')) warn(null);
+});
+
+// Not a re-render: it could swallow the click that caused the blur (the x of a badge).
+personInput.addEventListener('blur', () => {
+  selectedId = null;
+  tagbox.querySelector('.is-selected')?.classList.remove('is-selected');
+});
+
+personInput.addEventListener('paste', (event) => {
+  const text = event.clipboardData?.getData('text') ?? '';
+  if (!/[\r\n]/.test(text.trim())) return; // a single name pastes into the input as usual
+  event.preventDefault();
+  addNames(text.split(/\r?\n/));
+});
+
+tagbox.addEventListener('click', (event) => {
+  const target = event.target as Element;
+  const item = target.closest<HTMLElement>('.person');
+  if (target.closest('.person-x') && item) removeAt(item.dataset.id!);
+  else if (target.closest('.person-name') && item) startEdit(item);
+  else if (!item) personInput.focus(); // clicking the empty part of the box
+});
 groups.addEventListener('input', () => {
   save();
   markStale();
@@ -236,7 +386,7 @@ groups.addEventListener('input', () => {
 
 for (const button of document.querySelectorAll<HTMLButtonElement>('[data-step]')) {
   button.addEventListener('click', () => {
-    const max = Math.max(1, parseParticipants(names.value).length);
+    const max = Math.max(1, people().length);
     const current = parseInt(groups.value, 10) || 1;
     groups.value = String(Math.min(max, Math.max(1, current + Number(button.dataset.step))));
     save();

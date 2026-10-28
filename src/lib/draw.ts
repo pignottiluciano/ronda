@@ -4,16 +4,12 @@ export type DrawResult = string[][];
 
 export const MIN_PARTICIPANTS = 2;
 
-/** Trims each line and drops empty ones. Duplicates are kept on purpose. */
+/** Trims each line and drops empty ones. Repeats are kept here; the list rules (lists.ts) decide what to do with them. */
 export function parseParticipants(text: string): string[] {
   return text
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean);
-}
-
-export function hasDuplicates(list: readonly string[]): boolean {
-  return new Set(list).size !== list.length;
 }
 
 export type DrawError = 'min' | 'integer' | 'max';

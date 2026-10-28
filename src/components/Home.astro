@@ -136,18 +136,25 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
           <form id="draw-form" class="form" novalidate>
             <div class="field">
               <div class="field-head">
-                <label class="label" for="names">{t.participantsLabel}</label>
+                <label class="label" for="person-input">{t.participantsLabel}</label>
                 <span id="count" class="count" aria-live="polite">{t.participant(0)}</span>
               </div>
-              <textarea
-                id="names"
-                class="names"
-                rows="8"
-                spellcheck="false"
-                autocomplete="off"
-                aria-describedby="names-hint"
-                placeholder={t.namesPlaceholder}></textarea>
-              <p id="names-hint" class="hint">{t.namesHint}</p>
+              <ul id="people" class="tagbox" role="list">
+                <li class="person-new">
+                  <input
+                    id="person-input"
+                    class="person-input"
+                    type="text"
+                    maxlength="40"
+                    spellcheck="false"
+                    autocomplete="off"
+                    autocapitalize="words"
+                    enterkeyhint="done"
+                    aria-describedby="names-hint"
+                    placeholder={t.personPlaceholder} />
+                </li>
+              </ul>
+              <p id="names-hint" class="hint">{t.peopleHint}</p>
               <p id="saved" class="saved">{t.savedHere}</p>
             </div>
 

@@ -1,4 +1,5 @@
 // Browser-only. Never import from Astro frontmatter: localStorage does not exist at build time.
+import { parseParticipants } from '../lib/draw';
 import { createStore, parseStore, type ListStore } from '../lib/lists';
 
 const KEY = 'ronda.lists.v1';
@@ -21,7 +22,7 @@ export function readStore(defaultName: string): ListStore {
     if (typeof legacy === 'object' && legacy !== null) {
       const { names, groups } = legacy as Record<string, unknown>;
       if (typeof names === 'string' && Number.isInteger(groups) && (groups as number) >= 1) {
-        return createStore(defaultName, names, groups as number);
+        return createStore(defaultName, parseParticipants(names), groups as number);
       }
     }
   } catch {
