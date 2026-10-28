@@ -1,0 +1,505 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ronda · Turnos, propuestas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: light-dark(oklch(0.975 0.008 70), oklch(0.19 0.006 50));
+  --surface: light-dark(oklch(0.995 0.004 70), oklch(0.235 0.008 50));
+  --ink: light-dark(oklch(0.24 0.015 40), oklch(0.95 0.008 70));
+  --muted: light-dark(oklch(0.5 0.02 45), oklch(0.74 0.012 60));
+  --line: light-dark(oklch(0.89 0.012 60), oklch(0.34 0.01 50));
+  --accent: light-dark(oklch(0.55 0.16 33), oklch(0.74 0.14 38));
+  --accent-ink: light-dark(oklch(0.53 0.16 33), oklch(0.76 0.13 38));
+  --accent-soft: light-dark(oklch(0.94 0.04 40), oklch(0.32 0.05 38));
+  --on-accent: light-dark(oklch(0.99 0.005 60), oklch(0.2 0.02 40));
+  --page: light-dark(oklch(0.93 0.01 70), oklch(0.15 0.006 50));
+}
+* { box-sizing: border-box; margin: 0; }
+body { background: var(--page); color: var(--ink); font-family: "Figtree", sans-serif; line-height: 1.5; padding: 32px 24px 80px; }
+.intro { max-width: 1180px; margin: 0 auto 40px; }
+.intro h1 { font-family: "Fraunces", serif; font-weight: 500; font-size: 2.2rem; letter-spacing: -0.02em; }
+.intro p { color: var(--muted); max-width: 70ch; margin-top: 8px; }
+.prop { max-width: 1180px; margin: 0 auto 72px; }
+.prop > h2 { font-family: "Fraunces", serif; font-weight: 600; font-size: 1.6rem; letter-spacing: -0.02em; }
+.prop > p { color: var(--muted); max-width: 75ch; margin: 6px 0 24px; }
+.board { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; margin-bottom: 28px; }
+figure { display: grid; gap: 10px; justify-items: center; }
+figcaption { font-size: 0.85rem; color: var(--muted); }
+.num { font-variant-numeric: tabular-nums; }
+
+/* Frames */
+.phone { width: 360px; height: 760px; border: 1px solid var(--line); border-radius: 36px; background: var(--bg); overflow: hidden; padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 24px 48px -28px rgba(0,0,0,.35); }
+.desk { width: 100%; border: 1px solid var(--line); border-radius: 18px; background: var(--bg); padding: 16px 28px 32px; box-shadow: 0 24px 48px -28px rgba(0,0,0,.35); }
+
+/* Shared app chrome */
+.hdr { display: flex; align-items: center; gap: 8px; min-height: 40px; }
+.brand { display: flex; align-items: center; gap: 6px; font-family: "Fraunces", serif; font-weight: 600; font-size: 1.1rem; letter-spacing: -0.02em; }
+.brand svg { width: 24px; height: 24px; color: var(--accent); }
+.kick { color: var(--muted); font-size: 0.9rem; }
+.lang { margin-left: auto; display: flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; font-size: 0.8rem; font-weight: 600; }
+.lang span { display: grid; place-items: center; min-width: 36px; height: 34px; color: var(--muted); }
+.lang .on { background: var(--accent); color: var(--on-accent); }
+.tb { width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; display: grid; place-items: center; color: var(--muted); font-size: 0.9rem; }
+.ltabs { display: flex; gap: 6px; overflow: hidden; }
+.ltabs span { flex: none; height: 34px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px; display: grid; place-items: center; font-size: 0.875rem; color: var(--muted); }
+.ltabs .on { background: var(--ink); color: var(--bg); border-color: var(--ink); font-weight: 600; }
+.ltabs .plus { padding: 0; width: 34px; }
+.h-list { font-family: "Fraunces", serif; font-weight: 500; font-size: 1.6rem; letter-spacing: -0.02em; line-height: 1.1; }
+.label { font-weight: 600; font-size: 0.9rem; }
+.row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.muted { color: var(--muted); }
+small, .small { font-size: 0.8rem; }
+.btn { display: inline-grid; place-items: center; min-height: 44px; padding: 0 18px; border-radius: 10px; font-weight: 600; border: 1px solid var(--line); background: var(--surface); font-size: 0.95rem; white-space: nowrap; }
+.btn.primary { background: var(--accent); color: var(--on-accent); border-color: transparent; }
+.btn.ghost { background: transparent; }
+.btn.sm { min-height: 34px; padding: 0 12px; font-size: 0.85rem; }
+.actions { display: flex; gap: 10px; }
+.actions .primary { flex: 1; }
+.stepper { display: inline-grid; grid-template-columns: 40px 56px 40px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); text-align: center; line-height: 40px; }
+.stepper span:nth-child(2) { border-inline: 1px solid var(--line); font-weight: 600; }
+.bar { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; }
+.bar b { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+.bar.thin { height: 6px; }
+.over { color: var(--accent-ink); font-weight: 700; }
+.spacer { flex: 1; }
+
+/* Presets */
+.presets { display: flex; gap: 6px; flex-wrap: wrap; }
+.presets span { height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: 999px; display: grid; place-items: center; font-size: 0.85rem; background: var(--surface); }
+.presets .on { border-color: var(--accent); background: var(--accent-soft); font-weight: 600; color: var(--accent-ink); }
+
+/* ===== A: tag field, tabs by mode, rows ===== */
+.a-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px; background: var(--surface); border: 1px solid var(--accent); outline: 3px solid var(--accent-soft); border-radius: 12px; }
+.a-chip { display: inline-flex; align-items: center; height: 32px; padding: 0 2px 0 12px; border-radius: 999px; background: var(--accent-soft); font-weight: 600; font-size: 0.875rem; }
+.a-chip i { display: grid; place-items: center; width: 28px; height: 28px; font-style: normal; color: var(--muted); font-size: 1rem; }
+.a-chip.off { background: transparent; border: 1px dashed var(--line); color: var(--muted); text-decoration: line-through; }
+.a-chip.sel { outline: 2px solid var(--accent); }
+.a-add { flex: 1; min-width: 110px; height: 32px; display: flex; align-items: center; color: var(--muted); font-size: 0.875rem; }
+.a-add::before { content: ""; width: 1.5px; height: 18px; background: var(--accent); margin-right: 2px; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--line); border-radius: 12px; padding: 3px; background: var(--surface); }
+.seg span { text-align: center; height: 36px; line-height: 36px; border-radius: 9px; font-weight: 600; font-size: 0.875rem; color: var(--muted); }
+.seg .on { background: var(--accent); color: var(--on-accent); }
+.a-now { background: var(--surface); border: 1px solid var(--accent); border-radius: 16px; padding: 14px 16px 16px; display: grid; gap: 10px; }
+.a-now .who { font-family: "Fraunces", serif; font-size: 1.44rem; font-weight: 600; letter-spacing: -0.02em; }
+.a-clock { font-size: 3.2rem; font-weight: 700; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.a-rows { display: grid; }
+.a-r { display: grid; grid-template-columns: 1fr 64px 72px; align-items: center; gap: 10px; min-height: 48px; border-bottom: 1px solid var(--line); font-size: 0.9375rem; }
+.a-r .t { text-align: right; font-variant-numeric: tabular-nums; }
+.a-r .st { justify-self: end; }
+.a-r.cur { font-weight: 700; color: var(--accent-ink); }
+.a-r.off { color: var(--muted); text-decoration: line-through; }
+.tag { display: inline-grid; place-items: center; height: 28px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 0.75rem; font-weight: 600; color: var(--muted); background: var(--surface); }
+.tag.on { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-soft); }
+.rk { display: grid; }
+.rk .h, .rk .r { display: grid; grid-template-columns: 26px 1fr 110px 36px; align-items: center; gap: 10px; }
+.rk .h { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.rk .r { min-height: 46px; border-bottom: 1px solid var(--line); font-size: 0.9375rem; }
+.rk .r .p { display: grid; grid-template-columns: 1fr 38px; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; font-size: 0.85rem; text-align: right; }
+.rk .r .d { text-align: right; color: var(--muted); font-size: 0.85rem; }
+.rk .r.win { font-weight: 700; }
+.rk .r.win .pos { color: var(--accent-ink); }
+.rk .r.few { color: var(--muted); }
+.pos { font-weight: 700; color: var(--muted); }
+.a-desk { display: grid; grid-template-columns: 380px 1fr; gap: 48px; margin-top: 24px; }
+
+/* ===== B: avatar chips, tiles with rings, podium ===== */
+.b-input { display: flex; gap: 8px; }
+.b-input .f { flex: 1; height: 46px; display: flex; align-items: center; padding: 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--muted); font-size: 0.9375rem; }
+.b-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.b-chip { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 4px 0 4px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-weight: 600; font-size: 0.875rem; }
+.b-chip .av { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-ink); font-size: 0.8rem; font-weight: 700; }
+.b-chip i { width: 30px; height: 30px; display: grid; place-items: center; font-style: normal; color: var(--muted); border-radius: 50%; }
+.b-chip.off { border-style: dashed; color: var(--muted); }
+.b-chip.off .av { background: transparent; border: 1px dashed var(--line); color: var(--muted); }
+.b-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.b-tile { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 12px; display: grid; justify-items: center; gap: 6px; text-align: center; }
+.b-tile .n { font-weight: 600; font-size: 0.9375rem; }
+.b-tile.cur { border-color: var(--accent); background: var(--accent-soft); }
+.b-tile.off { border-style: dashed; background: transparent; color: var(--muted); }
+.ring { --p: 0; width: 76px; height: 76px; border-radius: 50%; background: conic-gradient(var(--accent) calc(var(--p) * 1%), var(--line) 0); display: grid; place-items: center; }
+.ring span { width: 62px; height: 62px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; font-weight: 700; font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+.b-tile.cur .ring span { background: var(--accent-soft); }
+.ring.big { width: 120px; height: 120px; }
+.ring.big span { width: 100px; height: 100px; font-size: 1.6rem; }
+.ring.none { background: var(--line); }
+.b-tile .s { font-size: 0.75rem; color: var(--muted); }
+.b-top { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 0.875rem; }
+.pod { display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: end; gap: 8px; text-align: center; padding-top: 8px; }
+.pod .c { display: grid; gap: 6px; justify-items: center; }
+.pod .av { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-ink); font-weight: 700; }
+.pod .first .av { width: 56px; height: 56px; background: var(--accent); color: var(--on-accent); font-size: 1.1rem; }
+.pod .blk { width: 100%; border-radius: 12px 12px 0 0; background: var(--surface); border: 1px solid var(--line); border-bottom: 0; display: grid; place-items: center; font-family: "Fraunces", serif; font-weight: 600; font-size: 1.3rem; }
+.pod .first .blk { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink); }
+.pod .n { font-weight: 600; font-size: 0.875rem; }
+.b-list { display: grid; }
+.b-list .r { display: grid; grid-template-columns: 22px 1fr 1fr 40px; align-items: center; gap: 10px; min-height: 44px; border-top: 1px solid var(--line); font-size: 0.9rem; }
+.b-list .r .pc { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.b-desk { display: grid; grid-template-columns: 320px 1fr 320px; gap: 36px; margin-top: 24px; align-items: start; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: grid; gap: 14px; }
+
+/* ===== C: stage / focus mode ===== */
+.c-input { display: flex; align-items: center; gap: 8px; height: 48px; padding: 0 6px 0 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--muted); }
+.c-input .k { margin-left: auto; font-size: 0.75rem; border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; }
+.c-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.c-chip { display: inline-flex; align-items: center; gap: 2px; height: 32px; padding: 0 2px 0 12px; border-radius: 8px; background: var(--ink); color: var(--bg); font-size: 0.875rem; font-weight: 600; }
+.c-chip i { width: 26px; height: 26px; display: grid; place-items: center; font-style: normal; opacity: 0.6; }
+.c-chip.off { background: transparent; color: var(--muted); border: 1px dashed var(--line); text-decoration: line-through; }
+.stage { flex: 1; border-radius: 24px; background: var(--ink); color: var(--bg); padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.stage .meta { display: flex; justify-content: space-between; font-size: 0.8rem; opacity: 0.7; }
+.stage .who { font-family: "Fraunces", serif; font-weight: 500; font-style: italic; font-size: 2.2rem; letter-spacing: -0.02em; margin-top: auto; }
+.stage .clock { font-size: 5rem; font-weight: 700; line-height: 0.95; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+.stage .of { opacity: 0.7; font-size: 0.9rem; }
+.stage .bar { background: color-mix(in oklch, var(--bg) 25%, transparent); height: 10px; }
+.stage .bar b { background: var(--accent); }
+.stage .ctl { display: grid; grid-template-columns: 1fr 1.6fr; gap: 10px; margin-top: 8px; }
+.stage .ctl .btn { min-height: 52px; background: transparent; color: var(--bg); border-color: color-mix(in oklch, var(--bg) 30%, transparent); }
+.stage .ctl .btn.primary { background: var(--accent); color: var(--on-accent); border-color: transparent; font-size: 1.05rem; }
+.stage.over .clock { color: var(--accent); }
+.queue { display: flex; gap: 6px; overflow: hidden; }
+.queue span { flex: none; height: 34px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; }
+.queue .done { color: var(--muted); }
+.queue .done::before { content: "✓"; color: var(--accent-ink); font-weight: 700; }
+.queue .cur { background: var(--accent); color: var(--on-accent); border-color: transparent; font-weight: 700; }
+.queue .off { color: var(--muted); border-style: dashed; text-decoration: line-through; }
+.c-win { border-radius: 20px; background: var(--ink); color: var(--bg); padding: 18px; display: grid; gap: 4px; }
+.c-win .k { font-size: 0.8rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.08em; }
+.c-win .n { font-family: "Fraunces", serif; font-style: italic; font-weight: 500; font-size: 2.2rem; letter-spacing: -0.02em; line-height: 1.1; }
+.c-win .p { font-size: 3rem; font-weight: 700; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.c-lb { display: grid; }
+.c-lb .r { display: grid; grid-template-columns: 30px 1fr auto; align-items: baseline; gap: 10px; min-height: 52px; padding-top: 10px; border-bottom: 1px solid var(--line); }
+.c-lb .pos { font-family: "Fraunces", serif; font-size: 1.1rem; }
+.c-lb .n { font-weight: 600; }
+.c-lb .n small { display: block; font-weight: 400; color: var(--muted); }
+.c-lb .p { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.c-desk { display: grid; grid-template-columns: 1fr 340px; gap: 28px; margin-top: 20px; }
+.c-desk .stage { padding: 28px 32px; min-height: 520px; }
+.c-desk .stage .who { font-size: 3.6rem; }
+.c-desk .stage .clock { font-size: 9rem; }
+</style>
+</head>
+<body>
+
+<header class="intro">
+  <h1>Turnos y ranking: tres propuestas</h1>
+  <p>Mismo caso en las tres: lista “Daily equipo”, 5 minutos por persona. Carla está hablando, Ana y Bruno ya hablaron (Bruno se pasó), Diego no está. El ranking acumula 8 días; gana quien menos habló en promedio.</p>
+</header>
+
+<!-- ======================= A ======================= -->
+<section class="prop">
+  <h2>A · Modos en pestañas</h2>
+  <p>Los badges viven dentro de un campo tipo “tag input”. Debajo del nombre de la lista, un selector Sorteo / Turnos / Ranking cambia la vista. Turnos es una tarjeta con quien habla y una tabla simple con todos. Ranking es una tabla con barra de porcentaje. Lo más sobrio y lo más parecido a la app actual.</p>
+  <div class="board">
+    <figure>
+      <div class="phone">
+        <div class="hdr"><div class="brand"><svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4"/></svg>Ronda</div><div class="lang"><span class="on">ES</span><span>EN</span></div><div class="tb">◐</div></div>
+        <div class="ltabs"><span class="on">Daily equipo</span><span>Tenis</span><span class="plus">+</span></div>
+        <div class="h-list">Daily equipo</div>
+        <div class="seg"><span class="on">Sorteo</span><span>Turnos</span><span>Ranking</span></div>
+        <div style="display:grid;gap:8px">
+          <div class="row"><span class="label">Participantes</span><small class="muted">7 · 1 no está</small></div>
+          <div class="a-chips">
+            <span class="a-chip">Ana<i>×</i></span><span class="a-chip">Bruno<i>×</i></span><span class="a-chip">Carla<i>×</i></span><span class="a-chip off">Diego<i>×</i></span><span class="a-chip">Emilia<i>×</i></span><span class="a-chip">Facundo<i>×</i></span><span class="a-chip sel">Gabi<i>×</i></span><span class="a-add">Agregar persona…</span>
+          </div>
+          <small class="muted">Enter para agregar · pegá varias líneas · tocá un nombre para editarlo o marcar “no está”</small>
+        </div>
+        <div style="display:grid;gap:8px"><span class="label">Cantidad de grupos</span><div class="stepper"><span>−</span><span>1</span><span>+</span></div></div>
+        <div class="spacer"></div>
+        <div class="actions"><span class="btn primary">Sortear</span><span class="btn">Limpiar</span></div>
+      </div>
+      <figcaption>Mobile · lista con badges</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone">
+        <div class="hdr"><div class="brand"><svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4"/></svg>Ronda</div><div class="lang"><span class="on">ES</span><span>EN</span></div><div class="tb">◐</div></div>
+        <div class="row"><div class="h-list">Daily equipo</div><small class="muted num">Reunión 12:04</small></div>
+        <div class="seg"><span>Sorteo</span><span class="on">Turnos</span><span>Ranking</span></div>
+        <div class="a-now">
+          <div class="row"><span class="who">Carla</span><small class="muted">3 de 7</small></div>
+          <div class="row" style="align-items:end"><span class="a-clock">2:41</span><span class="muted num">de 5:00</span></div>
+          <div class="bar"><b style="width:54%"></b></div>
+          <div class="actions"><span class="btn">Pausar</span><span class="btn primary">Siguiente: Emilia</span></div>
+        </div>
+        <div class="a-rows">
+          <div class="a-r"><span>Ana</span><span class="t">3:12</span><span class="st tag">Listo</span></div>
+          <div class="a-r"><span>Bruno</span><span class="t over">5:40</span><span class="st tag">Listo</span></div>
+          <div class="a-r cur"><span>Carla</span><span class="t">2:41</span><span class="st tag on">Habla</span></div>
+          <div class="a-r off"><span>Diego</span><span class="t">—</span><span class="st tag">Volver</span></div>
+          <div class="a-r"><span>Emilia</span><span class="t muted">0:00</span><span class="st tag">No está</span></div>
+          <div class="a-r"><span>Facundo</span><span class="t muted">0:00</span><span class="st tag">No está</span></div>
+          <div class="a-r"><span>Gabi</span><span class="t muted">0:00</span><span class="st tag">No está</span></div>
+        </div>
+        <div class="spacer"></div>
+        <span class="btn">Terminar y guardar el día</span>
+      </div>
+      <figcaption>Mobile · turnos</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone">
+        <div class="hdr"><div class="brand"><svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4"/></svg>Ronda</div><div class="lang"><span class="on">ES</span><span>EN</span></div><div class="tb">◐</div></div>
+        <div class="h-list">Daily equipo</div>
+        <div class="seg"><span>Sorteo</span><span>Turnos</span><span class="on">Ranking</span></div>
+        <div class="row"><small class="muted">8 días · mínimo 1 día</small><span class="btn sm">Compartir</span></div>
+        <div class="rk">
+          <div class="h"><span>#</span><span>Persona</span><span style="text-align:right">Promedio</span><span style="text-align:right">Días</span></div>
+          <div class="r win"><span class="pos">1</span><span>Emilia</span><span class="p"><span class="bar thin"><b style="width:38%"></b></span>38%</span><span class="d">6</span></div>
+          <div class="r"><span class="pos">2</span><span>Diego</span><span class="p"><span class="bar thin"><b style="width:44%"></b></span>44%</span><span class="d">5</span></div>
+          <div class="r"><span class="pos">3</span><span>Ana</span><span class="p"><span class="bar thin"><b style="width:52%"></b></span>52%</span><span class="d">8</span></div>
+          <div class="r"><span class="pos">4</span><span>Gabi</span><span class="p"><span class="bar thin"><b style="width:55%"></b></span>55%</span><span class="d">3</span></div>
+          <div class="r"><span class="pos">5</span><span>Carla</span><span class="p"><span class="bar thin"><b style="width:61%"></b></span>61%</span><span class="d">8</span></div>
+          <div class="r"><span class="pos">6</span><span>Facundo</span><span class="p"><span class="bar thin"><b style="width:70%"></b></span>70%</span><span class="d">7</span></div>
+          <div class="r"><span class="pos">7</span><span>Bruno</span><span class="p"><span class="bar thin"><b style="width:96%"></b></span>96%</span><span class="d">8</span></div>
+        </div>
+        <div class="spacer"></div>
+        <div class="actions" style="flex-wrap:wrap"><span class="btn sm">Historial</span><span class="btn sm">Exportar</span><span class="btn sm">Importar</span><span class="btn sm">Ajustes</span></div>
+      </div>
+      <figcaption>Mobile · ranking</figcaption>
+    </figure>
+  </div>
+
+  <figure style="justify-items:stretch">
+    <div class="desk">
+      <div class="hdr"><div class="brand"><svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4"/></svg>Ronda</div><span class="kick">Sorteos y grupos</span><div class="lang"><span class="on">ES</span><span>EN</span></div><div class="tb">◐</div></div>
+      <div class="ltabs" style="margin-top:16px;border-bottom:1px solid var(--line);padding-bottom:12px"><span class="on">Daily equipo</span><span>Tenis de los jueves</span><span>Clase 4°B</span><span class="plus">+</span></div>
+      <div class="a-desk">
+        <div style="display:grid;gap:18px;align-content:start">
+          <div class="h-list" style="font-size:2rem">Daily equipo</div>
+          <div style="display:grid;gap:8px">
+            <div class="row"><span class="label">Participantes</span><small class="muted">7 · 1 no está</small></div>
+            <div class="a-chips"><span class="a-chip">Ana<i>×</i></span><span class="a-chip">Bruno<i>×</i></span><span class="a-chip">Carla<i>×</i></span><span class="a-chip off">Diego<i>×</i></span><span class="a-chip">Emilia<i>×</i></span><span class="a-chip">Facundo<i>×</i></span><span class="a-chip">Gabi<i>×</i></span><span class="a-add">Agregar persona…</span></div>
+            <small class="muted">Enter para agregar · pegá varias líneas</small>
+          </div>
+          <div style="display:grid;gap:8px"><span class="label">Tiempo por persona</span><div class="presets"><span>2</span><span>3</span><span class="on">5 min</span><span>10</span><span>Otro…</span></div></div>
+        </div>
+        <div style="display:grid;gap:18px;align-content:start">
+          <div class="row"><div class="seg" style="width:360px"><span>Sorteo</span><span class="on">Turnos</span><span>Ranking</span></div><small class="muted num">Reunión 12:04</small></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start">
+            <div class="a-now">
+              <div class="row"><span class="who">Carla</span><small class="muted">3 de 7</small></div>
+              <div class="row" style="align-items:end"><span class="a-clock" style="font-size:4rem">2:41</span><span class="muted num">de 5:00</span></div>
+              <div class="bar"><b style="width:54%"></b></div>
+              <div class="actions"><span class="btn">Pausar</span><span class="btn primary">Siguiente: Emilia</span></div>
+            </div>
+            <div class="a-rows">
+              <div class="a-r"><span>Ana</span><span class="t">3:12</span><span class="st tag">Listo</span></div>
+              <div class="a-r"><span>Bruno</span><span class="t over">5:40</span><span class="st tag">Listo</span></div>
+              <div class="a-r cur"><span>Carla</span><span class="t">2:41</span><span class="st tag on">Habla</span></div>
+              <div class="a-r off"><span>Diego</span><span class="t">—</span><span class="st tag">Volver</span></div>
+              <div class="a-r"><span>Emilia</span><span class="t muted">0:00</span><span class="st tag">No está</span></div>
+              <div class="a-r"><span>Facundo</span><span class="t muted">0:00</span><span class="st tag">No está</span></div>
+              <div class="a-r"><span>Gabi</span><span class="t muted">0:00</span><span class="st tag">No está</span></div>
+            </div>
+          </div>
+          <div><span class="btn">Terminar y guardar el día</span></div>
+        </div>
+      </div>
+    </div>
+    <figcaption>Desktop · lista a la izquierda, modo Turnos a la derecha (Ranking reemplaza esa columna)</figcaption>
+  </figure>
+</section>
+
+<!-- ======================= B ======================= -->
+<section class="prop">
+  <h2>B · Tarjetas con anillo</h2>
+  <p>Cada persona es un badge con inicial. En Turnos cada una es una tarjeta con su propio anillo de tiempo: se toca la tarjeta para darle la palabra. Ranking con podio de los tres primeros y lista debajo. Más visual y “juego”; en desktop las tres cosas se ven a la vez.</p>
+  <div class="board">
+    <figure>
+      <div class="phone">
+        <div class="hdr"><div class="brand"><svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4"/></svg>Ronda</div><div class="lang"><span class="on">ES</span><span>EN</span></div><div class="tb">◐</div></div>
+        <div class="ltabs"><span class="on">Daily equipo</span><span>Tenis</span><span class="plus">+</span></div>
+        <div class="h-list">Daily equipo</div>
+        <div class="b-input"><span class="f">Agregar persona…</span><span class="btn">Agregar</span></div>
+        <div class="row"><span class="label">7 personas</span><small class="muted">tocá para editar</small></div>
+        <div class="b-chips">
+          <span class="b-chip"><span class="av">A</span>Ana<i>×</i></span><span class="b-chip"><span class="av">B</span>Bruno<i>×</i></span><span class="b-chip"><span class="av">C</span>Carla<i>×</i></span><span class="b-chip off"><span class="av">D</span>Diego<i>×</i></span><span class="b-chip"><span class="av">E</span>Emilia<i>×</i></span><span class="b-chip"><span class="av">F</span>Facundo<i>×</i></span><span class="b-chip"><span class="av">G</span>Gabi<i>×</i></span>
+        </div>
+        <div class="spacer"></div>
+        <div style="display:grid;gap:8px"><span class="label">Cantidad de grupos</span><div class="stepper"><span>−</span><span>1</span><span>+</span></div></div>
+        <div class="actions"><span class="btn primary">Sortear</span><span class="btn">Turnos</span></div>
+      </div>
+      <figcaption>Mobile · lista con badges</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone">
+        <div class="hdr"><div class="brand"><svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4"/></svg>Ronda</div><div class="lang"><span class="on">ES</span><span>EN</span></div><div class="tb">◐</div></div>
+        <div class="b-top"><span>←</span><b>Turnos</b><span class="muted num" style="margin-left:auto">5:00 c/u · Reunión 12:04</span></div>
+        <div class="b-tiles">
+          <div class="b-tile"><div class="ring" style="--p:64"><span>3:12</span></div><span class="n">Ana</span><span class="s">Listo</span></div>
+          <div class="b-tile"><div class="ring" style="--p:100"><span class="over">+0:40</span></div><span class="n">Bruno</span><span class="s">Se pasó</span></div>
+          <div class="b-tile cur"><div class="ring" style="--p:54"><span>2:41</span></div><span class="n">Carla</span><span class="s" style="color:var(--accent-ink);font-weight:600">Hablando</span></div>
+          <div class="b-tile off"><div class="ring none"><span>—</span></div><span class="n">Diego</span><span class="s">No está</span></div>
+          <div class="b-tile"><div class="ring"><span>5:00</span></div><span class="n">Emilia</span><span class="s">Sigue</span></div>
+          <div class="b-tile"><div class="ring"><span>5:00</span></div><span class="n">Facundo</span><span class="s">Espera</span></div>
+        </div>
+        <div class="spacer"></div>
+        <div class="actions"><span class="btn">No está</span><span class="btn primary">Siguiente</span></div>
+      </div>
+      <figcaption>Mobile · turnos (el anillo muestra lo que le queda)</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone">
+        <div class="hdr"><div class="brand"><svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4"/></svg>Ronda</div><div class="lang"><span class="on">ES</span><span>EN</span></div><div class="tb">◐</div></div>
+        <div class="b-top"><span>←</span><b>Ranking</b><span class="muted" style="margin-left:auto">8 días</span></div>
+        <div class="pod">
+          <div class="c"><span class="av">D</span><span class="n">Diego</span><div class="blk" style="height:70px">44%</div></div>
+          <div class="c first"><span class="av">E</span><span class="n">Emilia</span><div class="blk" style="height:100px">38%</div></div>
+          <div class="c"><span class="av">A</span><span class="n">Ana</span><div class="blk" style="height:52px">52%</div></div>
+        </div>
+        <div class="b-list">
+          <div class="r"><span class="pos">4</span><span>Gabi</span><span class="bar thin"><b style="width:55%"></b></span><span class="pc">55%</span></div>
+          <div class="r"><span class="pos">5</span><span>Carla</span><span class="bar thin"><b style="width:61%"></b></span><span class="pc">61%</span></div>
+          <div class="r"><span class="pos">6</span><span>Facundo</span><span class="bar thin"><b style="width:70%"></b></span><span class="pc">70%</span></div>
+          <div class="r"><span class="pos">7</span><span>Bruno</span><span class="bar thin"><b style="width:96%"></b></span><span class="pc">96%</span></div>
+        </div>
+        <div class="spacer"></div>
+        <div class="actions"><span class="btn primary">Compartir imagen</span><span class="btn">⋯</span></div>
+      </div>
+      <figcaption>Mobile · ranking con podio (⋯ = historial, backup, ajustes)</figcaption>
+    </figure>
+  </div>
+
+  <figure style="justify-items:stretch">
+    <div class="desk">
+      <div class="hdr"><div class="brand"><svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4"/></svg>Ronda</div><span class="kick">Sorteos y grupos</span><div class="lang"><span class="on">ES</span><span>EN</span></div><div class="tb">◐</div></div>
+      <div class="ltabs" style="margin-top:16px;border-bottom:1px solid var(--line);padding-bottom:12px"><span class="on">Daily equipo</span><span>Tenis de los jueves</span><span>Clase 4°B</span><span class="plus">+</span></div>
+      <div class="b-desk">
+        <div style="display:grid;gap:14px;align-content:start">
+          <div class="h-list" style="font-size:2rem">Daily equipo</div>
+          <div class="b-input"><span class="f">Agregar persona…</span></div>
+          <div class="b-chips"><span class="b-chip"><span class="av">A</span>Ana<i>×</i></span><span class="b-chip"><span class="av">B</span>Bruno<i>×</i></span><span class="b-chip"><span class="av">C</span>Carla<i>×</i></span><span class="b-chip off"><span class="av">D</span>Diego<i>×</i></span><span class="b-chip"><span class="av">E</span>Emilia<i>×</i></span><span class="b-chip"><span class="av">F</span>Facundo<i>×</i></span><span class="b-chip"><span class="av">G</span>Gabi<i>×</i></span></div>
+          <div class="actions"><span class="btn primary">Sortear</span><span class="btn">Limpiar</span></div>
+        </div>
+        <div style="display:grid;gap:16px;align-content:start">
+          <div class="row"><span class="label" style="font-size:1.1rem">Turnos · 5:00 c/u</span><small class="muted num">Reunión 12:04</small></div>
+          <div class="b-tiles" style="grid-template-columns:repeat(4,1fr)">
+            <div class="b-tile"><div class="ring" style="--p:64"><span>3:12</span></div><span class="n">Ana</span><span class="s">Listo</span></div>
+            <div class="b-tile"><div class="ring" style="--p:100"><span class="over">+0:40</span></div><span class="n">Bruno</span><span class="s">Se pasó</span></div>
+            <div class="b-tile cur"><div class="ring" style="--p:54"><span>2:41</span></div><span class="n">Carla</span><span class="s" style="color:var(--accent-ink);font-weight:600">Hablando</span></div>
+            <div class="b-tile off"><div class="ring none"><span>—</span></div><span class="n">Diego</span><span class="s">No está</span></div>
+            <div class="b-tile"><div class="ring"><span>5:00</span></div><span class="n">Emilia</span><span class="s">Sigue</span></div>
+            <div class="b-tile"><div class="ring"><span>5:00</span></div><span class="n">Facundo</span><span class="s">Espera</span></div>
+            <div class="b-tile"><div class="ring"><span>5:00</span></div><span class="n">Gabi</span><span class="s">Espera</span></div>
+          </div>
+          <div class="actions"><span class="btn">No está</span><span class="btn">Pausar</span><span class="btn primary">Siguiente</span><span class="btn">Terminar</span></div>
+        </div>
+        <div class="panel">
+          <div class="row"><b>Ranking</b><small class="muted">8 días</small></div>
+          <div class="pod">
+            <div class="c"><span class="av">D</span><span class="n">Diego</span><div class="blk" style="height:56px">44%</div></div>
+            <div class="c first"><span class="av">E</span><span class="n">Emilia</span><div class="blk" style="height:80px">38%</div></div>
+            <div class="c"><span class="av">A</span><span class="n">Ana</span><div class="blk" style="height:40px">52%</div></div>
+          </div>
+          <div class="b-list">
+            <div class="r"><span class="pos">4</span><span>Gabi</span><span class="bar thin"><b style="width:55%"></b></span><span class="pc">55%</span></div>
+            <div class="r"><span class="pos">5</span><span>Carla</span><span class="bar thin"><b style="width:61%"></b></span><span class="pc">61%</span></div>
+            <div class="r"><span class="pos">6</span><span>Facundo</span><span class="bar thin"><b style="width:70%"></b></span><span class="pc">70%</span></div>
+            <div class="r"><span class="pos">7</span><span>Bruno</span><span class="bar thin"><b style="width:96%"></b></span><span class="pc">96%</span></div>
+          </div>
+          <span class="btn primary">Compartir imagen</span>
+        </div>
+      </div>
+    </div>
+    <figcaption>Desktop · lista, turnos y ranking en tres columnas</figcaption>
+  </figure>
+</section>
+
+<!-- ======================= C ======================= -->
+<section class="prop">
+  <h2>C · Escenario</h2>
+  <p>Turnos es un modo foco: un bloque oscuro grande con el nombre y un reloj enorme, pensado para poner el celu en la mesa o compartir pantalla. Abajo, la cola con quién ya habló y quién sigue. Los badges son compactos y oscuros. El ranking arranca con “gana” bien grande y después la tabla.</p>
+  <div class="board">
+    <figure>
+      <div class="phone">
+        <div class="hdr"><div class="brand"><svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4"/></svg>Ronda</div><div class="lang"><span class="on">ES</span><span>EN</span></div><div class="tb">◐</div></div>
+        <div class="ltabs"><span class="on">Daily equipo</span><span>Tenis</span><span class="plus">+</span></div>
+        <div class="h-list">Daily equipo</div>
+        <div class="c-input">Agregar persona…<span class="k">Enter ↵</span></div>
+        <div class="c-chips"><span class="c-chip">Ana<i>×</i></span><span class="c-chip">Bruno<i>×</i></span><span class="c-chip">Carla<i>×</i></span><span class="c-chip off">Diego<i>×</i></span><span class="c-chip">Emilia<i>×</i></span><span class="c-chip">Facundo<i>×</i></span><span class="c-chip">Gabi<i>×</i></span></div>
+        <small class="muted">7 personas · 1 no está hoy</small>
+        <div class="spacer"></div>
+        <div style="display:grid;gap:8px"><span class="label">Tiempo por persona</span><div class="presets"><span>2</span><span>3</span><span class="on">5 min</span><span>10</span><span>Otro…</span></div></div>
+        <div class="actions"><span class="btn">Sortear</span><span class="btn primary">Empezar turnos</span></div>
+      </div>
+      <figcaption>Mobile · lista con badges</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone">
+        <div class="row"><span class="btn sm ghost">✕ Salir</span><small class="muted num">Reunión 12:04 · 3 de 7</small></div>
+        <div class="stage">
+          <div class="meta"><span>Daily equipo</span><span>5:00 c/u</span></div>
+          <div class="who">Carla</div>
+          <div class="clock">2:41</div>
+          <div class="of">quedan 2:19</div>
+          <div class="bar"><b style="width:54%"></b></div>
+          <div class="ctl"><span class="btn">No está</span><span class="btn primary">Siguiente →</span></div>
+        </div>
+        <div class="queue"><span class="done">Ana</span><span class="done">Bruno</span><span class="cur">Carla</span><span>Emilia</span><span>Facundo</span><span class="off">Diego</span></div>
+        <div class="actions"><span class="btn">Pausar</span><span class="btn">Terminar</span></div>
+      </div>
+      <figcaption>Mobile · turnos en modo foco</figcaption>
+    </figure>
+
+    <figure>
+      <div class="phone">
+        <div class="hdr"><div class="brand"><svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4"/></svg>Ronda</div><div class="lang"><span class="on">ES</span><span>EN</span></div><div class="tb">◐</div></div>
+        <div class="c-win"><span class="k">Habla menos · 8 días</span><span class="n">Emilia</span><span class="p">38%</span><small style="opacity:.7">promedio del tiempo usado · 6 días presente</small></div>
+        <div class="c-lb">
+          <div class="r"><span class="pos">2</span><span class="n">Diego<small>5 días</small></span><span class="p">44%</span></div>
+          <div class="r"><span class="pos">3</span><span class="n">Ana<small>8 días</small></span><span class="p">52%</span></div>
+          <div class="r"><span class="pos">4</span><span class="n">Gabi<small>3 días</small></span><span class="p">55%</span></div>
+          <div class="r"><span class="pos">5</span><span class="n">Carla<small>8 días</small></span><span class="p">61%</span></div>
+          <div class="r"><span class="pos">6</span><span class="n">Facundo<small>7 días</small></span><span class="p">70%</span></div>
+          <div class="r"><span class="pos">7</span><span class="n">Bruno<small>8 días</small></span><span class="p">96%</span></div>
+        </div>
+        <div class="spacer"></div>
+        <div class="actions"><span class="btn primary">Compartir imagen</span><span class="btn">Historial</span></div>
+      </div>
+      <figcaption>Mobile · ranking</figcaption>
+    </figure>
+  </div>
+
+  <figure style="justify-items:stretch">
+    <div class="desk">
+      <div class="hdr"><div class="brand"><svg viewBox="0 0 32 32" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4"/></svg>Ronda</div><span class="kick">Daily equipo · turnos</span><span class="muted num" style="margin-left:auto">Reunión 12:04 · 3 de 7</span><span class="btn sm">✕ Salir</span></div>
+      <div class="c-desk">
+        <div class="stage">
+          <div class="meta"><span>Daily equipo</span><span>5:00 c/u</span></div>
+          <div class="who">Carla</div>
+          <div class="clock">2:41</div>
+          <div class="of">quedan 2:19</div>
+          <div class="bar"><b style="width:54%"></b></div>
+          <div class="ctl" style="grid-template-columns:auto auto 1fr;max-width:520px"><span class="btn">Pausar</span><span class="btn">No está</span><span class="btn primary">Siguiente: Emilia →</span></div>
+        </div>
+        <div style="display:grid;gap:18px;align-content:start">
+          <div style="display:grid;gap:8px"><span class="label">Cola</span>
+            <div class="a-rows">
+              <div class="a-r"><span>Ana</span><span class="t">3:12</span><span class="st tag">Listo</span></div>
+              <div class="a-r"><span>Bruno</span><span class="t over">5:40</span><span class="st tag">Listo</span></div>
+              <div class="a-r cur"><span>Carla</span><span class="t">2:41</span><span class="st tag on">Habla</span></div>
+              <div class="a-r"><span>Emilia</span><span class="t muted">—</span><span class="st tag">Sigue</span></div>
+              <div class="a-r"><span>Facundo</span><span class="t muted">—</span><span class="st tag">Espera</span></div>
+              <div class="a-r"><span>Gabi</span><span class="t muted">—</span><span class="st tag">Espera</span></div>
+              <div class="a-r off"><span>Diego</span><span class="t">—</span><span class="st tag">Volver</span></div>
+            </div>
+          </div>
+          <span class="btn">Terminar y guardar el día</span>
+        </div>
+      </div>
+    </div>
+    <figcaption>Desktop · modo foco para compartir pantalla en la reunión</figcaption>
+  </figure>
+</section>
+
+</body>
+</html>
