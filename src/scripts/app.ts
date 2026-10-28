@@ -1,7 +1,7 @@
 import { draw, formatResult, validateDraw, type DrawResult } from '../lib/draw';
 import { messages } from '../i18n/messages';
 import {
-  MAX_PEOPLE, activeList, addList, addPeople, clearPeople, nameKey, removeList, removePerson, renameList, renamePerson, setActive,
+  MAX_PEOPLE, activeList, addList, addPeople, clearPeople, removeList, removePerson, renameList, renamePerson, setActive,
   setTurns, updateList,
   type ListStore, type Person,
 } from '../lib/lists';
@@ -42,11 +42,6 @@ let selectedId: string | null = null; // badge selected by the first Backspace
 const turns = initTurns({
   list: () => activeList(store),
   listIds: () => store.lists.map((list) => list.id),
-  drawOrder: () => {
-    if (last?.length !== 1) return [];
-    const byName = new Map(people().map((p) => [nameKey(p.name), p.id]));
-    return last[0]!.flatMap((name) => byName.get(nameKey(name)) ?? []);
-  },
   say: (message) => setStatus(message),
   absenceChanged: () => {
     renderPeople();

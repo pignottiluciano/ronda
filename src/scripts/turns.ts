@@ -2,6 +2,7 @@
 // app.ts owns the lists and hands this module what it needs through `TurnsHost`.
 import { messages } from '../i18n/messages';
 import { formatClock } from '../lib/clock';
+import { shuffle } from '../lib/draw';
 import type { SavedList } from '../lib/lists';
 import {
   BUDGET_PRESETS, MAX_BUDGET_MINUTES, cancelSession, emptyTurns, finish, isValidBudgetMinutes, nextId, pause, queue,
@@ -15,8 +16,6 @@ import { holdScreen, releaseScreen } from './wakelock';
 export interface TurnsHost {
   list(): SavedList;
   listIds(): string[];
-  /** Person ids in the order of the last single-group draw, or empty when there is none. */
-  drawOrder(): string[];
   say(message: string): void;
   /** Absences changed: badges, the count and the draw must follow. */
   absenceChanged(): void;
@@ -315,7 +314,7 @@ export function initTurns(host: TurnsHost) {
   startButton.addEventListener('click', () => {
     const present = ids().filter((id) => !turns().absent.includes(id));
     if (present.length === 0) return host.say(t.turnsNeedPeople);
-    update(startSession(turns(), ids(), Date.now(), host.drawOrder()));
+    update(startSession(turns(), ids(), Date.now(), shuffle(present))); // every start draws the order again
   });
 
   tiles.addEventListener('click', (event) => {
