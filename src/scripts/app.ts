@@ -7,7 +7,8 @@ import {
   type DrawResult,
 } from '../lib/draw';
 import { messages } from '../i18n/messages';
-import { readPreferences, writePreferences } from './storage';
+import { activeList, addList, removeList, renameList, setActive, updateList } from '../lib/lists';
+import { readStore, writeStore } from './storage';
 import { shareText } from './share';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -22,18 +23,55 @@ const results = $('results');
 const output = $('output');
 const resultActions = $('result-actions');
 const status = $('status');
+const tabs = $('tabs');
+const listName = $('list-name');
+const listNameInput = $<HTMLInputElement>('list-name-input');
+const saved = $('saved');
+const deleteDialog = $<HTMLDialogElement>('delete-dialog');
 
 const t = messages[document.documentElement.lang === 'en' ? 'en' : 'es'];
 const NAMES_HINT = t.namesHint;
+const emptyState = output.firstElementChild!.cloneNode(true);
+let store = readStore(t.defaultListName(1));
 let last: DrawResult | null = null;
 
 function setStatus(message: string) {
   status.textContent = message;
 }
 
-function save() {
-  const ok = writePreferences({ names: names.value, groups: Math.max(1, parseInt(groups.value, 10) || 1) });
+function persist() {
+  const ok = writeStore(store);
+  saved.hidden = !ok;
   if (!ok) setStatus(t.saveFailed);
+}
+
+// Names are set as text, never as HTML.
+function renderTabs(scrollToActive = false) {
+  tabs.replaceChildren(
+    ...store.lists.map((list) => {
+      const count = parseParticipants(list.names).length;
+      const tab = document.createElement('button');
+      tab.type = 'button';
+      tab.className = 'tab';
+      tab.dataset.id = list.id;
+      tab.setAttribute('aria-label', `${list.name}, ${t.participant(count)}`);
+      if (list.id === store.activeId) tab.setAttribute('aria-current', 'true');
+      const small = document.createElement('small');
+      small.textContent = String(count);
+      tab.append(list.name, small);
+      return tab;
+    }),
+  );
+  if (scrollToActive) tabs.querySelector('[aria-current]')?.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+}
+
+function save() {
+  store = updateList(store, activeList(store).id, {
+    names: names.value,
+    groups: Math.max(1, parseInt(groups.value, 10) || 1),
+  });
+  persist();
+  renderTabs();
 }
 
 function updateCount() {
@@ -128,6 +166,41 @@ function markStale() {
   setStatus(t.stale);
 }
 
+// Switching lists drops the previous result: it belonged to another list.
+function loadActive() {
+  const list = activeList(store);
+  names.value = list.names;
+  groups.value = String(list.groups);
+  listName.textContent = list.name;
+  last = null;
+  output.replaceChildren(emptyState.cloneNode(true));
+  resultActions.hidden = true;
+  results.classList.remove('is-stale');
+  showError(null);
+  setStatus('');
+  updateCount();
+  renderTabs(true);
+}
+
+function startRename() {
+  listNameInput.value = activeList(store).name;
+  listName.hidden = true;
+  listNameInput.hidden = false;
+  listNameInput.focus();
+  listNameInput.select();
+}
+
+function finishRename(apply: boolean) {
+  if (listNameInput.hidden) return; // Enter hides the input, which then also fires blur
+  listNameInput.hidden = true;
+  listName.hidden = false;
+  if (!apply) return;
+  store = renameList(store, activeList(store).id, listNameInput.value);
+  persist();
+  listName.textContent = activeList(store).name;
+  renderTabs(true);
+}
+
 function onInputChange() {
   updateCount();
   save();
@@ -171,9 +244,48 @@ for (const button of document.querySelectorAll<HTMLButtonElement>('[data-step]')
   });
 }
 
-const saved = readPreferences();
-if (saved) {
-  names.value = saved.names;
-  groups.value = String(saved.groups);
-}
-updateCount();
+tabs.addEventListener('click', (event) => {
+  const tab = (event.target as Element).closest<HTMLElement>('[data-id]');
+  if (!tab || tab.dataset.id === store.activeId) return;
+  store = setActive(store, tab.dataset.id!);
+  persist();
+  loadActive();
+});
+
+$('new-list').addEventListener('click', () => {
+  store = addList(store, t.defaultListName(store.lists.length + 1));
+  persist();
+  loadActive();
+  startRename();
+});
+
+$('rename').addEventListener('click', startRename);
+listNameInput.addEventListener('blur', () => finishRename(true));
+listNameInput.addEventListener('keydown', (event) => {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    finishRename(true);
+    $('rename').focus();
+  } else if (event.key === 'Escape') {
+    finishRename(false);
+    $('rename').focus();
+  }
+});
+
+$('delete').addEventListener('click', () => {
+  $('delete-title').textContent = t.deleteTitle(activeList(store).name);
+  deleteDialog.showModal();
+});
+
+deleteDialog.addEventListener('close', () => {
+  const confirmed = deleteDialog.returnValue === 'delete';
+  deleteDialog.returnValue = '';
+  if (!confirmed) return;
+  const { id, name } = activeList(store);
+  store = removeList(store, id, t.defaultListName(1));
+  persist();
+  loadActive();
+  setStatus(t.listDeleted(name));
+});
+
+loadActive();

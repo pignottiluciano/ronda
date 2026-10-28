@@ -1,31 +1,39 @@
 // Browser-only. Never import from Astro frontmatter: localStorage does not exist at build time.
+import { createStore, parseStore, type ListStore } from '../lib/lists';
 
-const KEY = 'ronda.preferences.v1';
+const KEY = 'ronda.lists.v1';
+const LEGACY_KEY = 'ronda.preferences.v1'; // single list, before saved lists existed
 
-export interface Preferences {
-  names: string;
-  groups: number;
+function readJson(key: string): unknown {
+  const raw = localStorage.getItem(key);
+  return raw === null ? null : JSON.parse(raw);
 }
 
-/** Returns null when nothing is saved, the data is invalid, or storage is blocked. */
-export function readPreferences(): Preferences | null {
+/**
+ * Always returns a usable store: the saved one, the legacy single list moved into a first list,
+ * or a fresh empty list named `defaultName` when nothing valid is stored or storage is blocked.
+ */
+export function readStore(defaultName: string): ListStore {
   try {
-    const raw = localStorage.getItem(KEY);
-    if (raw === null) return null;
-    const data: unknown = JSON.parse(raw);
-    if (typeof data !== 'object' || data === null) return null;
-    const { names, groups } = data as Record<string, unknown>;
-    if (typeof names !== 'string' || !Number.isInteger(groups) || (groups as number) < 1) return null;
-    return { names, groups: groups as number };
+    const saved = parseStore(readJson(KEY));
+    if (saved) return saved;
+    const legacy = readJson(LEGACY_KEY);
+    if (typeof legacy === 'object' && legacy !== null) {
+      const { names, groups } = legacy as Record<string, unknown>;
+      if (typeof names === 'string' && Number.isInteger(groups) && (groups as number) >= 1) {
+        return createStore(defaultName, names, groups as number);
+      }
+    }
   } catch {
-    return null;
+    // Corrupt JSON or blocked storage: start fresh.
   }
+  return createStore(defaultName);
 }
 
 /** Returns false when the browser refuses to store (private mode, quota, blocked site data). */
-export function writePreferences(preferences: Preferences): boolean {
+export function writeStore(store: ListStore): boolean {
   try {
-    localStorage.setItem(KEY, JSON.stringify(preferences));
+    localStorage.setItem(KEY, JSON.stringify(store));
     return true;
   } catch {
     return false;

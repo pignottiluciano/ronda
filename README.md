@@ -11,7 +11,7 @@ Use it to set speaking turns in a meeting, make teams in a class, pair people up
 - One participant per line, with a live count. Empty lines and extra spaces are ignored; repeated names are allowed.
 - Numbered order (1 group) or one card per group with its member count.
 - **Draw again** and **Share** (the system share sheet, or copy to the clipboard).
-- Saves the list and the number of groups in the browser (`localStorage`) and restores them on return. **Clear list** empties it.
+- Several named lists, shown as tabs: create, switch, rename and delete them. Each keeps its own participants and number of groups. Everything is saved in the browser (`localStorage`) and restored on return. **Clear list** empties the current one.
 - System, Light or Dark theme from the menu at the top right; it is remembered.
 - Spanish (`/`) and English (`/en/`) with an ES/EN switch next to the theme menu. The choice is remembered; it starts in Spanish by default.
 - Accessible: visible labels, keyboard support, visible focus, screen reader announcements and `prefers-reduced-motion` support.
@@ -25,7 +25,7 @@ npm install
 npm run dev      # server at http://localhost:4321
 npm run build    # static site in dist/
 npm run preview  # serves dist/
-npm test         # tests for the draw logic
+npm test         # tests for the draw and lists logic
 ```
 
 ## Structure
@@ -36,13 +36,14 @@ src/
   components/Home.astro  The page, takes the language as a prop
   i18n/messages.ts       All text in es and en
   lib/draw.ts            Draw logic, no DOM (parse, validate, shuffle, distribute)
+  lib/lists.ts           Saved-lists logic, no DOM (add, rename, remove, validate stored data)
   scripts/
     app.ts               Events and UI updates
-    storage.ts           Safe reading and writing of localStorage
+    storage.ts           Safe reading and writing of localStorage (migrates the old single list)
     share.ts             Share or copy
     theme.ts             Theme menu and its persistence
   styles/global.css      Color, spacing and type tokens, and styles
-tests/draw.test.mjs      Tests with node:test
+tests/                   Tests with node:test (draw and lists)
 docs/                    Design mocks (proposals, palettes, fonts, share images)
 ```
 
@@ -64,6 +65,6 @@ for l in es en; do "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome
 
 ## Privacy and limits
 
-- The list stays only in your browser and device. It is not synced, and it is lost if you clear the site's data or use private browsing. Do not store sensitive information in it.
+- Your lists stay only in your browser and device. It is not synced, and it is lost if you clear the site's data or use private browsing. Do not store sensitive information in it.
 - The result is not saved: when you reopen the app you get your list back and draw again.
 - Shuffling uses `Math.random()` (Fisher–Yates). It is fine for casual draws; it is not suitable for prizes or fairness audits.
