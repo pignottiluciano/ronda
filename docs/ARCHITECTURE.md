@@ -163,4 +163,4 @@ There is no deploy configuration file in the repo: pushing to `main` is the depl
 
 ## Share and app images
 
-`docs/og.html` and `docs/icon.html` generate the social images and the app icons; the commands are in the README. The ranking image is drawn at runtime by `src/scripts/share-image.ts` and uses the page's own fonts (`--font-heading`, `--font-body`) with a fixed light palette, so it looks the same whatever the theme.
+`docs/og.html` and `docs/icon.html` generate the social images and the app icons; the commands are in the README. The ranking image is drawn at runtime by `src/scripts/share-image.ts` (copy, download and, on touch devices, the share sheet live in `src/scripts/share.ts`; the copy passes the still-drawing image to `ClipboardItem` as a promise so the click's permission lasts) and uses the page's own fonts (`--font-heading`, `--font-body`) with a fixed light palette, so it looks the same whatever the theme.

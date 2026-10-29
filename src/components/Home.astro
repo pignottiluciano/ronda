@@ -242,9 +242,12 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
               <p id="now-clock" class="now-clock" role="timer" aria-live="off">00:00</p>
               <p id="now-of" class="now-of"></p>
               <div id="now-bar" class="bar" aria-hidden="true"><i></i></div>
-              <div class="actions">
-                <button type="button" id="turns-pause" class="btn btn-ghost" hidden>{t.turnsPause}</button>
-                <button type="button" id="turns-next" class="btn btn-primary"></button>
+              <div class="now-controls">
+                <button type="button" id="turns-pause" class="btn btn-clock" data-act="pause" aria-label={t.turnsPause} title={t.turnsPause} hidden>
+                  <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" /></svg>
+                  <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z" /></svg>
+                </button>
+                <button type="button" id="turns-next" class="btn btn-next"><span id="turns-next-label"></span></button>
               </div>
             </div>
             <div id="now-slot" class="now-slot" hidden>
@@ -253,8 +256,8 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
             </div>
             <ul id="tiles" class="tiles" role="list"></ul>
             <div class="actions turns-end">
-              <button type="button" id="turns-finish" class="btn btn-ghost">{t.turnsFinish}</button>
-              <button type="button" id="turns-discard" class="btn btn-ghost">{t.turnsDiscard}</button>
+              <button type="button" id="turns-finish" class="btn btn-ghost btn-small">{t.turnsFinish}</button>
+              <button type="button" id="turns-discard" class="btn btn-text btn-small">{t.turnsDiscard}</button>
             </div>
           </div>
           <p id="turns-announce" class="sr-only" aria-live="polite"></p>
@@ -264,6 +267,8 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
           <div class="results-head">
             <h2 id="ranking-title">{t.rankTitle}</h2>
             <div class="result-actions">
+              <button type="button" id="rank-copy" class="btn btn-ghost" hidden>{t.rankCopy}</button>
+              <button type="button" id="rank-download" class="btn btn-ghost" hidden>{t.rankDownload}</button>
               <button type="button" id="rank-share" class="btn btn-ghost" hidden>{t.rankShare}</button>
             </div>
           </div>

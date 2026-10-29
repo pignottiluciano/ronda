@@ -79,7 +79,7 @@ form with no control. The switch "Use turns" lives in the list tools next to ren
 ("Done", "Speaking", "Next", "Waiting", "Absent", "Over time"). Tapping gives the floor to that person and pauses the previous one.
 Active tile: `--accent` border and `--accent-soft` fill. Absent: dashed border, no fill. Over time: ring full, label `+m:ss`.
 The tile is a `<button>`; the ring is `aria-hidden`; the active one has `aria-current="true"`.
-Controls under the grid: "Not here" (marks the current or selected person absent), Pause, Next (primary, names who is next), Finish.
+Controls: a square icon button for the clock (▶ green to start, ⏸ neutral to pause, ▶ amber to resume) and a wide Next button (coral; outlined while the clock is the next press, so two filled buttons never sit together). "Not here" lives on each tile; Finish is secondary and Discard is red text. State colors: `--go` speaking, `--accent` up now, `--hold` paused, `--danger` over time. The floating card (320×170) drops the label, "of 05:00" and the Float button, and puts name and clock on one row.
 
 **Podium.** The three lowest averages, lowest in the middle and tallest, Fraunces percentages inside the steps; fewer than
 three people shows only those. Below it, the ranking table: position, name, bar plus percent, days present.

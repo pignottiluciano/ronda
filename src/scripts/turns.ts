@@ -52,6 +52,7 @@ export function initTurns(host: TurnsHost) {
   const barFill = $('now-bar').firstElementChild as HTMLElement;
   const pauseButton = $<HTMLButtonElement>('turns-pause');
   const nextButton = $<HTMLButtonElement>('turns-next');
+  const nextLabel = $('turns-next-label');
   const tiles = $('tiles');
   const announce = $('turns-announce');
   const pageTitle = document.title;
@@ -173,13 +174,14 @@ export function initTurns(host: TurnsHost) {
       const active = session.activeId === id;
       const running = active && session.activeSince !== null;
       const over = !away && ms > budget;
-      const state = away ? 'absent' : running ? 'speaking' : active ? 'paused' : ms > 0 ? 'done' : id === up ? 'next' : 'waiting';
+      const holding = active && !running && ms === 0; // has the floor, clock not started
+      const state = away ? 'absent' : running ? 'speaking' : holding ? 'holding' : active ? 'paused' : ms > 0 ? 'done' : id === up ? 'next' : 'waiting';
       const clock = over ? `+${formatClock(ms - budget)}` : formatClock(ms);
       tile.li.dataset.state = state;
       tile.li.dataset.over = String(over);
       tile.ring.style.setProperty('--p', String(Math.min(100, (ms / budget) * 100)));
       tile.time.textContent = away ? '—' : clock;
-      tile.state.textContent = over ? t.stateOver : { absent: t.stateAbsent, speaking: t.stateSpeaking, paused: t.statePaused, done: t.stateDone, next: t.stateNext, waiting: t.stateWaiting }[state];
+      tile.state.textContent = over ? t.stateOver : { absent: t.stateAbsent, speaking: t.stateSpeaking, holding: t.turnsUpNext, paused: t.statePaused, done: t.stateDone, next: t.stateNext, waiting: t.stateWaiting }[state];
       tile.main.disabled = away;
       tile.main.setAttribute('aria-label', t.tileGive(nameOf(id), clock));
       if (active) tile.main.setAttribute('aria-current', 'true');
@@ -191,19 +193,24 @@ export function initTurns(host: TurnsHost) {
     const activeId = session.activeId;
     const activeMs = activeId ? spokenMs(current, activeId, at) : 0;
     const activeOver = activeMs > budget;
-    now.dataset.state = activeId === null ? 'idle' : session.activeSince === null ? 'paused' : 'speaking';
-    now.dataset.over = String(activeOver);
     const waiting = activeId !== null && session.activeSince === null && activeMs === 0; // has the floor, clock not started
+    now.dataset.state = activeId === null ? 'idle' : session.activeSince !== null ? 'speaking' : waiting ? 'waiting' : 'paused';
+    now.dataset.over = String(activeOver);
     nowLabel.textContent = activeId === null ? '' : waiting ? t.turnsUpNext : t.turnsNow;
     nowName.textContent = activeId === null ? t.turnsNobody : nameOf(activeId);
     nowClock.textContent = formatRemaining(activeMs, budget);
     nowOf.textContent = t.turnsOf(formatClock(budget));
     barFill.style.transform = `scaleX(${Math.max(0, 1 - activeMs / budget)})`; // drains as the time goes
     pauseButton.hidden = activeId === null;
-    pauseButton.textContent = session.activeSince !== null ? t.turnsPause : waiting ? t.turnsGo : t.turnsResume;
-    pauseButton.classList.toggle('btn-primary', waiting); // the one click left to do
-    pauseButton.classList.toggle('btn-ghost', !waiting);
-    nextButton.textContent = up === null ? t.turnsAllSpoke : activeId === null ? t.turnsBegin(nameOf(up)) : t.turnsNext(nameOf(up));
+    const act = session.activeSince !== null ? 'pause' : waiting ? 'go' : 'resume';
+    const actLabel = { pause: t.turnsPause, go: t.turnsGo, resume: t.turnsResume }[act];
+    pauseButton.dataset.act = act;
+    pauseButton.setAttribute('aria-label', actLabel);
+    pauseButton.title = actLabel;
+    nextButton.dataset.quiet = String(waiting); // the clock is the next press, so passing the floor steps back
+    const nextText = up === null ? t.turnsAllSpoke : activeId === null ? t.turnsBegin(nameOf(up)) : t.turnsNext(nameOf(up));
+    nextLabel.textContent = nextText;
+    nextButton.title = nextText; // a long name is cut to two lines on the button
     total.hidden = false;
     total.textContent = t.turnsTotal(formatClock(sum));
 
@@ -346,11 +353,30 @@ export function initTurns(host: TurnsHost) {
     }
   });
 
+  // Space starts, pauses or resumes the clock; the right arrow passes the floor. Never while typing or on a focused control,
+  // which keep their own keys, and never to close the day by accident.
+  function onKey(event: KeyboardEvent) {
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (mode !== 'turns' && !float.isOpen()) return;
+    const key = event.key === ' ' ? pauseButton : event.key === 'ArrowRight' ? nextButton : null;
+    if (!key || key.closest('[hidden]') || (event.target as Element).closest('input, textarea, select, button, a, summary, dialog, [contenteditable]')) return;
+    if (key === nextButton && nextId(turns(), ids()) === null) return;
+    event.preventDefault();
+    key.click();
+  }
+  document.addEventListener('keydown', onKey);
+
   floatButton.addEventListener('click', async () => {
     if (float.isOpen()) return float.close();
-    if (!(await float.open())) host.say(t.floatFailed);
+    if (!(await float.open())) return host.say(t.floatFailed);
+    float.window()?.addEventListener('keydown', onKey);
   });
   $('turns-unfloat').addEventListener('click', float.close);
+
+  // After a pointer click the button lets go of the focus, so Space then drives the clock instead of repeating the last press.
+  const letGo = (event: MouseEvent) => event.detail > 0 && (event.currentTarget as HTMLElement).blur();
+  pauseButton.addEventListener('click', letGo);
+  nextButton.addEventListener('click', letGo);
 
   pauseButton.addEventListener('click', () => {
     const session = turns().current;

@@ -4,7 +4,7 @@ import { messages } from '../i18n/messages';
 import type { SavedList } from '../lib/lists';
 import { MAX_MIN_DAYS, ranking, removeSession, resetSessions, setMinDays, type ListTurns, type Ranking, type Session } from '../lib/turns';
 import { confirmAction } from './confirm';
-import { shareImage } from './share';
+import { canCopyImage, canShareImageFile, copyImage, downloadBlob, shareImage } from './share';
 import { MAX_IMAGE_ROWS, renderRankingImage } from './share-image';
 
 export interface RankingHost {
@@ -34,6 +34,10 @@ export function initRanking(host: RankingHost) {
   const history = $('history');
   const minDays = $<HTMLInputElement>('min-days');
   const shareButton = $<HTMLButtonElement>('rank-share');
+  const copyButton = $<HTMLButtonElement>('rank-copy');
+  const downloadButton = $<HTMLButtonElement>('rank-download');
+  const copyable = canCopyImage();
+  const shareable = canShareImageFile();
   const resetButton = $<HTMLButtonElement>('rank-reset');
   // Drawn ahead of the click: sharing must start inside the tap, and fonts and canvas take a moment.
   let prepared: Promise<Blob> | null = null;
@@ -120,7 +124,7 @@ export function initRanking(host: RankingHost) {
     empty.hidden = has;
     body.hidden = !has;
     resetButton.hidden = !has;
-    shareButton.hidden = true;
+    for (const button of [shareButton, copyButton, downloadButton]) button.hidden = true;
     minDays.value = String(turns.minDays);
     prepared = null;
     if (!has) return;
@@ -136,15 +140,30 @@ export function initRanking(host: RankingHost) {
     fewList.replaceChildren(...rk.fewData.map((row) => el('li', undefined, `${row.name} · ${t.imageDays(row.days)}`)));
     renderHistory(turns);
     prepared = prepareImage(list, rk, turns);
-    shareButton.hidden = prepared === null;
+    shareButton.hidden = prepared === null || !shareable;
+    copyButton.hidden = prepared === null || !copyable;
+    downloadButton.hidden = prepared === null;
   }
+
+  copyButton.addEventListener('click', async () => {
+    if (!prepared) return;
+    host.say((await copyImage(prepared)) === 'copied' ? t.imageCopied : t.imageCopyFailed);
+  });
+
+  downloadButton.addEventListener('click', async () => {
+    if (!prepared) return;
+    try {
+      host.say(downloadBlob(await prepared, t.imageFile) ? t.imageDownloaded : t.imageFailed);
+    } catch {
+      host.say(t.imageFailed);
+    }
+  });
 
   shareButton.addEventListener('click', async () => {
     if (!prepared) return;
     try {
       const outcome = await shareImage(await prepared, t.imageFile, host.list().name);
       if (outcome === 'shared') host.say(t.imageDone);
-      else if (outcome === 'downloaded') host.say(t.imageDownloaded);
       else if (outcome === 'failed') host.say(t.imageFailed);
     } catch {
       host.say(t.imageFailed);

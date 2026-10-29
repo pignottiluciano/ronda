@@ -34,7 +34,7 @@ export function createFloat({ card, slot, onChange }: FloatOptions) {
     const api = pipApi();
     if (!api) return false;
     try {
-      const next = await api.requestWindow({ width: 360, height: 300 });
+      const next = await api.requestWindow({ width: 320, height: 170 });
       // The page's own styles and theme, so the card looks the same out there.
       for (const sheet of document.querySelectorAll('link[rel="stylesheet"], style')) next.document.head.append(sheet.cloneNode(true));
       for (const { name, value } of document.documentElement.attributes) next.document.documentElement.setAttribute(name, value);

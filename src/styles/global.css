@@ -13,16 +13,25 @@
 
   /* Color "Tinta y coral": warm near-neutral paper/charcoal, color only in the accent.
      light-dark(light, dark) follows color-scheme below. */
-  --bg: light-dark(oklch(0.975 0.008 70), oklch(0.19 0.006 50));
+  --bg: light-dark(oklch(0.975 0.008 70), oklch(0.16 0.006 50));
   --surface: light-dark(oklch(0.995 0.004 70), oklch(0.235 0.008 50));
   --ink: light-dark(oklch(0.24 0.015 40), oklch(0.95 0.008 70));
   --muted: light-dark(oklch(0.5 0.02 45), oklch(0.74 0.012 60));
-  --line: light-dark(oklch(0.89 0.012 60), oklch(0.34 0.01 50));
+  --line: light-dark(oklch(0.89 0.012 60), oklch(0.4 0.01 50));
   --accent: light-dark(oklch(0.55 0.16 33), oklch(0.74 0.14 38));
   --accent-ink: light-dark(oklch(0.53 0.16 33), oklch(0.76 0.13 38)); /* accent as text color */
-  --accent-soft: light-dark(oklch(0.94 0.04 40), oklch(0.32 0.05 38));
+  --accent-soft: light-dark(oklch(0.94 0.04 40), oklch(0.3 0.035 40));
   --on-accent: light-dark(oklch(0.99 0.005 60), oklch(0.2 0.02 40));
   --danger: light-dark(oklch(0.45 0.18 27), oklch(0.76 0.13 27));
+  /* Turn states, one hue each so they read apart: green = the clock runs (or starts), coral = pass the floor,
+     amber = stopped, red = over time. --go and --hold-ink also serve as text and border on --surface. */
+  --go: light-dark(oklch(0.5 0.13 150), oklch(0.76 0.15 150));
+  --on-go: light-dark(oklch(0.99 0.01 150), oklch(0.2 0.04 150));
+  --go-soft: light-dark(oklch(0.94 0.05 150), oklch(0.29 0.05 150));
+  --hold: light-dark(oklch(0.82 0.15 82), oklch(0.82 0.14 82));
+  --on-hold: oklch(0.25 0.05 70);
+  --hold-ink: light-dark(oklch(0.48 0.1 70), oklch(0.82 0.14 82));
+  --hold-soft: light-dark(oklch(0.95 0.06 85), oklch(0.3 0.045 82));
   /* Border of editable controls: 3:1 against --bg and --surface in both themes (--line is only 1.4:1, fine for dividers). */
   --control: light-dark(oklch(0.62 0.02 50), oklch(0.55 0.015 55));
 
@@ -421,8 +430,14 @@ button, input, textarea { font: inherit; color: inherit; }
 
 /* Who has the floor: name, clock counting up, and the share of the budget used. */
 .now { display: grid; gap: var(--s2); padding: var(--s4) var(--s5) var(--s5); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
-.now[data-state='speaking'], .now[data-state='paused'] { border-color: var(--accent); }
-.now-label { font-size: var(--t-xs); color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.now[data-state='speaking'] { border-color: var(--go); }
+.now[data-state='waiting'] { border-color: var(--accent); border-style: dashed; }
+.now[data-state='paused'] { border-color: var(--hold-ink); }
+.now[data-over='true'] { border-color: var(--danger); }
+.now-label { font-size: var(--t-xs); color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+.now[data-state='speaking'] .now-label { color: var(--go); }
+.now[data-state='waiting'] .now-label { color: var(--accent-ink); }
+.now[data-state='paused'] .now-label { color: var(--hold-ink); }
 .now-name { font-family: var(--font-head); font-size: var(--t-xl); font-weight: 600; letter-spacing: -0.02em; overflow-wrap: anywhere; }
 .now-clock { font-size: clamp(3rem, 14vw, 4rem); font-weight: 700; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .now[data-over='true'] .now-clock { color: var(--danger); }
@@ -430,18 +445,44 @@ button, input, textarea { font: inherit; color: inherit; }
 .now-of { font-size: var(--t-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
 .bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
 .bar i { display: block; height: 100%; width: 100%; background: var(--accent); border-radius: 4px; transform-origin: left; }
+.now[data-state='speaking'] .bar i { background: var(--go); }
+.now[data-state='paused'] .bar i { background: var(--hold-ink); }
 .now[data-over='true'] .bar i { background: var(--danger); }
-.now .actions { margin-top: var(--s2); }
 .now-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
 .btn-small { min-height: 36px; padding: 0 var(--s4); font-size: var(--t-sm); }
-/* Out in its own window the card fills it. */
+
+/* Two controls that never change meaning: the clock (square, icon) and passing the floor (wide, text).
+   The fill goes to whichever one is the next thing to press, so two filled buttons never sit side by side. */
+.now-controls { display: flex; gap: var(--s3); margin-top: var(--s2); }
+.btn-clock { flex: none; width: 56px; padding: 0; display: grid; place-items: center; background: transparent; border-color: var(--control); }
+.btn-clock svg { width: 20px; height: 20px; fill: currentColor; }
+.btn-clock .i-play, .btn-clock .i-pause { display: none; }
+.btn-clock[data-act='pause'] .i-pause, .btn-clock:not([data-act='pause']) .i-play { display: block; }
+.btn-clock[data-act='go'] { background: var(--go); border-color: var(--go); color: var(--on-go); }
+.btn-clock[data-act='resume'] { background: var(--hold); border-color: var(--hold); color: var(--on-hold); }
+.btn-next { flex: 1 1 auto; background: var(--accent); color: var(--on-accent); text-wrap: balance; line-height: 1.2; padding-block: var(--s2); overflow-wrap: anywhere; }
+.btn-next span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.btn-next[data-quiet='true'] { background: transparent; border-color: var(--accent); color: var(--ink); }
+.btn-text { background: transparent; color: var(--danger); }
+.btn-text:hover { text-decoration: underline; }
+
+/* Out in its own window the card fills it, in one compact block: name and clock on a row, the bar, the controls. */
 .float-body { min-height: 100vh; display: grid; }
-.now[data-floating='true'] { border: 0; border-radius: 0; align-content: center; padding: var(--s4); }
+.now[data-floating='true'] { border: 0; border-radius: 0; align-content: center; grid-template-columns: 1fr auto; align-items: center; gap: var(--s2) var(--s3); padding: var(--s3) var(--s4); }
+.now[data-floating='true'] .now-head, .now[data-floating='true'] .now-of { display: none; }
+.now[data-floating='true'] .now-name { font-size: var(--t-lg); }
+.now[data-floating='true'] .now-clock { font-size: 2.25rem; }
+.now[data-floating='true'] .bar, .now[data-floating='true'] .now-controls { grid-column: 1 / -1; }
+.now[data-floating='true'] .now-controls { margin-top: 0; }
+.now[data-floating='true'] .btn { min-height: 40px; }
+.now[data-floating='true'] .btn-clock { width: 48px; }
 .now-slot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s3); padding: var(--s4) var(--s5); border: 1px dashed var(--control); border-radius: var(--radius); color: var(--muted); font-size: var(--t-sm); }
 
 .tiles { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 .tile { --tile-bg: var(--surface); --arc: var(--accent); display: grid; background: var(--tile-bg); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-.tile[data-state='speaking'], .tile[data-state='paused'] { --tile-bg: var(--accent-soft); border-color: var(--accent); }
+.tile[data-state='speaking'] { --tile-bg: var(--go-soft); --arc: var(--go); border-color: var(--go); }
+.tile[data-state='holding'] { --tile-bg: var(--accent-soft); border-color: var(--accent); border-style: dashed; }
+.tile[data-state='paused'] { --tile-bg: var(--hold-soft); --arc: var(--hold-ink); border-color: var(--hold-ink); }
 .tile[data-state='absent'] { --tile-bg: var(--bg); border-style: dashed; color: var(--muted); }
 .tile[data-over='true'] { --arc: var(--danger); }
 .tile-main { display: grid; justify-items: center; gap: var(--s1); padding: var(--s3) var(--s2) var(--s2); border: 0; background: transparent; cursor: pointer; text-align: center; }
@@ -451,7 +492,9 @@ button, input, textarea { font: inherit; color: inherit; }
 .tile[data-over='true'] .ring-time { color: var(--danger); }
 .tile-name { font-weight: 600; font-size: var(--t-sm); overflow-wrap: anywhere; }
 .tile-state { font-size: var(--t-xs); color: var(--muted); }
-.tile[data-state='speaking'] .tile-state, .tile[data-state='paused'] .tile-state { color: var(--accent-ink); font-weight: 600; }
+.tile[data-state='speaking'] .tile-state { color: var(--go); font-weight: 600; }
+.tile[data-state='holding'] .tile-state { color: var(--accent-ink); font-weight: 600; }
+.tile[data-state='paused'] .tile-state { color: var(--hold-ink); font-weight: 600; }
 .tile[data-over='true'] .tile-state { color: var(--danger); font-weight: 600; }
 .tile-away { min-height: var(--tap); border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--muted); font-size: var(--t-xs); cursor: pointer; }
 .tile-away:hover { color: var(--ink); background: var(--accent-soft); }
