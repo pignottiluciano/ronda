@@ -1,7 +1,7 @@
 // Turns UI. State transitions live in src/lib/turns.ts; this file reads the clock and updates the DOM.
 // app.ts owns the lists and hands this module what it needs through `TurnsHost`.
 import { messages } from '../i18n/messages';
-import { formatClock } from '../lib/clock';
+import { formatClock, formatRemaining } from '../lib/clock';
 import { shuffle } from '../lib/draw';
 import type { SavedList } from '../lib/lists';
 import {
@@ -9,6 +9,7 @@ import {
   setAbsent, setBudgetMinutes, speak, spokenMs, startSession, syncPeople, type ListTurns, type TurnsStore,
 } from '../lib/turns';
 import { confirmAction } from './confirm';
+import { createFloat, floatSupported } from './float';
 import { initRanking } from './ranking';
 import { readTurns, writeTurns } from './storage';
 import { holdScreen, releaseScreen } from './wakelock';
@@ -54,11 +55,13 @@ export function initTurns(host: TurnsHost) {
   const tiles = $('tiles');
   const announce = $('turns-announce');
   const pageTitle = document.title;
+  const floatButton = $<HTMLButtonElement>('turns-float');
+  const float = createFloat({ card: now, slot: $('now-slot'), onChange: () => (render(), syncRuntime()) });
 
   let store: TurnsStore = readTurns(host.listIds());
   const drawOption = modes.querySelector<HTMLElement>('input[value="draw"]')!.parentElement!;
   let mode: Mode = 'draw';
-  let interval: number | undefined;
+  let ticker: { win: Window; id: number } | undefined;
   const overAnnounced = new Set<string>(); // "startedAt:personId", so a person is told once per day
 
   const listId = () => host.list().id;
@@ -192,9 +195,9 @@ export function initTurns(host: TurnsHost) {
     now.dataset.over = String(activeOver);
     nowLabel.textContent = activeId === null ? '' : t.turnsNow;
     nowName.textContent = activeId === null ? t.turnsNobody : nameOf(activeId);
-    nowClock.textContent = activeOver ? `+${formatClock(activeMs - budget)}` : formatClock(activeMs);
+    nowClock.textContent = formatRemaining(activeMs, budget);
     nowOf.textContent = t.turnsOf(formatClock(budget));
-    barFill.style.transform = `scaleX(${Math.min(1, activeMs / budget)})`;
+    barFill.style.transform = `scaleX(${Math.max(0, 1 - activeMs / budget)})`; // drains as the time goes
     pauseButton.hidden = activeId === null;
     pauseButton.textContent = session.activeSince === null ? t.turnsResume : t.turnsPause;
     nextButton.textContent = up === null ? t.turnsAllSpoke : activeId === null ? t.turnsBegin(nameOf(up)) : t.turnsNext(nameOf(up));
@@ -209,16 +212,24 @@ export function initTurns(host: TurnsHost) {
         say(t.turnsOver(nameOf(activeId)));
       }
     }
-    document.title = running ? `${formatClock(activeMs)} · ${nameOf(activeId)} · ${pageTitle}` : pageTitle;
+    document.title = running ? `${formatRemaining(activeMs, budget)} · ${nameOf(activeId)} · ${pageTitle}` : pageTitle;
   }
 
   function syncRuntime() {
     const session = turns().current;
     const running = session !== null && session.activeSince !== null;
-    if (running && interval === undefined) interval = window.setInterval(() => (mode === 'turns' ? paint(Date.now()) : syncTitleOnly()), 250);
-    else if (!running && interval !== undefined) {
-      clearInterval(interval);
-      interval = undefined;
+    // While floating the tick runs in that window: a hidden tab gets its timers throttled, the floating one does not.
+    const host = float.window() ?? window;
+    if (ticker && (!running || ticker.win !== host)) {
+      try {
+        ticker.win.clearInterval(ticker.id);
+      } catch {
+        // The floating window is already gone, and its timers with it.
+      }
+      ticker = undefined;
+    }
+    if (running && !ticker) {
+      ticker = { win: host, id: host.setInterval(() => (mode === 'turns' || float.isOpen() ? paint(Date.now()) : syncTitleOnly()), 250) };
     }
     if (running) void holdScreen();
     else releaseScreen();
@@ -230,7 +241,7 @@ export function initTurns(host: TurnsHost) {
     const current = turns();
     const session = current.current;
     if (!session || session.activeId === null || session.activeSince === null) return;
-    document.title = `${formatClock(spokenMs(current, session.activeId, Date.now()))} · ${nameOf(session.activeId)} · ${pageTitle}`;
+    document.title = `${formatRemaining(spokenMs(current, session.activeId, Date.now()), session.budgetMs)} · ${nameOf(session.activeId)} · ${pageTitle}`;
   }
 
   function render() {
@@ -246,13 +257,14 @@ export function initTurns(host: TurnsHost) {
     setup.hidden = session;
     live.hidden = !session;
     total.hidden = !session;
-    if (mode === 'turns') {
-      renderBudget(current);
-      if (session) {
-        renderTiles(current);
-        paint(Date.now());
-      }
+    if (mode === 'turns') renderBudget(current);
+    if (!session) float.close();
+    else if (mode === 'turns' || float.isOpen()) {
+      renderTiles(current);
+      paint(Date.now());
     }
+    floatButton.hidden = !floatSupported() || !session;
+    floatButton.textContent = float.isOpen() ? t.floatBack : t.floatOpen;
     if (mode === 'ranking') rankingView.render();
     syncRuntime();
   }
@@ -330,6 +342,12 @@ export function initTurns(host: TurnsHost) {
       update(next);
     }
   });
+
+  floatButton.addEventListener('click', async () => {
+    if (float.isOpen()) return float.close();
+    if (!(await float.open())) host.say(t.floatFailed);
+  });
+  $('turns-unfloat').addEventListener('click', float.close);
 
   pauseButton.addEventListener('click', () => {
     const session = turns().current;

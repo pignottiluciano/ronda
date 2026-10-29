@@ -432,6 +432,12 @@ button, input, textarea { font: inherit; color: inherit; }
 .bar i { display: block; height: 100%; width: 100%; background: var(--accent); border-radius: 4px; transform-origin: left; }
 .now[data-over='true'] .bar i { background: var(--danger); }
 .now .actions { margin-top: var(--s2); }
+.now-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+.btn-small { min-height: 36px; padding: 0 var(--s4); font-size: var(--t-sm); }
+/* Out in its own window the card fills it. */
+.float-body { min-height: 100vh; display: grid; }
+.now[data-floating='true'] { border: 0; border-radius: 0; align-content: center; padding: var(--s4); }
+.now-slot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s3); padding: var(--s4) var(--s5); border: 1px dashed var(--control); border-radius: var(--radius); color: var(--muted); font-size: var(--t-sm); }
 
 .tiles { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 .tile { --tile-bg: var(--surface); --arc: var(--accent); display: grid; background: var(--tile-bg); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }

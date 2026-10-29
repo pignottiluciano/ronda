@@ -4,3 +4,9 @@ export function formatClock(ms: number): string {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${pad(Math.floor(seconds / 60))}:${pad(seconds % 60)}`;
 }
+
+/** Time left of a budget as mm:ss, or `+mm:ss` once it is used up. Rounds the remainder up so 00:00 means the time is really gone. */
+export function formatRemaining(spokenMs: number, budgetMs: number): string {
+  if (spokenMs > budgetMs) return `+${formatClock(spokenMs - budgetMs)}`;
+  return formatClock(Math.ceil((budgetMs - spokenMs) / 1000) * 1000);
+}
