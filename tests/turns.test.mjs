@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  cancelSession, emptyTurns, finish, nextId, parseTurnsStore, pause, queue, ranking, removeSession, resetSessions,
+  cancelSession, emptyTurns, finish, handOver, nextId, parseTurnsStore, pause, queue, ranking, removeSession, resetSessions,
   setAbsent, setBudgetMinutes, setMinDays, speak, spokenMs, startSession, syncPeople,
 } from '../src/lib/turns.ts';
 
@@ -123,6 +123,19 @@ test('parsing keeps valid lists, drops broken ones and ids that no list has any 
   assert.equal(parsed.L1.sessions.length, 1);
   assert.deepEqual(parseTurnsStore(null, []), {});
   assert.deepEqual(parseTurnsStore([], []), {});
+});
+
+test('handing over stops the previous clock and gives the floor without starting the next one', () => {
+  let t = speak(started(), 'a', 0);
+  t = handOver(t, 'b', 2 * MIN);
+  assert.equal(spokenMs(t, 'a', 9 * MIN), 2 * MIN);
+  assert.equal(t.current.activeId, 'b');
+  assert.equal(t.current.activeSince, null);
+  assert.equal(spokenMs(t, 'b', 9 * MIN), 0); // nothing runs until someone starts it
+  assert.equal(nextId(t, ids), 'c');
+  assert.equal(handOver(t, 'b', 3 * MIN), t); // already theirs
+  assert.equal(handOver(setAbsent(t, 'c', true, 0), 'c', 3 * MIN).current.activeId, 'b'); // absent: refused
+  assert.equal(speak(t, 'b', 4 * MIN).current.activeSince, 4 * MIN); // the second click starts it
 });
 
 // ---- Ranking ----

@@ -5,7 +5,7 @@ import { formatClock, formatRemaining } from '../lib/clock';
 import { shuffle } from '../lib/draw';
 import type { SavedList } from '../lib/lists';
 import {
-  BUDGET_PRESETS, MAX_BUDGET_MINUTES, cancelSession, emptyTurns, finish, isValidBudgetMinutes, nextId, pause, queue,
+  BUDGET_PRESETS, MAX_BUDGET_MINUTES, cancelSession, emptyTurns, finish, handOver, isValidBudgetMinutes, nextId, pause, queue,
   setAbsent, setBudgetMinutes, speak, spokenMs, startSession, syncPeople, type ListTurns, type TurnsStore,
 } from '../lib/turns';
 import { confirmAction } from './confirm';
@@ -193,13 +193,16 @@ export function initTurns(host: TurnsHost) {
     const activeOver = activeMs > budget;
     now.dataset.state = activeId === null ? 'idle' : session.activeSince === null ? 'paused' : 'speaking';
     now.dataset.over = String(activeOver);
-    nowLabel.textContent = activeId === null ? '' : t.turnsNow;
+    const waiting = activeId !== null && session.activeSince === null && activeMs === 0; // has the floor, clock not started
+    nowLabel.textContent = activeId === null ? '' : waiting ? t.turnsUpNext : t.turnsNow;
     nowName.textContent = activeId === null ? t.turnsNobody : nameOf(activeId);
     nowClock.textContent = formatRemaining(activeMs, budget);
     nowOf.textContent = t.turnsOf(formatClock(budget));
     barFill.style.transform = `scaleX(${Math.max(0, 1 - activeMs / budget)})`; // drains as the time goes
     pauseButton.hidden = activeId === null;
-    pauseButton.textContent = session.activeSince === null ? t.turnsResume : t.turnsPause;
+    pauseButton.textContent = session.activeSince !== null ? t.turnsPause : waiting ? t.turnsGo : t.turnsResume;
+    pauseButton.classList.toggle('btn-primary', waiting); // the one click left to do
+    pauseButton.classList.toggle('btn-ghost', !waiting);
     nextButton.textContent = up === null ? t.turnsAllSpoke : activeId === null ? t.turnsBegin(nameOf(up)) : t.turnsNext(nameOf(up));
     total.hidden = false;
     total.textContent = t.turnsTotal(formatClock(sum));
@@ -364,8 +367,12 @@ export function initTurns(host: TurnsHost) {
   nextButton.addEventListener('click', () => {
     const up = nextId(turns(), ids());
     if (!up) return finishDay(); // everyone has spoken: the button closes the day
-    say(t.turnsSpeaking(nameOf(up)));
-    update(speak(turns(), up, Date.now()));
+    if (turns().current?.activeId == null) {
+      say(t.turnsSpeaking(nameOf(up)));
+      return update(speak(turns(), up, Date.now())); // the first one starts at once
+    }
+    say(t.turnsUp(nameOf(up)));
+    update(handOver(turns(), up, Date.now())); // then each one waits for their own click to start
   });
 
   function finishDay() {

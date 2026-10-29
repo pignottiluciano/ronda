@@ -101,6 +101,15 @@ export function speak(turns: ListTurns, id: string, now: number): ListTurns {
   return { ...turns, current: { ...settled, order, activeId: id, activeSince: now } };
 }
 
+/** Gives the floor to `id` without starting their clock: whoever runs the day starts it with another click. */
+export function handOver(turns: ListTurns, id: string, now: number): ListTurns {
+  const current = turns.current;
+  if (!current || turns.absent.includes(id) || current.activeId === id) return turns;
+  const settled = settle(current, now);
+  const order = settled.order.includes(id) ? settled.order : [...settled.order, id];
+  return { ...turns, current: { ...settled, order, activeId: id, activeSince: null } };
+}
+
 export function pause(turns: ListTurns, now: number): ListTurns {
   return turns.current ? { ...turns, current: settle(turns.current, now) } : turns;
 }
