@@ -56,6 +56,7 @@ export function initTurns(host: TurnsHost) {
   const pageTitle = document.title;
 
   let store: TurnsStore = readTurns(host.listIds());
+  const drawOption = modes.querySelector<HTMLElement>('input[value="draw"]')!.parentElement!;
   let mode: Mode = 'draw';
   let interval: number | undefined;
   const overAnnounced = new Set<string>(); // "startedAt:personId", so a person is told once per day
@@ -236,6 +237,8 @@ export function initTurns(host: TurnsHost) {
     const enabled = host.list().turns;
     modes.hidden = !enabled;
     if (!enabled) mode = 'draw';
+    else if (mode === 'draw') mode = 'turns'; // starting a day draws the order, so the plain draw is not offered
+    drawOption.hidden = enabled;
     layout.dataset.mode = mode;
     for (const radio of modes.querySelectorAll<HTMLInputElement>('input')) radio.checked = radio.value === mode;
     const current = turns();
@@ -272,7 +275,7 @@ export function initTurns(host: TurnsHost) {
 
   /** A different list is on screen: open on its turns if a day is in progress there, else on the draw. */
   function open() {
-    mode = host.list().turns && turns().current ? 'turns' : 'draw';
+    mode = host.list().turns ? 'turns' : 'draw';
     refresh();
   }
 
