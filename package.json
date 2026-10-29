@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
+    "start": "astro dev stop && astro dev --host 0.0.0.0 --port 4710",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
