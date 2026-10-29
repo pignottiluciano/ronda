@@ -196,7 +196,6 @@ export function initTurns(host: TurnsHost) {
     barFill.style.transform = `scaleX(${Math.min(1, activeMs / budget)})`;
     pauseButton.hidden = activeId === null;
     pauseButton.textContent = session.activeSince === null ? t.turnsResume : t.turnsPause;
-    nextButton.disabled = up === null;
     nextButton.textContent = up === null ? t.turnsAllSpoke : activeId === null ? t.turnsBegin(nameOf(up)) : t.turnsNext(nameOf(up));
     total.hidden = false;
     total.textContent = t.turnsTotal(formatClock(sum));
@@ -343,18 +342,20 @@ export function initTurns(host: TurnsHost) {
 
   nextButton.addEventListener('click', () => {
     const up = nextId(turns(), ids());
-    if (!up) return;
+    if (!up) return finishDay(); // everyone has spoken: the button closes the day
     say(t.turnsSpeaking(nameOf(up)));
     update(speak(turns(), up, Date.now()));
   });
 
-  $('turns-finish').addEventListener('click', () => {
+  function finishDay() {
     const saved = finish(turns(), host.list().people, Date.now());
     mode = 'ranking'; // the day just saved is in the score now
     update(saved);
     host.absenceChanged(); // a finished day clears today's absences
     host.say(t.turnsSaved(saved.sessions.length));
-  });
+  }
+
+  $('turns-finish').addEventListener('click', finishDay);
 
   $('turns-discard').addEventListener('click', async () => {
     if (!(await confirmAction({ title: t.turnsDiscardTitle, body: t.turnsDiscardBody, confirm: t.turnsDiscardConfirm }))) return;
