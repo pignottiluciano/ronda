@@ -12,7 +12,13 @@ Use it to set speaking turns in a meeting, make teams in a class, pair people up
 - Numbered order (1 group) or one card per group with its member count.
 - **Draw again** and **Share** (the system share sheet, or copy to the clipboard).
 - Several named lists, shown as tabs: create, switch, rename and delete them. Each keeps its own participants and number of groups. Everything is saved in the browser (`localStorage`) and restored on return. **Clear list** empties the current one.
-- Optional **turns** per list (switch it on with the clock button next to rename): everyone gets the same time (presets of 2 to 15 minutes, or 1 to 60), one person speaks at a time, and the clock counts up in silence. Starting draws the order at random; tap a person to give them the floor, or use Next to follow that order. Mark someone as not here and they stay out of the draw and the turns. Going over the time is shown as `+mm:ss`, never cut off. The screen stays awake while someone speaks, a reload keeps the clock right, and the tab title shows who is speaking. Finish the day to save it in the list. It cannot alert you if the app is closed or the phone is locked, because there is no backend to push from.
+- Optional **turns** per list (switch it on with the clock button next to rename). The list then opens on Turns and Ranking; the plain draw is hidden, because starting a day already draws the order.
+  - Everyone gets the same time: presets of 2 to 15 minutes, or any value from 1 to 60. Press **Start turns** and the order is drawn at random, again each time.
+  - The speaker's clock **counts down**, and the bar drains. Going over is shown as `+mm:ss` in red and keeps counting; it is never cut off, and that time counts in the ranking. There is no sound.
+  - **Next** hands the floor to the next person with the clock stopped ("Up now"); they press **Start talking** when they begin. The first person of the day starts at once. Tap a person's tile to give them the floor and start their clock right away.
+  - Mark someone as **not here** and they stay out of the turns and of today's score.
+  - **Float** (Chrome and Edge on desktop) moves the "speaking now" card into a small window that stays on top of everything, with Pause and Next in it, so you can switch tabs or apps. It needs HTTPS or `localhost`; where it is not supported the button is hidden. **Bring back** (or closing the window) returns the card to the page.
+  - The screen stays awake while someone speaks, a reload keeps the clock right, and the tab title shows the time left and who is speaking. **Finish and save the day** stores it in the list. It cannot alert you if the app is closed or the phone is locked, because there is no backend to push from.
 - **Ranking** per list, built from the saved days: who spoke less, on average. Each person's score is the share of the time they were given that they used, counted only over the days they were there (so missing a day neither helps nor hurts); the lowest wins and ties share a place. A podium shows the first three, then a table with the percentage and days present. You can set the minimum number of days to be ranked (1 by default), delete a single day, reset the score, and **share the ranking as a 4:5 image** (the share sheet on phones, a PNG download elsewhere). The image is drawn in the browser; nothing is uploaded.
 - **Backup** at the bottom of the page: *Export* downloads every list, its people and its saved days as one JSON file; *Import* reads one back after showing what it will do (lists with the same id are replaced by the file's version, the others are added, nothing is deleted). The day in progress and today's absences are not exported. The file is validated like stored data, a file from a newer version or over 5 MB is refused, and a browser that only has the empty default list gets it replaced.
 - System, Light or Dark theme from the menu at the top right; it is remembered.
@@ -27,42 +33,15 @@ Requires Node 22.23.4 or later.
 ```sh
 npm install
 npm run dev      # server at http://localhost:4321
+npm start        # dev server at http://localhost:4710, also reachable from other devices on your network
 npm run build    # static site in dist/
 npm run preview  # serves dist/
 npm test         # tests for the draw, lists, turns, clock and backup logic
 ```
 
-## Structure
+## How it works
 
-```text
-src/
-  pages/index.astro      Spanish version (/); pages/en/index.astro is the English one
-  components/Home.astro  The page, takes the language as a prop
-  i18n/messages.ts       All text in es and en
-  lib/draw.ts            Draw logic, no DOM (parse, validate, shuffle, distribute)
-  lib/turns.ts           Turns and ranking logic, no DOM (start, speak, pause, absences, finish, score, validate stored data)
-  lib/clock.ts           mm:ss formatting
-  lib/backup.ts          Backup format, validation and import rules, no DOM
-  lib/lists.ts           Saved-lists logic, no DOM (lists, people with ids, validate and migrate stored data)
-  sw/worker.js           Service worker source; pages/sw.js.ts serves it as /sw.js with a build version
-  scripts/
-    app.ts               Events and UI updates
-    storage.ts           Safe reading and writing of localStorage (migrates the old single list)
-    share.ts             Share or copy
-    theme.ts             Theme menu and its persistence
-    turns.ts             Turns UI, tick, tab title; owns the stored turn data
-    ranking.ts           Ranking UI: podium, table, history, settings
-    share-image.ts       Draws the ranking as a 4:5 PNG on a canvas
-    confirm.ts           One confirmation dialog for destructive actions
-    backup.ts            Export and import UI
-    notify.ts            Short message shown in every mode and announced to screen readers
-    wakelock.ts          Screen wake lock while someone speaks
-  styles/global.css      Color, spacing and type tokens, and styles
-tests/                   Tests with node:test (draw, lists, turns, clock and backup)
-docs/                    DESIGN.md (design decisions and tokens) and design mocks (proposals, palettes, fonts, share images)
-```
-
-The draw logic touches neither the DOM nor storage, so it can be tested on its own. The only client-side JavaScript is in `src/scripts/`, with no UI framework.
+Logic without DOM or storage lives in `src/lib` (with tests); the browser code that reads the clock and draws is in `src/scripts`, with no UI framework. Stored data, the backup format, the ranking rules, the floating window, offline support and deployment are described in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Design decisions and tokens are in [docs/DESIGN.md](docs/DESIGN.md).
 
 ## Design decisions
 
