@@ -1,6 +1,6 @@
 # Ronda
 
-Live at <https://ronda.lucianopignotti.workers.dev>.
+Live at <https://ronda-dusky.vercel.app>.
 
 Paste a list, choose how many groups you want and draw. With one group you get a random order; with two or more, groups as even as possible (10 people in 3 groups gives 4, 3 and 3).
 

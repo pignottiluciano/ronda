@@ -3,7 +3,7 @@ import { defineConfig, fontProviders } from 'astro/config';
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://ronda.lucianopignotti.workers.dev',
+  site: 'https://ronda-dusky.vercel.app',
   // Astro downloads these at build time and serves them from the site itself (no Google requests at runtime).
   fonts: [
     {

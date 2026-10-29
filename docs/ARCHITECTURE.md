@@ -157,12 +157,9 @@ npm run preview  # serves dist/
 
 ## Deploy
 
-The site is plain static output (`dist/`), so any static host works. It is deployed twice from the same repo, both from `main`:
+The site is plain static output (`dist/`), so any static host works. It is deployed on Vercel at <https://ronda-dusky.vercel.app>: project `ronda`, linked to the repository, redeploying on every push to `main`. That URL is the `site` in `astro.config.mjs`, which feeds the canonical link, the hreflang links and the share image; change it if the domain changes.
 
-- **Cloudflare:** <https://ronda.lucianopignotti.workers.dev>. This is the `site` in `astro.config.mjs`.
-- **Vercel:** project `ronda`, linked to the repository, redeploys on every push. Vercel Authentication is on by default, so its URLs ask for a Vercel login until it is turned off in the project settings.
-
-There is no deploy configuration file in the repo for either. Pushing to `main` is the deploy.
+There is no deploy configuration file in the repo: pushing to `main` is the deploy. Vercel Authentication is on by default for new projects and asks for a Vercel login; it must be off in the project settings (Deployment Protection) for the site to be public.
 
 ## Share and app images
 
