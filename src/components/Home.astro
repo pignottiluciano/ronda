@@ -19,7 +19,7 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={t.description} />
     <meta name="theme-color" content="#faf6f1" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#161311" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#0d1218" media="(prefers-color-scheme: dark)" />
     <script is:inline>
       // Before paint, to avoid a flash of the wrong theme. Key shared with src/scripts/theme.ts.
       try {
@@ -225,8 +225,15 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
                 </label>
               </div>
             </div>
+            <fieldset id="turn-order" class="field order-field">
+              <legend class="label">{t.turnsOrderLabel}</legend>
+              <div class="seg">
+                <label><input type="radio" name="turn-order" value="draw" checked /><span>{t.turnsOrderDraw}</span></label>
+                <label><input type="radio" name="turn-order" value="list" /><span>{t.turnsOrderList}</span></label>
+              </div>
+            </fieldset>
             <p id="turns-days" class="hint" hidden></p>
-            <p class="hint">{t.turnsStartHint}</p>
+            <p class="hint"><span id="order-hint">{t.turnsHintDraw}</span> {t.turnsStartHint}</p>
             <div class="actions">
               <button type="button" id="turns-start" class="btn btn-primary">{t.turnsStart}</button>
             </div>

@@ -6,7 +6,7 @@ import { shuffle } from '../lib/draw';
 import type { SavedList } from '../lib/lists';
 import {
   BUDGET_PRESETS, MAX_BUDGET_MINUTES, cancelSession, emptyTurns, finish, handOver, isValidBudgetMinutes, nextId, pause, queue,
-  setAbsent, setBudgetMinutes, speak, spokenMs, startSession, syncPeople, type ListTurns, type TurnsStore,
+  setAbsent, setBudgetMinutes, setOrder, speak, spokenMs, startSession, syncPeople, type ListTurns, type TurnsStore,
 } from '../lib/turns';
 import { confirmAction } from './confirm';
 import { createFloat, floatSupported } from './float';
@@ -44,6 +44,8 @@ export function initTurns(host: TurnsHost) {
   const custom = $<HTMLInputElement>('budget-custom');
   const days = $('turns-days');
   const startButton = $<HTMLButtonElement>('turns-start');
+  const orderField = $<HTMLFieldSetElement>('turn-order');
+  const orderHint = $('order-hint');
   const now = $('now');
   const nowLabel = $('now-label');
   const nowName = $('now-name');
@@ -103,6 +105,8 @@ export function initTurns(host: TurnsHost) {
       chip.setAttribute('aria-pressed', String(Number(chip.dataset.minutes) === minutes));
     }
     custom.value = (BUDGET_PRESETS as readonly number[]).includes(minutes) ? '' : String(minutes);
+    for (const radio of orderField.querySelectorAll<HTMLInputElement>('input')) radio.checked = radio.value === current.order;
+    orderHint.textContent = current.order === 'list' ? t.turnsHintList : t.turnsHintDraw;
     const saved = current.sessions.length;
     days.hidden = saved === 0;
     days.textContent = saved === 0 ? '' : t.turnsDays(saved);
@@ -335,10 +339,15 @@ export function initTurns(host: TurnsHost) {
   });
   custom.max = String(MAX_BUDGET_MINUTES);
 
+  orderField.addEventListener('change', (event) => {
+    update(setOrder(turns(), (event.target as HTMLInputElement).value === 'list' ? 'list' : 'draw'));
+  });
+
   startButton.addEventListener('click', () => {
     const present = ids().filter((id) => !turns().absent.includes(id));
     if (present.length === 0) return host.say(t.turnsNeedPeople);
-    update(startSession(turns(), ids(), Date.now(), shuffle(present))); // every start draws the order again
+    // A drawn order is drawn again on every start; list order needs none (startSession keeps the list's).
+    update(startSession(turns(), ids(), Date.now(), turns().order === 'draw' ? shuffle(present) : []));
   });
 
   tiles.addEventListener('click', (event) => {

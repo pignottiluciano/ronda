@@ -11,29 +11,30 @@
   --t-xs: 0.833rem; --t-sm: 0.9375rem; --t-md: 1rem; --t-lg: 1.2rem; --t-xl: 1.44rem;
   --t-title: clamp(1.75rem, 5vw, 2.074rem);
 
-  /* Color "Tinta y coral": warm near-neutral paper/charcoal, color only in the accent.
+  /* Color "Tinta y coral": warm near-neutral paper in light; dark is "Noche tinta", a cool ink night that lets the coral stand out.
+     Color only in the accent.
      light-dark(light, dark) follows color-scheme below. */
-  --bg: light-dark(oklch(0.975 0.008 70), oklch(0.16 0.006 50));
-  --surface: light-dark(oklch(0.995 0.004 70), oklch(0.235 0.008 50));
-  --ink: light-dark(oklch(0.24 0.015 40), oklch(0.95 0.008 70));
-  --muted: light-dark(oklch(0.5 0.02 45), oklch(0.74 0.012 60));
-  --line: light-dark(oklch(0.89 0.012 60), oklch(0.4 0.01 50));
-  --accent: light-dark(oklch(0.55 0.16 33), oklch(0.74 0.14 38));
-  --accent-ink: light-dark(oklch(0.53 0.16 33), oklch(0.76 0.13 38)); /* accent as text color */
-  --accent-soft: light-dark(oklch(0.94 0.04 40), oklch(0.3 0.035 40));
+  --bg: light-dark(oklch(0.975 0.008 70), oklch(0.18 0.015 255));
+  --surface: light-dark(oklch(0.995 0.004 70), oklch(0.25 0.018 255));
+  --ink: light-dark(oklch(0.24 0.015 40), oklch(0.93 0.008 250));
+  --muted: light-dark(oklch(0.5 0.02 45), oklch(0.77 0.015 250));
+  --line: light-dark(oklch(0.89 0.012 60), oklch(0.42 0.02 255));
+  --accent: light-dark(oklch(0.55 0.16 33), oklch(0.75 0.14 38));
+  --accent-ink: light-dark(oklch(0.53 0.16 33), oklch(0.77 0.13 38)); /* accent as text color */
+  --accent-soft: light-dark(oklch(0.94 0.04 40), oklch(0.32 0.045 38));
   --on-accent: light-dark(oklch(0.99 0.005 60), oklch(0.2 0.02 40));
-  --danger: light-dark(oklch(0.45 0.18 27), oklch(0.76 0.13 27));
+  --danger: light-dark(oklch(0.45 0.18 27), oklch(0.7 0.18 25));
   /* Turn states, one hue each so they read apart: green = the clock runs (or starts), coral = pass the floor,
      amber = stopped, red = over time. --go and --hold-ink also serve as text and border on --surface. */
-  --go: light-dark(oklch(0.5 0.13 150), oklch(0.76 0.15 150));
-  --on-go: light-dark(oklch(0.99 0.01 150), oklch(0.2 0.04 150));
-  --go-soft: light-dark(oklch(0.94 0.05 150), oklch(0.29 0.05 150));
-  --hold: light-dark(oklch(0.82 0.15 82), oklch(0.82 0.14 82));
+  --go: light-dark(oklch(0.5 0.13 150), oklch(0.8 0.15 160));
+  --on-go: light-dark(oklch(0.99 0.01 150), oklch(0.2 0.04 160));
+  --go-soft: light-dark(oklch(0.94 0.05 150), oklch(0.31 0.05 165));
+  --hold: light-dark(oklch(0.82 0.15 82), oklch(0.86 0.14 88));
   --on-hold: oklch(0.25 0.05 70);
-  --hold-ink: light-dark(oklch(0.48 0.1 70), oklch(0.82 0.14 82));
-  --hold-soft: light-dark(oklch(0.95 0.06 85), oklch(0.3 0.045 82));
+  --hold-ink: light-dark(oklch(0.48 0.1 70), oklch(0.86 0.14 88));
+  --hold-soft: light-dark(oklch(0.95 0.06 85), oklch(0.32 0.04 85));
   /* Border of editable controls: 3:1 against --bg and --surface in both themes (--line is only 1.4:1, fine for dividers). */
-  --control: light-dark(oklch(0.62 0.02 50), oklch(0.55 0.015 55));
+  --control: light-dark(oklch(0.62 0.02 50), oklch(0.62 0.02 255));
 
   --radius: 16px;
   --radius-sm: 10px;
@@ -418,6 +419,9 @@ button, input, textarea { font: inherit; color: inherit; }
 .turns { min-width: 0; scroll-margin-top: var(--s4); }
 .turns-setup { display: grid; gap: var(--s4); }
 .turns-live { display: grid; gap: var(--s5); }
+.order-field { margin: 0; padding: 0; border: 0; min-width: 0; }
+.order-field legend { margin-bottom: var(--s2); padding: 0; }
+.order-field .seg { margin: 0; }
 .chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
 .chip { min-height: 36px; padding: 0 var(--s3); border: 1px solid var(--control); border-radius: 999px; background: transparent; cursor: pointer; font-size: var(--t-sm); font-variant-numeric: tabular-nums; transition: border-color 150ms ease-out; }
 .chip:hover { border-color: var(--muted); }

@@ -1,7 +1,8 @@
 # Design - Ronda
 
 Source of truth for tokens is `src/styles/global.css`. This file records the decisions behind them and
-the rules for the turns and ranking feature. Mocks: `docs/turnos.html` (proposals A, B, C; chosen: A with B's turns and podium).
+the rules for the turns and ranking feature. Mocks: `docs/turnos.html` (proposals A, B, C; chosen: A with B's turns and podium) and `docs/inicio-y-paletas.html`
+(turn order control and dark palettes; chosen: B, the per-list "Order" control, with palette 2, "Noche tinta").
 
 ## Direction
 Utility app for groups, mobile first, used live in meetings and classes. Calm editorial: warm near-neutral
@@ -18,22 +19,23 @@ and quiet; motion only confirms state changes (who is speaking, time over, saved
 - **Phone on a table.** The speaker's clock is readable from a distance (at least 3rem on mobile) and every control is at least 44px. Exception: the parts of a person badge are 32px high (they sit in a wrapping box); the x, which deletes, keeps a 44px hit area through a pseudo-element, and the name button only edits (reversible).
 
 ## Color
-Existing roles, unchanged. Contrast measured in OKLCH to sRGB with WCAG 2.x (light / dark):
+Light keeps the warm paper. Dark is "Noche tinta": a cool ink neutral (hue 255) under the same coral, so the accent
+stands out and cards separate from the background. Contrast measured in OKLCH to sRGB with WCAG 2.x (light / dark):
 
 | Role | Use | Contrast |
 | --- | --- | --- |
-| `--ink` on `--bg` / `--surface` | body text | 15.4 / 16.0 and 16.3 / 14.4 |
-| `--muted` on `--bg` / `--surface` / `--accent-soft` | secondary text | 5.6 / 8.0, 6.0 / 7.2, 5.0 / 5.6 |
-| `--accent-ink` on `--surface` / `--accent-soft` | accent text, active labels | 5.6 / 7.4, 4.7 / 5.7 |
-| `--on-accent` on `--accent` | primary button text | 5.1 / 7.5 |
-| `--danger` on `--bg` / `--surface` | errors, overtime text | 7.6 / 8.2, 8.1 / 7.4 |
-| `--accent` vs `--surface` / `--accent-soft` | filled ring and bar (non-text, 3:1) | 5.2 / 6.9, 4.3 / 5.3 |
+| `--ink` on `--bg` / `--surface` | body text | 15.4 / 16.0 and 15.3 / 13.0 |
+| `--muted` on `--bg` / `--surface` / `--accent-soft` | secondary text | 5.6 / 9.1, 6.0 / 7.7, 5.0 / 6.2 |
+| `--accent-ink` on `--surface` / `--accent-soft` | accent text, active labels | 5.6 / 7.4, 4.7 / 5.9 |
+| `--on-accent` on `--accent` | primary button text | 5.1 / 7.8 |
+| `--danger` on `--bg` / `--surface` | errors, overtime text | 7.6 / 6.5, 8.1 / 5.5 |
+| `--accent` vs `--surface` / `--accent-soft` | filled ring and bar (non-text, 3:1) | 5.2 / 6.8, 4.3 / 5.5 |
 
 New token:
 
 | Role | Light | Dark | Use |
 | --- | --- | --- | --- |
-| `--control` | oklch(0.62 0.02 50) | oklch(0.55 0.015 55) | border of editable controls (tag box, inputs, steppers): 3.4:1+ on `--bg` and `--surface` in both themes |
+| `--control` | oklch(0.62 0.02 50) | oklch(0.62 0.02 255) | border of editable controls (tag box, inputs, steppers): 3.4:1+ on `--bg` and `--surface` in both themes (dark: 5.2 / 4.4) |
 
 Known gap, not part of this feature: the existing `.names` and `.stepper` borders use `--line` (1.4:1). Move them to
 `--control` when touching them; the new tag box uses `--control` from the start.

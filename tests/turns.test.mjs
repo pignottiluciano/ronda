@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   cancelSession, emptyTurns, finish, handOver, nextId, parseTurnsStore, pause, queue, ranking, removeSession, resetSessions,
-  setAbsent, setBudgetMinutes, setMinDays, speak, spokenMs, startSession, syncPeople,
+  setAbsent, setBudgetMinutes, setMinDays, setOrder, speak, spokenMs, startSession, syncPeople,
 } from '../src/lib/turns.ts';
 
 const MIN = 60_000;
@@ -200,4 +200,13 @@ test('removing a day or resetting only touches the days; the minimum is validate
   assert.deepEqual([reset.sessions.length, reset.minDays, reset.budgetMs], [0, 3, 7 * MIN]);
   assert.equal(setMinDays(t, 2).minDays, 2);
   for (const bad of [0, 100, 1.5, NaN]) assert.equal(setMinDays(t, bad), t);
+});
+
+test('the order setting is drawn by default, kept per list across reloads, and old saves read as drawn', () => {
+  assert.equal(emptyTurns().order, 'draw');
+  const t = setOrder(emptyTurns(), 'list');
+  const { order: _none, ...old } = emptyTurns();
+  const parsed = parseTurnsStore(JSON.parse(JSON.stringify({ L: t, O: old, X: { ...t, order: 'nope' } })), ['L', 'O', 'X']);
+  assert.deepEqual([parsed.L.order, parsed.O.order, parsed.X.order], ['list', 'draw', 'draw']);
+  assert.deepEqual(startSession(t, ids, 0).current.order, ids); // list order: no draw passed in
 });

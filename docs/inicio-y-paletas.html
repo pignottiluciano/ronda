@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ronda · Inicio de turnos y paletas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+/* Page chrome: fixed neutral, independent of the palette under test. */
+* { box-sizing: border-box; margin: 0; }
+body { background: #111; color: #eee; font-family: "Figtree", sans-serif; line-height: 1.5; padding: 0 16px 80px; }
+.bar-top { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; padding: 16px 0; background: #111; border-bottom: 1px solid #333; margin-bottom: 24px; }
+.bar-top fieldset { border: 0; padding: 0; display: grid; gap: 4px; }
+.bar-top legend { font-size: 0.75rem; color: #aaa; text-transform: uppercase; letter-spacing: 0.06em; padding: 0; margin-bottom: 4px; }
+.pick { display: flex; flex-wrap: wrap; gap: 4px; }
+.pick label { position: relative; }
+.pick input { position: absolute; opacity: 0; inset: 0; }
+.pick span { display: block; padding: 6px 12px; border: 1px solid #444; border-radius: 8px; font-size: 0.875rem; cursor: pointer; }
+.pick input:checked + span { background: #eee; color: #111; border-color: #eee; font-weight: 600; }
+.pick input:focus-visible + span { outline: 2px solid #8cf; outline-offset: 2px; }
+.check[hidden] { display: none; }
+.check { display: flex; gap: 8px; align-items: center; font-size: 0.875rem; }
+.wrap { max-width: 1180px; margin: 0 auto; }
+h1 { font-family: "Fraunces", serif; font-weight: 500; font-size: 2rem; letter-spacing: -0.02em; }
+.desc { color: #bbb; max-width: 75ch; margin: 8px 0 24px; }
+.desc strong { color: #fff; }
+.board { display: flex; flex-wrap: wrap; gap: 28px; align-items: flex-start; }
+@media (max-width: 700px) { .bar-top { position: static; } }
+figure { width: min(360px, 100%); }
+figure { display: grid; gap: 10px; justify-items: center; }
+figcaption { font-size: 0.85rem; color: #aaa; }
+table { border-collapse: collapse; font-size: 0.875rem; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 6px 12px 6px 0; border-bottom: 1px solid #2a2a2a; }
+th { color: #aaa; font-weight: 600; }
+.ok { color: #7d7; } .bad { color: #f88; } .meh { color: #fc6; }
+.sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: -2px; margin-right: 6px; border: 1px solid #555; }
+
+/* App frame: real Ronda tokens and components, palette injected by JS. */
+.phone { --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --t-xs: 0.833rem; --t-sm: 0.9375rem; --t-lg: 1.2rem; --t-xl: 1.44rem; --radius: 16px; --radius-sm: 10px; --tap: 44px;
+  width: min(360px, 100%); min-height: 720px; border: 1px solid #333; border-radius: 36px; background: var(--bg); color: var(--ink); overflow: hidden; padding: 20px 16px; display: grid; align-content: start; gap: var(--s4); font-size: 1rem; }
+.phone h2 { font-family: "Fraunces", serif; font-weight: 600; font-size: var(--t-xl); letter-spacing: -0.02em; }
+.phone button { font: inherit; color: inherit; }
+.phone :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--s4); display: grid; gap: var(--s4); }
+.label { font-weight: 600; font-size: var(--t-sm); }
+.hint { font-size: var(--t-xs); color: var(--muted); }
+.field { display: grid; gap: var(--s2); }
+.chips, .actions { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.chip { min-height: 36px; padding: 0 var(--s3); border: 1px solid var(--control); border-radius: 999px; background: transparent; cursor: pointer; font-size: var(--t-sm); }
+.chip[aria-pressed='true'] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); min-height: var(--tap); padding: 0 var(--s5); border: 1px solid transparent; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; }
+.btn:active { transform: scale(0.97); }
+.btn-primary { flex: 1 1 auto; background: var(--accent); color: var(--on-accent); }
+.btn-ghost { background: transparent; border-color: var(--control); }
+.btn-small { min-height: 36px; padding: 0 var(--s4); font-size: var(--t-sm); }
+.btn-text { background: transparent; color: var(--accent-ink); padding: 0 var(--s2); }
+.btn svg { width: 18px; height: 18px; flex: none; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: 3px; border: 1px solid var(--control); border-radius: var(--radius-sm); background: var(--surface); }
+.seg label { position: relative; }
+.seg input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.seg span { display: grid; place-items: center; min-height: 40px; padding: 0 var(--s2); text-align: center; border-radius: 7px; font-weight: 600; font-size: var(--t-sm); color: var(--muted); }
+.seg input:checked + span { background: var(--accent); color: var(--on-accent); }
+.seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.queue { list-style: none; padding: 0; display: grid; gap: var(--s2); counter-reset: q; }
+.queue li { counter-increment: q; display: flex; align-items: center; gap: var(--s3); min-height: 40px; padding: 0 var(--s3); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--bg); }
+.queue li::before { content: counter(q); display: grid; place-items: center; width: 24px; height: 24px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); font-size: var(--t-xs); font-weight: 700; }
+.queue li:first-child { border-color: var(--accent); }
+.queue.is-shuffling li { animation: pop 260ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.queue.is-shuffling li:nth-child(2) { animation-delay: 30ms; } .queue.is-shuffling li:nth-child(3) { animation-delay: 60ms; } .queue.is-shuffling li:nth-child(4) { animation-delay: 90ms; } .queue.is-shuffling li:nth-child(5) { animation-delay: 120ms; } .queue.is-shuffling li:nth-child(6) { animation-delay: 150ms; }
+@keyframes pop { from { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) { .queue.is-shuffling li { animation: none; } }
+.order-tag { display: inline-flex; align-items: center; gap: var(--s1); font-size: var(--t-xs); color: var(--muted); }
+
+.now { display: grid; gap: var(--s2); padding: var(--s4) var(--s5) var(--s5); background: var(--surface); border: 1px dashed var(--accent); border-radius: var(--radius); }
+.now-label { font-size: var(--t-xs); color: var(--accent-ink); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+.now-name { font-family: "Fraunces", serif; font-size: var(--t-xl); font-weight: 600; }
+.now-controls { display: flex; gap: var(--s3); }
+.btn-go { flex: none; width: 56px; padding: 0; background: var(--go); color: var(--on-go); }
+.btn-go svg { fill: currentColor; }
+.tiles { list-style: none; padding: 0; display: grid; gap: var(--s2); grid-template-columns: repeat(3, 1fr); }
+.tile { --tile-bg: var(--surface); --arc: var(--accent); display: grid; justify-items: center; gap: 2px; padding: var(--s3) var(--s1) var(--s2); background: var(--tile-bg); border: 1px solid var(--line); border-radius: var(--radius); text-align: center; position: relative; }
+.tile[data-state='speaking'] { --tile-bg: var(--go-soft); --arc: var(--go); border-color: var(--go); }
+.tile[data-state='holding'] { --tile-bg: var(--accent-soft); border-color: var(--accent); border-style: dashed; }
+.tile[data-state='paused'] { --tile-bg: var(--hold-soft); --arc: var(--hold-ink); border-color: var(--hold-ink); }
+.tile[data-state='absent'] { --tile-bg: var(--bg); border-style: dashed; color: var(--muted); }
+.tile[data-over='true'] { --arc: var(--danger); border-color: var(--danger); }
+.ring { width: 52px; height: 52px; border-radius: 999px; display: grid; place-items: center; background: conic-gradient(var(--arc) calc(var(--p) * 1%), var(--line) 0); }
+.ring b { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 999px; background: var(--tile-bg); font-size: 0.75rem; font-variant-numeric: tabular-nums; }
+.tile-name { font-weight: 600; font-size: var(--t-sm); }
+.tile-state { font-size: 0.75rem; color: var(--muted); }
+.tile[data-state='speaking'] .tile-state { color: var(--go); font-weight: 600; }
+.tile[data-state='holding'] .tile-state { color: var(--accent-ink); font-weight: 600; }
+.tile[data-state='paused'] .tile-state { color: var(--hold-ink); font-weight: 600; }
+.tile[data-over='true'] .tile-state, .tile[data-over='true'] .ring b { color: var(--danger); font-weight: 600; }
+/* Palettes 1 and 3: a second cue besides color for "over time". */
+.phone[data-cue='true'] .tile[data-over='true']::after { content: '!'; position: absolute; top: 6px; right: 8px; width: 18px; height: 18px; border-radius: 999px; background: var(--danger); color: var(--bg); font-size: 0.75rem; font-weight: 700; line-height: 18px; }
+.stale { opacity: var(--stale, 0.45); font-size: var(--t-sm); }
+</style>
+</head>
+<body>
+<div class="bar-top">
+  <fieldset><legend>Botón de inicio</legend><div class="pick">
+    <label><input type="radio" name="btn" value="A"><span>A · Dos botones</span></label>
+    <label><input type="radio" name="btn" value="B" checked><span>B · Control "Orden"</span></label>
+    <label><input type="radio" name="btn" value="C"><span>C · Ver orden antes</span></label>
+  </div></fieldset>
+  <fieldset><legend>Paleta (dark)</legend><div class="pick">
+    <label><input type="radio" name="pal" value="cur"><span>Actual</span></label>
+    <label><input type="radio" name="pal" value="p1" checked><span>1 · Carbón cálido</span></label>
+    <label><input type="radio" name="pal" value="p2"><span>2 · Noche tinta</span></label>
+    <label><input type="radio" name="pal" value="p3"><span>3 · 1 + más contraste</span></label>
+  </div></fieldset>
+  <fieldset><legend>Tema</legend><div class="pick">
+    <label><input type="radio" name="theme" value="dark" checked><span>Oscuro</span></label>
+    <label><input type="radio" name="theme" value="light"><span>Claro</span></label>
+  </div></fieldset>
+  <label class="check" id="more-wrap" hidden><input type="checkbox" id="more" checked> Simular <code>prefers-contrast: more</code></label>
+</div>
+
+<div class="wrap">
+  <h1>Inicio de turnos y paletas</h1>
+  <p class="desc" id="btn-desc"></p>
+
+  <div class="board">
+    <figure>
+      <div class="phone" id="flow"></div>
+      <figcaption>Probalo: configurar y empezar</figcaption>
+    </figure>
+    <figure>
+      <div class="phone" id="states"></div>
+      <figcaption>Todos los estados, para comparar colores</figcaption>
+    </figure>
+    <div>
+      <h2 style="font-family: Fraunces, serif; font-weight: 600; margin-bottom: 4px">Contraste medido</h2>
+      <p class="desc" id="pal-desc" style="margin-bottom: 12px"></p>
+      <table><thead><tr><th>Par</th><th>Ratio</th><th>Mínimo</th></tr></thead><tbody id="ratios"></tbody></table>
+    </div>
+  </div>
+</div>
+
+<script>
+const PEOPLE = ['Ana', 'Bruno', 'Carla', 'Diego', 'Eva', 'Fede'];
+
+// [L, C, h] in OKLCH. Light theme is the current one for every palette: only dark is under test.
+const LIGHT = { bg: [0.975, 0.008, 70], surface: [0.995, 0.004, 70], ink: [0.24, 0.015, 40], muted: [0.5, 0.02, 45], line: [0.89, 0.012, 60], control: [0.62, 0.02, 50],
+  accent: [0.55, 0.16, 33], 'accent-ink': [0.53, 0.16, 33], 'accent-soft': [0.94, 0.04, 40], 'on-accent': [0.99, 0.005, 60], danger: [0.45, 0.18, 27],
+  go: [0.5, 0.13, 150], 'on-go': [0.99, 0.01, 150], 'go-soft': [0.94, 0.05, 150], 'hold-ink': [0.48, 0.1, 70], 'hold-soft': [0.95, 0.06, 85] };
+const PAL = {
+  cur: { name: 'Actual', desc: 'Lo que está en producción. Texto bien, pero superficie y fondo casi iguales (1.16), bordes de 1.81 y los estados con la misma luminosidad.',
+    bg: [0.16, 0.006, 50], surface: [0.235, 0.008, 50], ink: [0.95, 0.008, 70], muted: [0.74, 0.012, 60], line: [0.4, 0.01, 50], control: [0.55, 0.015, 55],
+    accent: [0.74, 0.14, 38], 'accent-ink': [0.76, 0.13, 38], 'accent-soft': [0.3, 0.035, 40], 'on-accent': [0.2, 0.02, 40], danger: [0.76, 0.13, 27],
+    go: [0.76, 0.15, 150], 'on-go': [0.2, 0.04, 150], 'go-soft': [0.29, 0.05, 150], 'hold-ink': [0.82, 0.14, 82], 'hold-soft': [0.3, 0.045, 82] },
+  p1: { name: '1 · Carbón cálido', cue: true, desc: 'Mismos tonos, otra luminosidad: tarjetas que se separan del fondo, texto menos brillante, bordes de control por encima de 4:1. El rojo de "se pasó" baja y se satura para no confundirse con el coral, y suma un "!" como segunda señal.',
+    bg: [0.17, 0.008, 50], surface: [0.28, 0.01, 50], ink: [0.92, 0.008, 70], muted: [0.76, 0.012, 60], line: [0.44, 0.01, 50], control: [0.62, 0.015, 55],
+    accent: [0.74, 0.14, 38], 'accent-ink': [0.77, 0.13, 38], 'accent-soft': [0.35, 0.045, 40], 'on-accent': [0.2, 0.02, 40], danger: [0.68, 0.19, 25],
+    go: [0.82, 0.16, 150], 'on-go': [0.2, 0.04, 150], 'go-soft': [0.34, 0.06, 150], 'hold-ink': [0.87, 0.14, 88], 'hold-soft': [0.35, 0.05, 82] },
+  p2: { name: '2 · Noche tinta', desc: 'Fondo neutro frío y el coral igual: el acento resalta más. Cambia el carácter cálido de papel y tinta de DESIGN.md.',
+    bg: [0.18, 0.015, 255], surface: [0.25, 0.018, 255], ink: [0.93, 0.008, 250], muted: [0.77, 0.015, 250], line: [0.42, 0.02, 255], control: [0.62, 0.02, 255],
+    accent: [0.75, 0.14, 38], 'accent-ink': [0.77, 0.13, 38], 'accent-soft': [0.32, 0.045, 38], 'on-accent': [0.2, 0.02, 40], danger: [0.7, 0.18, 25],
+    go: [0.8, 0.15, 160], 'on-go': [0.2, 0.04, 160], 'go-soft': [0.31, 0.05, 165], 'hold-ink': [0.86, 0.14, 88], 'hold-soft': [0.32, 0.04, 85] },
+  p3: { name: '3 · Carbón + más contraste', cue: true, desc: 'La paleta 1 para todos, y esta capa solo para quien pide más contraste en el sistema. Destildá el checkbox para ver la base.',
+    bg: [0.13, 0.004, 50], surface: [0.24, 0.006, 50], ink: [0.97, 0.005, 70], muted: [0.85, 0.01, 60], line: [0.55, 0.01, 50], control: [0.72, 0.01, 55],
+    accent: [0.8, 0.13, 38], 'accent-ink': [0.82, 0.12, 38], 'accent-soft': [0.3, 0.04, 40], 'on-accent': [0.18, 0.02, 40], danger: [0.74, 0.17, 25],
+    go: [0.85, 0.15, 150], 'on-go': [0.18, 0.04, 150], 'go-soft': [0.3, 0.05, 150], 'hold-ink': [0.89, 0.13, 88], 'hold-soft': [0.31, 0.045, 82] },
+};
+const BTN = {
+  A: '<strong>A · Dos botones.</strong> "Sortear y empezar" como principal y "Empezar en orden" al lado. Cero estado guardado; a cambio, dos llamados a la acción compiten siempre.',
+  B: '<strong>B · Control "Orden" (recomendado).</strong> Se elige Sorteado o Como la lista y queda guardado por lista, como el tiempo. Un solo botón; el texto de ayuda cambia según la opción.',
+  C: '<strong>C · Ver el orden antes.</strong> "Empezar turnos" muestra la fila: se puede volver a sortear o usar el orden de la lista, y recién ahí arranca el reloj. Lo más transparente, un paso más cada vez.',
+};
+
+// OKLCH → linear sRGB → WCAG relative luminance.
+function lum([L, C, h]) {
+  h *= Math.PI / 180; const a = C * Math.cos(h), b = C * Math.sin(h);
+  const l = (L + 0.3963377774 * a + 0.2158037573 * b) ** 3, m = (L - 0.1055613458 * a - 0.0638541728 * b) ** 3, s = (L - 0.0894841775 * a - 1.291485548 * b) ** 3;
+  const rgb = [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s].map((v) => Math.min(1, Math.max(0, v)));
+  return 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2];
+}
+const ratio = (x, y) => { const a = lum(x) + 0.05, b = lum(y) + 0.05; return Math.max(a, b) / Math.min(a, b); };
+const css = ([L, C, h]) => `oklch(${L} ${C} ${h})`;
+
+const state = { btn: 'B', pal: 'p1', theme: 'dark', more: true, step: 'setup', budget: 5, order: 'draw', queue: [], ordered: 'draw' };
+const shuffle = (list) => { const a = [...list]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+function tokens() {
+  if (state.theme === 'light') return LIGHT;
+  if (state.pal === 'p3' && !state.more) return PAL.p1;
+  return PAL[state.pal];
+}
+
+function paint() {
+  const t = tokens();
+  for (const el of document.querySelectorAll('.phone')) {
+    for (const [k, v] of Object.entries(t)) if (Array.isArray(v)) el.style.setProperty('--' + k, css(v));
+    el.style.setProperty('--hold', css(t['hold-ink']));
+    el.style.colorScheme = state.theme;
+    el.dataset.cue = String(state.theme === 'dark' && !!PAL[state.pal].cue);
+  }
+  document.getElementById('more-wrap').hidden = state.pal !== 'p3' || state.theme !== 'dark';
+  document.getElementById('pal-desc').textContent = state.theme === 'light' ? 'Tema claro: se mantiene como está en todas las paletas.' : PAL[state.pal].desc;
+  const rows = [
+    ['ink', 'bg', 'Texto / fondo', 4.5], ['ink', 'surface', 'Texto / tarjeta', 4.5], ['muted', 'surface', 'Texto secundario / tarjeta', 4.5],
+    ['accent-ink', 'surface', 'Coral texto / tarjeta', 4.5], ['on-accent', 'accent', 'Botón principal', 4.5], ['go', 'go-soft', 'Verde "habla" / tile', 4.5],
+    ['hold-ink', 'hold-soft', 'Ámbar "pausa" / tile', 4.5], ['danger', 'surface', 'Rojo "se pasó" / tarjeta', 4.5],
+    ['control', 'surface', 'Borde de control', 3], ['line', 'surface', 'Borde de tile / divisor', 3], ['surface', 'bg', 'Tarjeta vs fondo (separación)', 1.3],
+    ['danger', 'accent', 'Rojo vs coral (distinguir)', 1.3],
+  ];
+  document.getElementById('ratios').innerHTML = rows.map(([fg, bg, label, min]) => {
+    const r = ratio(t[fg], t[bg]); const cls = r >= min ? 'ok' : r >= min * 0.8 ? 'meh' : 'bad';
+    return `<tr><td><span class="sw" style="background:${css(t[fg])}"></span><span class="sw" style="background:${css(t[bg])}"></span>${label}</td><td class="${cls}">${r.toFixed(2)}</td><td>${min}</td></tr>`;
+  }).join('');
+}
+
+const play = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+const dice = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="8.5" r="1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1" fill="currentColor"/></svg>';
+const list = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>';
+
+const budgetField = () => `<div class="field"><span class="label" id="bl">Tiempo por persona</span><div class="chips" role="group" aria-labelledby="bl">${[2, 3, 5, 10, 15].map((m) => `<button type="button" class="chip" data-budget="${m}" aria-pressed="${m === state.budget}">${m} min</button>`).join('')}</div></div>`;
+const baseHint = 'Habla una persona por vez y todas tienen el mismo tiempo. El reloj no corta a nadie y no suena.';
+
+function setupHtml() {
+  if (state.btn === 'A') return `${budgetField()}
+    <p class="hint">${baseHint}</p>
+    <div class="actions"><button type="button" class="btn btn-primary" data-start="draw">${dice}Sortear y empezar</button><button type="button" class="btn btn-ghost" data-start="list">${list}En orden</button></div>`;
+  if (state.btn === 'B') return `${budgetField()}
+    <fieldset class="field" style="border:0;padding:0"><legend class="label" style="margin-bottom:var(--s2)">Orden</legend>
+      <div class="seg"><label><input type="radio" name="ord" value="draw" ${state.order === 'draw' ? 'checked' : ''}><span>Sorteado</span></label><label><input type="radio" name="ord" value="list" ${state.order === 'list' ? 'checked' : ''}><span>Como la lista</span></label></div></fieldset>
+    <p class="hint">${state.order === 'draw' ? 'El orden se sortea al empezar.' : 'Hablan en el orden de la lista: ' + PEOPLE.slice(0, 3).join(', ') + '…'} ${baseHint}</p>
+    <div class="actions"><button type="button" class="btn btn-primary" data-start="${state.order}">Empezar turnos</button></div>`;
+  return `${budgetField()}
+    <p class="hint">${baseHint}</p>
+    <div class="actions"><button type="button" class="btn btn-primary" data-preview>Empezar turnos</button></div>`;
+}
+
+function previewHtml(animate) {
+  return `<p class="label">¿Arrancamos con este orden?</p>
+    <ol class="queue ${animate ? 'is-shuffling' : ''}" aria-label="Orden de turnos">${state.queue.map((n) => `<li>${n}</li>`).join('')}</ol>
+    <div class="actions">
+      <button type="button" class="btn btn-ghost btn-small" data-reshuffle>${dice}Volver a sortear</button>
+      <button type="button" class="btn btn-ghost btn-small" data-listorder ${state.ordered === 'list' ? 'aria-pressed="true"' : ''}>${list}Orden de la lista</button>
+    </div>
+    <div class="actions"><button type="button" class="btn btn-primary" data-go>Arrancar</button></div>
+    <button type="button" class="btn btn-text btn-small" data-back style="justify-self:start">Atrás</button>`;
+}
+
+function liveHtml() {
+  const [first, ...rest] = state.queue;
+  return `<p class="order-tag">${state.ordered === 'draw' ? dice + ' Orden sorteado' : list + ' Orden de la lista'} · ${state.budget} min c/u</p>
+    <div class="now"><p class="now-label">Le toca a</p><p class="now-name">${first}</p>
+      <div class="now-controls"><button type="button" class="btn btn-go" aria-label="Empezar reloj">${play}</button><button type="button" class="btn btn-primary">Pasarle a ${rest[0]}</button></div></div>
+    <ol class="tiles" aria-label="Fila">${state.queue.map((n, i) => `<li class="tile" ${i === 0 ? 'data-state="holding"' : ''}><span class="ring" style="--p:0"><b>0:00</b></span><span class="tile-name">${i + 1}. ${n}</span><span class="tile-state">${i === 0 ? 'Espera su clic' : 'En fila'}</span></li>`).join('')}</ol>
+    <button type="button" class="btn btn-text btn-small" data-reset style="justify-self:start">Volver a configurar</button>`;
+}
+
+function renderFlow(animate = false) {
+  const el = document.getElementById('flow');
+  const title = '<h2>Turnos</h2>';
+  if (state.step === 'live') el.innerHTML = title + liveHtml();
+  else el.innerHTML = title + `<div class="card">${state.step === 'preview' ? previewHtml(animate) : setupHtml()}</div>`;
+  document.getElementById('btn-desc').innerHTML = BTN[state.btn];
+}
+
+function renderStates() {
+  const tiles = [
+    ['Ana', 'speaking', false, 62, '3:06', 'Hablando'], ['Bruno', 'paused', false, 40, '2:00', 'En pausa'], ['Carla', 'holding', false, 0, '0:00', 'Espera su clic'],
+    ['Diego', '', true, 100, '6:12', 'Se pasó'], ['Eva', '', false, 85, '4:15', 'Habló'], ['Fede', 'absent', false, 0, '—', 'No está'],
+  ];
+  document.getElementById('states').innerHTML = `<h2>Estados</h2>
+    <div class="now" style="border-style:solid;border-color:var(--go)"><p class="now-label" style="color:var(--go)">Hablando</p><p class="now-name">Ana</p>
+      <p style="font-size:3rem;font-weight:700;line-height:1;font-variant-numeric:tabular-nums">3:06</p><p class="hint">de 5:00</p></div>
+    <ul class="tiles">${tiles.map(([n, s, over, p, time, label]) => `<li class="tile" ${s ? `data-state="${s}"` : ''} data-over="${over}"><span class="ring" style="--p:${p}"><b>${time}</b></span><span class="tile-name">${n}</span><span class="tile-state">${label}</span></li>`).join('')}</ul>
+    <div class="card"><div class="chips"><button class="chip" aria-pressed="true">5 min</button><button class="chip">10 min</button></div>
+      <div class="actions"><button class="btn btn-primary">Principal</button><button class="btn btn-ghost">Secundario</button></div>
+      <p class="hint">Texto secundario sobre tarjeta.</p><p class="stale">Resultado viejo con opacity .45 (hoy)</p></div>`;
+}
+
+document.querySelector('.bar-top').addEventListener('change', (e) => {
+  const { name, value, id, checked } = e.target;
+  if (name === 'btn') { state.btn = value; state.step = 'setup'; renderFlow(); paint(); }
+  if (name === 'pal') state.pal = value;
+  if (name === 'theme') state.theme = value;
+  if (id === 'more') state.more = checked;
+  paint();
+});
+
+const flow = document.getElementById('flow');
+flow.addEventListener('change', (e) => { if (e.target.name === 'ord') { state.order = e.target.value; renderFlow(); flow.querySelector(`input[value="${state.order}"]`).focus(); } });
+flow.addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.budget) { state.budget = +b.dataset.budget; renderFlow(); }
+  else if (b.dataset.start) { state.ordered = b.dataset.start; state.queue = b.dataset.start === 'draw' ? shuffle(PEOPLE) : [...PEOPLE]; state.step = 'live'; renderFlow(); }
+  else if ('preview' in b.dataset) { state.ordered = 'draw'; state.queue = shuffle(PEOPLE); state.step = 'preview'; renderFlow(true); }
+  else if ('reshuffle' in b.dataset) { state.ordered = 'draw'; state.queue = shuffle(PEOPLE); renderFlow(true); }
+  else if ('listorder' in b.dataset) { state.ordered = 'list'; state.queue = [...PEOPLE]; renderFlow(true); }
+  else if ('go' in b.dataset) { state.step = 'live'; renderFlow(); }
+  else if ('back' in b.dataset || 'reset' in b.dataset) { state.step = 'setup'; renderFlow(); }
+});
+
+renderFlow(); renderStates(); paint();
+</script>
+</body>
+</html>

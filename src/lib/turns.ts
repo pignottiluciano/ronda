@@ -32,8 +32,12 @@ export interface Session {
   entries: Entry[];
 }
 
+/** How the speaking order is set when a day starts: drawn again, or as the list is. */
+export type TurnOrder = 'draw' | 'list';
+
 export interface ListTurns {
   budgetMs: number; // equal for everyone
+  order: TurnOrder;
   minDays: number; // used by the ranking
   absent: string[]; // not here today; they stay out of the draw and of the turns
   sessions: Session[];
@@ -48,6 +52,7 @@ const elapsed = (since: number, now: number) => Math.max(0, now - since);
 
 export const emptyTurns = (): ListTurns => ({
   budgetMs: DEFAULT_BUDGET_MINUTES * MINUTE,
+  order: 'draw',
   minDays: 1,
   absent: [],
   sessions: [],
@@ -61,6 +66,8 @@ export const isValidBudgetMinutes = (value: unknown): value is number =>
 export function setBudgetMinutes(turns: ListTurns, minutes: number): ListTurns {
   return turns.current || !isValidBudgetMinutes(minutes) ? turns : { ...turns, budgetMs: minutes * MINUTE };
 }
+
+export const setOrder = (turns: ListTurns, order: TurnOrder): ListTurns => ({ ...turns, order });
 
 /** Adds the running turn to the person who had it and stops the clock. */
 function settle(current: CurrentSession, now: number): CurrentSession {
@@ -285,7 +292,8 @@ function parseListTurns(v: unknown): ListTurns | null {
   if (!sessions.every((s) => s !== null)) return null;
   const current = v.current === null ? null : parseCurrent(v.current);
   if (v.current !== null && !current) return null;
-  return { budgetMs: v.budgetMs, minDays: v.minDays as number, absent: v.absent, sessions, current };
+  const order: TurnOrder = v.order === 'list' ? 'list' : 'draw'; // saved before the setting existed: drawn, as it always was
+  return { budgetMs: v.budgetMs, order, minDays: v.minDays as number, absent: v.absent, sessions, current };
 }
 
 /** Keeps the valid lists, and only those in `listIds` when given (turn data of a deleted list goes away). */
