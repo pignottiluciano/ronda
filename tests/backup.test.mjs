@@ -102,14 +102,15 @@ test('importing keeps the local turn data of a list the backup brings without an
 test('importing into a browser that only has the empty default list replaces that list', () => {
   const { store: source, turns: sourceTurns } = sample();
   const backup = parsed(JSON.stringify(createBackup(source, sourceTurns, 0)));
-  const fresh = createStore('Lista 1');
+  const blank = createStore('Lista 1');
+  const fresh = setTurns(blank, blank.activeId, true); // a new browser starts with turns on
   assert.deepEqual([planImport(fresh, {}, backup).replace, planImport(fresh, {}, backup).add], [[], ['Daily', 'Tenis']]);
   const { store } = applyImport(fresh, {}, backup);
   assert.deepEqual(store.lists.map((l) => l.name), ['Daily', 'Tenis']);
   assert.equal(store.activeId, source.activeId);
 });
 
-test('a lone list with people, turns or saved days is never dropped by an import', () => {
+test('a lone list with people or saved days is never dropped by an import', () => {
   const { store: source, turns: sourceTurns } = sample();
   const backup = parsed(JSON.stringify(createBackup(source, sourceTurns, 0)));
   const real = createStore('Mine', ['Zoe']);

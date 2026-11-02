@@ -1,6 +1,6 @@
 // Browser-only. Never import from Astro frontmatter: localStorage does not exist at build time.
 import { parseParticipants } from '../lib/draw';
-import { createStore, parseStore, type ListStore } from '../lib/lists';
+import { createStore, parseStore, setTurns, type ListStore } from '../lib/lists';
 import { parseTurnsStore, type TurnsStore } from '../lib/turns';
 
 const KEY = 'ronda.lists.v1';
@@ -30,7 +30,9 @@ export function readStore(defaultName: string): ListStore {
   } catch {
     // Corrupt JSON or blocked storage: start fresh.
   }
-  return createStore(defaultName);
+  // First visit: the list starts with turns on. From then on the saved flag decides.
+  const fresh = createStore(defaultName);
+  return setTurns(fresh, fresh.activeId, true);
 }
 
 /** Returns false when the browser refuses to store (private mode, quota, blocked site data). */

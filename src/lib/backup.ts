@@ -63,10 +63,11 @@ export function parseBackup(text: string): ParsedBackup {
   };
 }
 
-/** A lone list with nothing in it is what a new browser starts with; importing replaces it instead of keeping it. */
+/** A lone list with nothing in it is what a new browser starts with; importing replaces it instead of keeping it.
+ * The turns flag is not data: a new browser starts with it on. */
 function isBlank(current: ListStore, turns: TurnsStore): boolean {
   const [only] = current.lists;
-  return current.lists.length === 1 && only !== undefined && only.people.length === 0 && !only.turns && !(turns[only.id]?.sessions.length);
+  return current.lists.length === 1 && only !== undefined && only.people.length === 0 && !(turns[only.id]?.sessions.length);
 }
 
 /** What an import would do, for the confirmation: lists with the same id are replaced, the rest are added, the others stay. */
