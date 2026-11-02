@@ -141,11 +141,16 @@ function chip(person: Person): HTMLElement {
   return item;
 }
 
-// Badges are replaced around the input, never the input itself, so it keeps focus.
+// Badges are replaced around the input, never the input itself, so it keeps focus. A focused badge button
+// (the away toggle, say) goes back to the same person and control.
 function renderPeople() {
+  const focused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const focusedId = focused?.closest<HTMLElement>('.person')?.dataset.id;
+  const focusedClass = focused?.className;
   tagbox.querySelectorAll('.person').forEach((node) => node.remove());
   inputItem.before(...people().map(chip));
   shown = new Set(people().map((p) => p.id));
+  if (focusedId && focusedClass) tagbox.querySelector<HTMLElement>(`[data-id="${CSS.escape(focusedId)}"] .${focusedClass}`)?.focus();
 }
 
 function commit(next: ListStore) {
