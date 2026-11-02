@@ -18,7 +18,7 @@ and quiet; motion only confirms state changes (who is speaking, time over, saved
 - **Numbers carry the meaning.** Every ring, bar and podium step has the value as text next to it; the graphic is secondary.
 - **Opt-in complexity.** Turns, ranking and history appear only on lists where the user turned them on. A list without turns looks exactly like today's.
 - **Neutral about who "wins".** The ranking says "speaks less"; no medals, trophies or shaming. Overtime is shown, not punished.
-- **Phone on a table.** The speaker's clock is readable from a distance (at least 3rem on mobile) and every control is at least 44px. Exception: the parts of a person badge are 32px high (they sit in a wrapping box); the x, which deletes, keeps a 44px hit area through a pseudo-element, and the name button only edits (reversible).
+- **Phone on a table.** The speaker's clock is readable from a distance (at least 3rem on mobile) and every control is at least 44px (2.75rem). Exception: the parts of a person badge are 32px (2rem) high (they sit in a wrapping box); the x, which deletes, keeps a 44px hit area through a pseudo-element, and the name button only edits (reversible).
 
 ## Color
 Light keeps the warm paper. Dark is "Noche tinta": a cool ink neutral (hue 255) under the same coral, so the accent
@@ -56,10 +56,19 @@ New sizes use existing tokens plus two display sizes, both with `font-variant-nu
 | Podium score | `--t-xl`, Fraunces | 600 |
 | Table numbers | `--t-sm` | 400, 700 for the first row |
 
+## Units
+Sizes are `rem`, with 1rem = 16px, so raising the browser's or the phone's default text size grows the boxes around the text
+and nothing gets cramped (at the normal size nothing moves). Never set `html { font-size: 62.5% }`: it overrides that setting.
+Stay in `px`: 1 to 3px lines (borders, outlines, offsets), `999px` and `50%` radii, the thin `.bar` tracks, the share image
+canvas (1080x1350 is a fixed image) and the floating window request. Media queries use rem too (24.9375, 29.9375 and
+56.25rem; the JS `matchMedia` in `app.ts` repeats 56.1875rem), and browsers evaluate them against the browser's default text
+size, not the page's. Grids with a minimum column use `minmax(min(Xrem, 100%), 1fr)` so a big text size cannot push the page
+wider than the screen; the ranking table scrolls sideways inside its own region when it does not fit.
+
 ## Space, shape, elevation
 Spacing scale 4, 8, 12, 16, 24, 32, 48, 64 (existing). Radius: `--radius` 16 for cards and tiles, `--radius-sm` 10 for
 controls, 999px for person badges and mode pills (nested elements use the smaller radius). No shadows; elevation is
-border plus `--surface` over `--bg`. Container 1120px. Desktop layout is two columns (list left, active mode right).
+border plus `--surface` over `--bg`. Container 1120px (70rem). Desktop layout is two columns (list left, active mode right).
 
 ## Motion
 Durations: fast 150ms, base 250ms. Easing `--ease-out`. Motion is used for: a badge entering and leaving, the active
@@ -69,7 +78,7 @@ No sound anywhere.
 
 ## Components
 **Person badge (tag box).** A bordered box (`--control`, accent border and `--accent-soft` outline on focus-within) holding a
-list of badges followed by the input. Badge: 32px pill, `--accent-soft` fill, name button plus a 28px x button.
+list of badges followed by the input. Badge: 32px (2rem) pill, `--accent-soft` fill, name button plus a 28px x button.
 States: default; selected (second step of Backspace, accent outline); absent today (dashed border, struck-through,
 only on lists with turns); editing (the name becomes an input in place). Name button edits, x removes.
 Enter adds, pasted lines add one badge each, duplicates and empty names are rejected with a hint, never silently.
@@ -79,7 +88,7 @@ Labels: x is "Remove Ana"; the live region announces "Ana added" and "Ana remove
 keyboard and screen reader behavior is free. Shown only on lists with turns on; otherwise the list shows today's draw
 form with no control. The switch "Use turns" lives in the list tools next to rename and delete.
 
-**Turn tile.** Card with a conic-gradient ring (76px, 62px inner), clock text inside, name below, state label
+**Turn tile.** Card with a conic-gradient ring (76px = 4.75rem, 62px = 3.875rem inner), clock text inside, name below, state label
 ("Done", "Speaking", "Next", "Waiting", "Absent", "Over time"). Tapping gives the floor to that person and pauses the previous one.
 Active tile: `--accent` border and `--accent-soft` fill. Absent: dashed border, no fill. Over time: ring full, label `+m:ss`.
 The tile is a `<button>`; the ring is `aria-hidden`; the active one has `aria-current="true"`.
@@ -107,10 +116,10 @@ People under the minimum days appear after the table under "Not enough data". Ti
 Ronda mark at the bottom. Uses the light palette always (it leaves the app), Fraunces and Figtree, text at least 28px.
 
 ## Layout and responsive
-Breakpoint 900px (existing). Below it everything stacks; the mode control sits under the list title and the badge box is
-full width. From 900px the list column is `minmax(320px, 400px)` and the right column shows the selected mode; Ranking
+Breakpoint 900px = 56.25rem (existing). Below it everything stacks; the mode control sits under the list title and the badge box is
+full width. From 56.25rem the list column is `minmax(20rem, 25rem)` and the right column shows the selected mode; Ranking
 replaces Turns in that column rather than adding a third one. Tiles are two per row on phones and four per row on desktop.
-Verify at 375, 768 and 1280px: no horizontal scroll, 44px targets.
+Verify at 320, 375, 768 and 1280px, and with the text size at 125% and 150%: no horizontal scroll, 44px targets.
 
 ## Content
 Voice: plain, direct, Spanish first (`es`) with `en` parity in `src/i18n/messages.ts`. Sentence case, specific verbs

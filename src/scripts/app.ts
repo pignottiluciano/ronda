@@ -300,7 +300,7 @@ function runDraw(): boolean {
 
 function scrollToResults() {
   // Desktop shows results side by side; only stacked layouts need to scroll.
-  if (!matchMedia('(max-width: 899px)').matches) return;
+  if (!matchMedia('(max-width: 56.1875rem)').matches) return;
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   results.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
 }

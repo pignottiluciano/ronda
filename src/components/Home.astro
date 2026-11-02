@@ -194,6 +194,7 @@ const t = messages[lang];
         <p class="hint">{t.rankHow}</p>
         <div id="podium" class="podium" aria-hidden="true"></div>
         <p id="rank-none" class="hint" hidden>{t.rankNoRows}</p>
+        <div id="rank-scroll" class="rank-scroll" role="region" tabindex="0" aria-label={t.rankTableLabel}>
         <table id="rank-table" class="rank-table">
           <caption class="sr-only">{t.rankTableLabel}</caption>
           <thead>
@@ -201,6 +202,7 @@ const t = messages[lang];
           </thead>
           <tbody id="rank-rows"></tbody>
         </table>
+        </div>
         <div id="rank-few" class="rank-few" hidden>
           <h3>{t.rankFewTitle}</h3>
           <p id="rank-few-hint" class="hint"></p>

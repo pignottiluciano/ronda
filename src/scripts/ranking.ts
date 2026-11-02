@@ -27,7 +27,7 @@ export function initRanking(host: RankingHost) {
   const meta = $('rank-meta');
   const podium = $('podium');
   const none = $('rank-none');
-  const table = $('rank-table');
+  const table = $('rank-scroll'); // the scrollable wrapper of the table: hiding it hides both
   const rows = $('rank-rows');
   const few = $('rank-few');
   const fewHint = $('rank-few-hint');
