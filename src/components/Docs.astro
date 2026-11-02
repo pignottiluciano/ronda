@@ -1,0 +1,27 @@
+---
+// The help page shell. The text itself lives in one component per language (docs/DocsEs, docs/DocsEn).
+import Base from '../layouts/Base.astro';
+import { messages, type Lang } from '../i18n/messages';
+import DocsEs from './docs/DocsEs.astro';
+import DocsEn from './docs/DocsEn.astro';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const t = messages[lang];
+---
+
+<Base lang={lang} paths={{ es: '/documentation/', en: '/en/documentation/' }} title={t.docsPageTitle} description={t.docsDescription} help>
+  <main class="doc">
+    <h1>{t.docsTitle}</h1>
+    <p class="doc-lede">{t.docsLede}</p>
+    {lang === 'es' ? <DocsEs /> : <DocsEn />}
+    <a class="doc-back" href={lang === 'es' ? '/' : '/en/'}>← {t.docsBack}</a>
+  </main>
+
+  <script>
+    import '../scripts/theme';
+    import '../scripts/pwa';
+  </script>
+</Base>

@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ronda · Cómo funciona (mock)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+/* Real Ronda tokens (light + "Noche tinta" dark). */
+:root {
+  color-scheme: light dark;
+  --bg: light-dark(oklch(0.975 0.008 70), oklch(0.18 0.015 255));
+  --surface: light-dark(oklch(0.995 0.004 70), oklch(0.25 0.018 255));
+  --ink: light-dark(oklch(0.24 0.015 40), oklch(0.93 0.008 250));
+  --muted: light-dark(oklch(0.5 0.02 45), oklch(0.77 0.015 250));
+  --line: light-dark(oklch(0.89 0.012 60), oklch(0.42 0.02 255));
+  --accent: light-dark(oklch(0.55 0.16 33), oklch(0.75 0.14 38));
+  --accent-ink: light-dark(oklch(0.53 0.16 33), oklch(0.77 0.13 38));
+  --accent-soft: light-dark(oklch(0.94 0.04 40), oklch(0.32 0.045 38));
+  --control: light-dark(oklch(0.62 0.02 50), oklch(0.62 0.02 255));
+  --go: light-dark(oklch(0.5 0.13 150), oklch(0.8 0.15 160));
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
+  --t-xs: 0.833rem; --t-sm: 0.9375rem; --t-lg: 1.2rem; --t-xl: 1.44rem;
+  --radius: 16px; --radius-sm: 10px;
+}
+:root[data-theme='light'] { color-scheme: light; }
+:root[data-theme='dark'] { color-scheme: dark; }
+* { box-sizing: border-box; margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: "Figtree", sans-serif; line-height: 1.6; }
+a { color: var(--accent-ink); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Mock-only bar */
+.mockbar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: center; padding: 8px 16px; background: #111; color: #ccc; font-size: 0.8rem; }
+.mockbar button { font: inherit; padding: 4px 10px; border-radius: 6px; border: 1px solid #444; background: none; color: #eee; cursor: pointer; }
+.mockbar button[aria-pressed='true'] { background: #eee; color: #111; }
+
+/* App header, as today plus the new link */
+.top { max-width: 1120px; margin: 0 auto; display: flex; align-items: center; gap: var(--s3); padding: var(--s4); }
+.brand { font-family: "Fraunces", serif; font-weight: 600; font-size: var(--t-lg); text-decoration: none; color: var(--ink); margin-right: auto; }
+.help { font-size: var(--t-sm); font-weight: 600; color: var(--ink); text-decoration: none; padding: var(--s2) var(--s3); border-radius: var(--radius-sm); }
+.help:hover { background: var(--accent-soft); }
+.help[aria-current='page'] { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 4px; }
+.langs { display: flex; gap: 2px; font-size: var(--t-xs); font-weight: 700; }
+.langs a { padding: var(--s1) var(--s2); border-radius: 6px; color: var(--muted); text-decoration: none; }
+.langs a[aria-current='true'] { color: var(--ink); background: var(--accent-soft); }
+.theme { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid var(--line); border-radius: 999px; color: var(--ink); background: none; }
+.theme svg { width: 18px; height: 18px; }
+
+/* Docs page */
+.doc { max-width: 68ch; margin: 0 auto; padding: var(--s5) var(--s4) var(--s7); }
+.doc h1 { font-family: "Fraunces", serif; font-weight: 500; font-size: clamp(2rem, 6vw, 2.6rem); letter-spacing: -0.02em; line-height: 1.15; }
+.doc .lede { color: var(--muted); font-size: var(--t-lg); margin-top: var(--s3); }
+.toc { margin: var(--s6) 0; padding: var(--s4) var(--s5); border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.toc h2 { font-size: var(--t-xs); text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: var(--s2); }
+.toc ol { padding-left: 1.2em; columns: 2 14rem; column-gap: var(--s6); }
+.toc li { padding: 2px 0; break-inside: avoid; }
+.toc a { text-decoration: none; font-weight: 600; }
+.toc a:hover { text-decoration: underline; }
+section { padding-top: var(--s6); scroll-margin-top: var(--s4); }
+section + section { border-top: 1px solid var(--line); margin-top: var(--s6); }
+section h2 { font-family: "Fraunces", serif; font-weight: 600; font-size: var(--t-xl); letter-spacing: -0.02em; margin-bottom: var(--s3); }
+section h3 { font-size: var(--t-sm); font-weight: 700; margin: var(--s4) 0 var(--s1); }
+section p, section li { max-width: 62ch; }
+section > p + p, section > ul + p, section > p + ul { margin-top: var(--s3); }
+section ul { padding-left: 1.2em; display: grid; gap: var(--s1); margin-top: var(--s2); }
+.tip { margin-top: var(--s4); padding: var(--s3) var(--s4); border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: var(--t-sm); }
+kbd { font: inherit; font-size: 0.85em; font-weight: 600; padding: 1px 7px; border: 1px solid var(--control); border-bottom-width: 2px; border-radius: 6px; background: var(--surface); }
+b.ui { font-weight: 600; }
+/* Inline icon: the same glyph the app shows, sized to the text. */
+/* 1.4em box centered on the text: measured, the icon's middle sits within 0.1px of the line's middle. */
+.ic { display: inline-grid; place-items: center; width: 1.4em; height: 1.4em; vertical-align: -0.15em; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.ic svg { width: 1em; height: 1em; }
+.ic.go { background: var(--go); border-color: var(--go); color: light-dark(#fff, oklch(0.2 0.04 160)); }
+.back { display: inline-block; margin-top: var(--s7); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="mockbar">Mock · <span>Tema:</span>
+  <button type="button" data-theme="system" aria-pressed="true">Sistema</button>
+  <button type="button" data-theme="light" aria-pressed="false">Claro</button>
+  <button type="button" data-theme="dark" aria-pressed="false">Oscuro</button>
+</div>
+
+<header class="top">
+  <a class="brand" href="#">Ronda</a>
+  <a class="help" id="help" href="#" aria-current="page"></a>
+  <nav class="langs" aria-label="Idioma">
+    <a href="#" data-lang="es" lang="es">ES</a>
+    <a href="#" data-lang="en" lang="en">EN</a>
+  </nav>
+  <span class="theme" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span>
+</header>
+
+<main class="doc" id="doc"></main>
+
+<script>
+// Icons inside the text: {name} in a string becomes the glyph the app uses.
+const ICON = {
+  clock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></svg>',
+  pencil: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+  away: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M6.3 6.3l11.4 11.4"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 7l10 10M17 7 7 17"/></svg>',
+  grip: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>',
+  up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>',
+  down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+  pause: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>',
+};
+const icon = (s) => s.replace(/\{(\w+)(\.go)?\}/g, (_, n, go) => `<span class="ic${go ? ' go' : ''}" role="img" aria-label="${LABEL[lang][n]}">${ICON[n]}</span>`);
+
+const LABEL = {
+  es: { clock: 'reloj', pencil: 'lápiz', trash: 'tacho', away: 'no está', x: 'quitar', grip: 'manija', up: 'subir', down: 'bajar', play: 'empezar', pause: 'pausar' },
+  en: { clock: 'clock', pencil: 'pencil', trash: 'bin', away: 'not here', x: 'remove', grip: 'handle', up: 'up', down: 'down', play: 'start', pause: 'pause' },
+};
+
+const DOC = {
+  es: {
+    help: '¿Cómo funciona?', title: 'Cómo funciona Ronda', back: 'Volver a Ronda', toc: 'En esta página',
+    lede: 'Ronda arma un orden al azar o grupos parejos con una lista de nombres, y si querés, reparte turnos para hablar con el mismo tiempo para todos. No necesitás cuenta.',
+    sections: [
+      ['listas', 'Listas', `
+        <p>Cada lista es una pestaña arriba, con su cantidad de personas. Tocá <b class="ui">+ Nueva lista</b> para sumar otra.</p>
+        <ul>
+          <li><b>Agregar:</b> escribí un nombre y apretá <kbd>Enter</kbd>. Si pegás varias líneas, se suma una persona por línea.</li>
+          <li><b>Editar un nombre:</b> tocalo.</li>
+          <li><b>Quitar:</b> tocá {x} en la persona, o apretá <kbd>Borrar</kbd> dos veces con el campo vacío.</li>
+          <li><b>Renombrar o borrar la lista:</b> {pencil} y {trash}, al lado del nombre.</li>
+        </ul>
+        <p class="tip">Un nombre no se puede repetir en la misma lista. Entran hasta 200 personas.</p>`],
+      ['sortear', 'Sortear', `
+        <p>Elegí la <b class="ui">cantidad de grupos</b> y tocá <b class="ui">Sortear</b>.</p>
+        <ul>
+          <li><b>1 grupo:</b> te da un orden al azar.</li>
+          <li><b>2 o más:</b> grupos lo más parejos posible (10 personas en 3 grupos: 4, 3 y 3).</li>
+        </ul>
+        <p><b class="ui">Sortear de nuevo</b> mezcla otra vez. <b class="ui">Compartir</b> abre el menú del teléfono o copia el resultado.</p>`],
+      ['turnos', 'Turnos', `
+        <p>Para reuniones donde habla una persona por vez. Se activan por lista con {clock}, al lado del nombre de la lista. Si no los activás, la lista queda como siempre.</p>
+        <h3>Antes de empezar</h3>
+        <ul>
+          <li><b>Tiempo por persona:</b> todos tienen el mismo, de 1 a 60 minutos.</li>
+          <li><b>Orden:</b> <b class="ui">Sorteado</b> mezcla cada vez que empezás. <b class="ui">Como la lista</b> usa el orden de la lista.</li>
+          <li><b>Fila de hoy</b> (con <i>Como la lista</i>): muestra quién habla en qué puesto. Arrastrá desde {grip} o usá {up} {down} para cambiar el orden.</li>
+          <li><b>No está:</b> tocá {away} en la persona (en la lista o en la fila). Queda tachada y fuera de los turnos de hoy.</li>
+        </ul>
+        <p>Cuando esté todo, tocá <b class="ui">Empezar turnos</b>.</p>`],
+      ['reunion', 'Durante la reunión', `
+        <ul>
+          <li>{play.go} arranca el reloj de quien tiene la palabra y {pause} lo pausa.</li>
+          <li><b class="ui">Siguiente</b> le pasa la palabra a la próxima persona, con el reloj quieto hasta que toque <b class="ui">Empezar a hablar</b>.</li>
+          <li>Tocá a cualquier persona para darle la palabra en el momento.</li>
+          <li>Si alguien se pasa, el reloj sigue en rojo con <b>+m:ss</b>. Nunca corta a nadie y no suena.</li>
+        </ul>
+        <h3>Atajos de teclado</h3>
+        <p><kbd>Espacio</kbd> arranca, pausa o reanuda el reloj. <kbd>→</kbd> pasa la palabra.</p>
+        <h3>Ventana flotante</h3>
+        <p>En Chrome y Edge de computadora, <b class="ui">Flotar</b> deja el reloj en una ventanita encima de todo, para que puedas cambiar de pestaña o de app.</p>
+        <p>Al final, <b class="ui">Terminar y guardar el día</b> lo suma al ranking. <b class="ui">Descartar día</b> lo borra.</p>
+        <p class="tip">La pantalla no se apaga mientras alguien habla. Si recargás la página, el reloj sigue bien.</p>`],
+      ['ranking', 'Ranking', `
+        <p>Con los días guardados, Ronda muestra <b>quién habló menos en promedio</b>: el porcentaje de su tiempo que usó cada persona, contando solo los días que vino. Faltar no suma ni resta.</p>
+        <ul>
+          <li>Podés elegir el <b class="ui">mínimo de días</b> para entrar al ranking.</li>
+          <li>En <b class="ui">Historial</b> podés borrar un día suelto; <b class="ui">Reiniciar puntaje</b> borra todos.</li>
+          <li><b class="ui">Copiar</b>, <b class="ui">descargar</b> o <b class="ui">compartir imagen</b> te da el podio listo para mandar.</li>
+        </ul>`],
+      ['datos', 'Tus datos', `
+        <p>Todo se guarda <b>solo en este navegador</b>. No se manda a ningún lado y no hay cuenta.</p>
+        <p>Para no perderlos o pasarlos a otro dispositivo, abajo de todo está <b class="ui">Copia de seguridad</b>: <b class="ui">Exportar</b> baja un archivo y <b class="ui">Importar</b> lo vuelve a cargar. Antes de importar te muestra qué va a cambiar y nunca borra listas.</p>
+        <p class="tip">Si borrás los datos del navegador, se borran tus listas. Exportá una copia de vez en cuando.</p>`],
+      ['mas', 'Más', `
+        <ul>
+          <li><b>Tema:</b> sistema, claro u oscuro, desde el menú de arriba a la derecha.</li>
+          <li><b>Idioma:</b> ES o EN, arriba.</li>
+          <li><b>Instalar:</b> desde el menú del navegador ("Agregar a pantalla de inicio" o "Instalar app"). Después de la primera visita funciona sin conexión.</li>
+        </ul>`],
+    ],
+  },
+  en: {
+    help: 'How it works', title: 'How Ronda works', back: 'Back to Ronda', toc: 'On this page',
+    lede: 'Ronda turns a list of names into a random order or even groups and, if you want, gives everyone the same speaking time. No account needed.',
+    sections: [
+      ['lists', 'Lists', `
+        <p>Each list is a tab at the top, with how many people it has. Tap <b class="ui">+ New list</b> to add another.</p>
+        <ul>
+          <li><b>Add:</b> type a name and press <kbd>Enter</kbd>. Paste several lines to add one person per line.</li>
+          <li><b>Edit a name:</b> tap it.</li>
+          <li><b>Remove:</b> tap {x} on the person, or press <kbd>Backspace</kbd> twice in the empty field.</li>
+          <li><b>Rename or delete the list:</b> {pencil} and {trash}, next to its name.</li>
+        </ul>
+        <p class="tip">A name can only appear once per list. Up to 200 people.</p>`],
+      ['draw', 'Draw', `
+        <p>Choose the <b class="ui">number of groups</b> and tap <b class="ui">Draw</b>.</p>
+        <ul>
+          <li><b>1 group:</b> a random order.</li>
+          <li><b>2 or more:</b> groups as even as possible (10 people in 3 groups: 4, 3 and 3).</li>
+        </ul>
+        <p><b class="ui">Draw again</b> shuffles once more. <b class="ui">Share</b> opens your phone's share menu or copies the result.</p>`],
+      ['turns', 'Turns', `
+        <p>For meetings where one person speaks at a time. Turn them on per list with {clock}, next to the list name. If you don't, the list stays as it is.</p>
+        <h3>Before you start</h3>
+        <ul>
+          <li><b>Time per person:</b> the same for everyone, 1 to 60 minutes.</li>
+          <li><b>Order:</b> <b class="ui">Drawn</b> shuffles at every start. <b class="ui">As listed</b> uses the list order.</li>
+          <li><b>Today's line</b> (with <i>As listed</i>): shows who speaks in which position. Drag by {grip} or use {up} {down} to change the order.</li>
+          <li><b>Not here:</b> tap {away} on the person (in the list or the line). They are struck through and left out of today's turns.</li>
+        </ul>
+        <p>When you're ready, tap <b class="ui">Start turns</b>.</p>`],
+      ['meeting', 'During the meeting', `
+        <ul>
+          <li>{play.go} starts the clock of whoever has the floor and {pause} pauses it.</li>
+          <li><b class="ui">Next</b> hands the floor to the next person, with the clock stopped until they tap <b class="ui">Start talking</b>.</li>
+          <li>Tap anyone to give them the floor right away.</li>
+          <li>Going over keeps the clock running in red as <b>+m:ss</b>. It never cuts anyone off and makes no sound.</li>
+        </ul>
+        <h3>Keyboard shortcuts</h3>
+        <p><kbd>Space</kbd> starts, pauses or resumes the clock. <kbd>→</kbd> passes the floor.</p>
+        <h3>Floating window</h3>
+        <p>In Chrome and Edge on a computer, <b class="ui">Float</b> keeps the clock in a small window on top of everything, so you can switch tabs or apps.</p>
+        <p>At the end, <b class="ui">Finish and save the day</b> adds it to the ranking. <b class="ui">Discard day</b> throws it away.</p>
+        <p class="tip">The screen stays on while someone speaks. Reloading the page keeps the clock right.</p>`],
+      ['ranking', 'Ranking', `
+        <p>From the saved days, Ronda shows <b>who spoke less on average</b>: the share of their time each person used, counting only the days they came. Missing a day neither helps nor hurts.</p>
+        <ul>
+          <li>Set the <b class="ui">minimum days</b> to enter the ranking.</li>
+          <li>In <b class="ui">History</b> you can delete one day; <b class="ui">Reset score</b> deletes them all.</li>
+          <li><b class="ui">Copy</b>, <b class="ui">download</b> or <b class="ui">share image</b> gives you the podium ready to send.</li>
+        </ul>`],
+      ['data', 'Your data', `
+        <p>Everything is saved <b>only in this browser</b>. Nothing is sent anywhere and there is no account.</p>
+        <p>To keep it safe or move it to another device, <b class="ui">Backup</b> is at the bottom of the page: <b class="ui">Export</b> downloads a file and <b class="ui">Import</b> loads it back. Before importing it shows what will change, and it never deletes lists.</p>
+        <p class="tip">Clearing your browser data deletes your lists. Export a copy now and then.</p>`],
+      ['more', 'More', `
+        <ul>
+          <li><b>Theme:</b> system, light or dark, from the menu at the top right.</li>
+          <li><b>Language:</b> ES or EN, at the top.</li>
+          <li><b>Install:</b> from your browser menu ("Add to Home Screen" or "Install app"). After the first visit it works offline.</li>
+        </ul>`],
+    ],
+  },
+};
+
+let lang = 'es';
+function render() {
+  const d = DOC[lang];
+  document.documentElement.lang = lang;
+  document.getElementById('help').textContent = d.help;
+  for (const a of document.querySelectorAll('[data-lang]')) a.setAttribute('aria-current', String(a.dataset.lang === lang));
+  document.getElementById('doc').innerHTML = `
+    <h1>${d.title}</h1>
+    <p class="lede">${d.lede}</p>
+    <nav class="toc" aria-labelledby="toc-title"><h2 id="toc-title">${d.toc}</h2>
+      <ol>${d.sections.map(([id, h]) => `<li><a href="#${id}">${h}</a></li>`).join('')}</ol></nav>
+    ${d.sections.map(([id, h, body]) => `<section id="${id}" aria-labelledby="${id}-h"><h2 id="${id}-h">${h}</h2>${icon(body)}</section>`).join('')}
+    <a class="back" href="#">← ${d.back}</a>`;
+}
+document.querySelector('.langs').addEventListener('click', (e) => {
+  const a = e.target.closest('[data-lang]'); if (!a) return;
+  e.preventDefault(); lang = a.dataset.lang; render();
+});
+document.querySelector('.mockbar').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-theme]'); if (!b) return;
+  for (const x of document.querySelectorAll('.mockbar [data-theme]')) x.setAttribute('aria-pressed', String(x === b));
+  if (b.dataset.theme === 'system') delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = b.dataset.theme;
+});
+render();
+</script>
+</body>
+</html>

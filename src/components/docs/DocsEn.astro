@@ -1,0 +1,95 @@
+---
+// Help text in English. Button names match the app's labels in src/i18n/messages.ts, so people find them on screen.
+// When a feature changes, update this file and DocsEs.astro.
+import Icon from '../Icon.astro';
+---
+
+<nav class="doc-toc" aria-labelledby="toc-title">
+  <h2 id="toc-title">On this page</h2>
+  <ol>
+    <li><a href="#lists">Lists</a></li>
+    <li><a href="#draw">Draw</a></li>
+    <li><a href="#turns">Turns</a></li>
+    <li><a href="#meeting">During the meeting</a></li>
+    <li><a href="#ranking">Ranking</a></li>
+    <li><a href="#data">Your data</a></li>
+    <li><a href="#more">More</a></li>
+  </ol>
+</nav>
+
+<section id="lists" aria-labelledby="lists-h">
+  <h2 id="lists-h">Lists</h2>
+  <p>Each list is a tab at the top, with how many people it has. Tap <b>+ New list</b> to add another.</p>
+  <ul>
+    <li><strong>Add:</strong> type a name and press <kbd>Enter</kbd>. Paste several lines to add one person per line.</li>
+    <li><strong>Edit a name:</strong> tap it.</li>
+    <li><strong>Remove:</strong> tap <Icon name="x" label="remove" /> on the person, or press <kbd>Backspace</kbd> twice in the empty field.</li>
+    <li><strong>Rename or delete the list:</strong> <Icon name="pencil" label="pencil" /> and <Icon name="trash" label="bin" />, next to its name.</li>
+  </ul>
+  <p class="doc-tip">A name can only appear once per list. Up to 200 people.</p>
+</section>
+
+<section id="draw" aria-labelledby="draw-h">
+  <h2 id="draw-h">Draw</h2>
+  <p>Choose the <b>number of groups</b> and tap <b>Draw</b>.</p>
+  <ul>
+    <li><strong>1 group:</strong> a random order.</li>
+    <li><strong>2 or more:</strong> groups as even as possible (10 people in 3 groups: 4, 3 and 3).</li>
+  </ul>
+  <p><b>Draw again</b> shuffles once more. <b>Share</b> opens your phone's share menu or copies the result.</p>
+</section>
+
+<section id="turns" aria-labelledby="turns-h">
+  <h2 id="turns-h">Turns</h2>
+  <p>For meetings where one person speaks at a time. Switch them on or off per list with <Icon name="clock" label="clock" />, next to the list name. Your first list starts with them on; switch them off and only the draw remains.</p>
+  <h3>Before you start</h3>
+  <ul>
+    <li><strong>Time per person:</strong> the same for everyone, 1 to 60 minutes.</li>
+    <li><strong>Order:</strong> <b>Drawn</b> shuffles at every start. <b>As listed</b> uses the list order.</li>
+    <li><strong>Today's line</strong> (with <i>As listed</i>): shows who speaks in which position. Drag by <Icon name="grip" label="handle" /> or use <Icon name="up" label="up" /> <Icon name="down" label="down" /> to change the order.</li>
+    <li><strong>Not here:</strong> tap <Icon name="away" label="not here" /> on the person (in the list or the line). They are struck through and left out of today's turns.</li>
+  </ul>
+  <p>When you're ready, tap <b>Start turns</b>.</p>
+</section>
+
+<section id="meeting" aria-labelledby="meeting-h">
+  <h2 id="meeting-h">During the meeting</h2>
+  <ul>
+    <li><Icon name="play" label="start" tone="go" /> starts the clock of whoever has the floor and <Icon name="pause" label="pause" /> pauses it.</li>
+    <li><b>Next</b> hands the floor to the next person, with the clock stopped until they tap <b>Start talking</b>.</li>
+    <li>Tap anyone to give them the floor right away.</li>
+    <li>Going over keeps the clock running in red as <strong>+m:ss</strong>. It never cuts anyone off and makes no sound.</li>
+  </ul>
+  <h3>Keyboard shortcuts</h3>
+  <p><kbd>Space</kbd> starts, pauses or resumes the clock. <kbd>→</kbd> passes the floor.</p>
+  <h3>Floating window</h3>
+  <p>In Chrome and Edge on a computer, <b>Float</b> keeps the clock in a small window on top of everything, so you can switch tabs or apps.</p>
+  <p>At the end, <b>Finish and save the day</b> adds it to the ranking. <b>Discard day</b> throws it away.</p>
+  <p class="doc-tip">The screen stays on while someone speaks. Reloading the page keeps the clock right.</p>
+</section>
+
+<section id="ranking" aria-labelledby="ranking-h">
+  <h2 id="ranking-h">Ranking</h2>
+  <p>From the saved days, Ronda shows <strong>who spoke less on average</strong>: the share of their time each person used, counting only the days they came. Missing a day neither helps nor hurts.</p>
+  <ul>
+    <li>Set the <b>minimum days</b> to enter the ranking.</li>
+    <li>In <b>History</b> you can delete one day; <b>Reset score</b> deletes them all.</li>
+    <li><b>Copy</b>, <b>download</b> or <b>share image</b> gives you the podium ready to send.</li>
+  </ul>
+</section>
+
+<section id="data" aria-labelledby="data-h">
+  <h2 id="data-h">Your data</h2>
+  <p>Everything is saved <strong>only in this browser</strong>. Nothing is sent anywhere and there is no account.</p>
+  <p>To keep it safe or move it to another device, <b>Backup</b> is at the bottom of the page: <b>Export</b> downloads a file and <b>Import</b> loads it back. Before importing it shows what will change, and it never deletes lists.</p>
+  <p class="doc-tip">Clearing your browser data deletes your lists. Export a copy now and then.</p>
+</section>
+
+<section id="more" aria-labelledby="more-h">
+  <h2 id="more-h">More</h2>
+  <ul>
+    <li><strong>Theme:</strong> system, light or dark, from the menu at the top right.</li>
+    <li><strong>Language:</strong> ES or EN, at the top.</li>
+    <li><strong>Install:</strong> from your browser menu ("Add to Home Screen" or "Install app"). After the first visit it works offline.</li>
+  </ul>
+</section>

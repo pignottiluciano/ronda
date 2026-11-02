@@ -9,8 +9,12 @@ Ronda is a static Astro site with no backend. Everything the user creates lives 
 ```text
 src/
   pages/index.astro      Spanish version (/); pages/en/index.astro is the English one
+  pages/documentation.astro  Help page in Spanish (/documentation/); pages/en/documentation.astro is the English one
   pages/sw.js.ts         Serves the service worker as /sw.js, stamped with a build version
-  components/Home.astro  The whole page; takes the language as a prop
+  layouts/Base.astro     Shared shell: head (theme and language before paint, SEO) and header, given each page's path in both languages
+  components/Home.astro  The app page; takes the language as a prop
+  components/Docs.astro  The help page; its text is in components/docs/DocsEs.astro and DocsEn.astro
+  components/Icon.astro  An app icon inside running text (help page)
   i18n/messages.ts       All text, es and en (en is typed as `typeof es`, so a missing key fails the build)
   lib/                   Pure logic: no DOM, no storage, no clock of its own
     draw.ts              Parse, validate, shuffle and distribute names into groups
@@ -18,6 +22,7 @@ src/
     turns.ts             The speaking-time day, absences, finishing a day, the ranking, stored-data validation
     clock.ts             mm:ss formatting (elapsed, and time remaining)
     backup.ts            Backup file format, validation and import rules
+    icons.ts             The SVG icons, shared by the scripts, the page markup and the help page
   scripts/               Browser code: reads the clock, touches the DOM and storage
     app.ts               Lists, badges, the draw; hands what turns need to turns.ts
     turns.ts             Turns UI, 250 ms tick, tab title, hooks the floating window and the wake lock
@@ -49,7 +54,7 @@ Everything is in `localStorage`. Values read back are validated by the same pars
 | `ronda.lists.v1` | `{ activeId, lists: [{ id, name, people: [{ id, name }], groups, turns }] }`. `turns` is the per-list opt-in flag. |
 | `ronda.turns.v1` | `{ [listId]: ListTurns }`, see below. |
 | `ronda.theme` | `system`, `light` or `dark`. |
-| `ronda.lang` | `es` or `en`, the last language chosen with the switch. Only an explicit choice redirects between `/` and `/en/`. |
+| `ronda.lang` | `es` or `en`, the last language chosen with the switch. Only an explicit choice redirects, to the same page in that language (`/` ↔ `/en/`, `/documentation/` ↔ `/en/documentation/`). |
 | `ronda.preferences.v1` | Legacy single list. Read once and moved into `ronda.lists.v1`. |
 | `ronda.timer.v1` | Legacy general timer. Removed on load. |
 | `sessionStorage` `ronda.notice` | One message shown after the page reloads following an import. |
@@ -115,7 +120,7 @@ State changes live in `src/lib/turns.ts`:
 - The day in progress and today's absences are **not** exported: a backup holds history, not a running clock.
 - Import validates with the stored-data parsers. It refuses invalid JSON, a wrong shape, a `version` higher than the app knows, and files over 5 MB.
 - It shows what it will do first. Lists with the **same id are replaced** by the file's version, in the same place; the others are **added**; nothing is deleted. Turn data comes from the file where it has some, so a list the file brings without any keeps its own.
-- A browser that only has the empty default list gets it replaced instead of keeping a blank list.
+- A browser that only has the empty default list gets it replaced instead of keeping a blank list (its turns flag does not count: a new browser starts with turns on).
 - After a successful import the page reloads and shows a notice (via `sessionStorage`).
 
 When the format changes, raise `BACKUP_VERSION` and keep reading the old one.
@@ -134,7 +139,7 @@ When the format changes, raise `BACKUP_VERSION` and keep reading the old one.
 
 `src/sw/worker.js` is served as `/sw.js` by `src/pages/sw.js.ts`, which stamps a version into the cache name on every build so the old cache is dropped.
 
-- On install it fetches `/` and `/en/`, reads the `/_astro/…` assets they link and caches all of it.
+- On install it fetches `/`, `/en/`, `/documentation/` and `/en/documentation/`, reads the `/_astro/…` assets they link and caches all of it.
 - Navigations go network first, so a new deploy shows up right away; the cached page is the offline fallback.
 - It is registered **only in production builds** (`import.meta.env.PROD`), so in dev a cache never hides your changes.
 

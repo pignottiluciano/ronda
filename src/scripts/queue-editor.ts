@@ -2,14 +2,11 @@
 // buttons, and the away toggle is the same as the badge one. This module only draws and reports; app.ts owns the order and
 // turns.ts owns the absences and the announcements.
 import { messages } from '../i18n/messages';
+import { ICONS } from '../lib/icons';
 import type { Person } from '../lib/lists';
 
 const t = messages[document.documentElement.lang === 'en' ? 'en' : 'es'];
 
-const AWAY_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="8" /><path d="M6.3 6.3l11.4 11.4" /></svg>';
-const GRIP_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="9" cy="6" r="1.6" /><circle cx="15" cy="6" r="1.6" /><circle cx="9" cy="12" r="1.6" /><circle cx="15" cy="12" r="1.6" /><circle cx="9" cy="18" r="1.6" /><circle cx="15" cy="18" r="1.6" /></svg>';
-const UP_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6" /></svg>';
-const DOWN_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6" /></svg>';
 
 type Act = 'away' | 'up' | 'down';
 
@@ -39,18 +36,18 @@ export function createQueueEditor({ list, onMove, onToggleAway }: QueueEditorOpt
     const handle = document.createElement('span');
     handle.className = 'queue-handle';
     handle.setAttribute('aria-hidden', 'true'); // the arrows are the keyboard and screen reader way
-    handle.innerHTML = GRIP_ICON;
+    handle.innerHTML = ICONS.grip;
     const name = document.createElement('span');
     name.className = 'queue-name';
     name.textContent = person.name;
-    const toggle = button('away', away ? t.awayBackToggle(person.name) : t.awayToggle(person.name), AWAY_ICON);
+    const toggle = button('away', away ? t.awayBackToggle(person.name) : t.awayToggle(person.name), ICONS.away);
     toggle.setAttribute('aria-pressed', String(away));
     li.append(
       handle,
       name,
       toggle,
-      button('up', t.queueUp(person.name), UP_ICON, index === 0),
-      button('down', t.queueDown(person.name), DOWN_ICON, index === total - 1),
+      button('up', t.queueUp(person.name), ICONS.up, index === 0),
+      button('down', t.queueDown(person.name), ICONS.down, index === total - 1),
     );
     return li;
   }

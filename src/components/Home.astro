@@ -1,6 +1,6 @@
 ---
-import { Font } from 'astro:assets';
-import '../styles/global.css';
+import Base from '../layouts/Base.astro';
+import { ICONS } from '../lib/icons';
 import { messages, type Lang } from '../i18n/messages';
 
 interface Props {
@@ -8,328 +8,231 @@ interface Props {
 }
 const { lang } = Astro.props;
 const t = messages[lang];
-const paths = { es: '/', en: '/en/' } as const;
-const image = new URL(`/og-${lang}.png`, Astro.site);
-const url = (l: Lang) => new URL(paths[l], Astro.site);
 ---
 
-<html lang={lang}>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content={t.description} />
-    <meta name="theme-color" content="#faf6f1" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0d1218" media="(prefers-color-scheme: dark)" />
-    <script is:inline>
-      // Before paint, to avoid a flash of the wrong theme. Key shared with src/scripts/theme.ts.
-      try {
-        const theme = localStorage.getItem('ronda.theme');
-        if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme;
-      } catch {}
-      // Language: pages are / (es, the default) and /en/ (en). Only an explicit saved choice redirects.
-      try {
-        const saved = localStorage.getItem('ronda.lang');
-        if ((saved === 'es' || saved === 'en') && saved !== document.documentElement.lang) {
-          location.replace(saved === 'en' ? '/en/' : '/');
-        }
-      } catch {}
-      document.addEventListener('click', (event) => {
-        const link = event.target instanceof Element ? event.target.closest('[data-lang]') : null;
-        if (!link) return;
-        try {
-          localStorage.setItem('ronda.lang', link.dataset.lang);
-        } catch {}
-      });
-    </script>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <meta name="apple-mobile-web-app-title" content="Ronda" />
-    <Font cssVariable="--font-heading" preload />
-    <Font cssVariable="--font-body" preload />
-    <title>{t.pageTitle}</title>
-    <link rel="canonical" href={url(lang)} />
-    <link rel="alternate" hreflang="es" href={url('es')} />
-    <link rel="alternate" hreflang="en" href={url('en')} />
-    <link rel="alternate" hreflang="x-default" href={url('es')} />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Ronda" />
-    <meta property="og:title" content={t.pageTitle} />
-    <meta property="og:description" content={t.description} />
-    <meta property="og:url" content={url(lang)} />
-    <meta property="og:locale" content={lang === 'es' ? 'es_ES' : 'en_US'} />
-    <meta property="og:locale:alternate" content={lang === 'es' ? 'en_US' : 'es_ES'} />
-    <meta property="og:image" content={image} />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={t.ogImageAlt} />
-    <meta name="twitter:card" content="summary_large_image" />
-  </head>
-  <body>
-    <div class="page">
-      <header class="top">
-        <div class="brand">
+<Base lang={lang} paths={{ es: '/', en: '/en/' }} title={t.pageTitle} description={t.description}>
+  <nav class="tabs" aria-label={t.listsLabel}>
+    <div id="tabs" class="tabs-scroll">
+      <button type="button" class="tab" aria-current="true">{t.defaultListName(1)}<small>0</small></button>
+    </div>
+    <button type="button" id="new-list" class="tab add">+ {t.newList}</button>
+  </nav>
+
+  <main id="layout" class="layout" data-mode="draw">
+    <section class="panel" aria-labelledby="list-name">
+      <h1 class="sr-only">{t.titleStart}{t.titleEm}</h1>
+      <div class="listname">
+        <h2 id="list-name" class="list-title">{t.defaultListName(1)}</h2>
+        <input id="list-name-input" class="list-title-input" maxlength="40" autocomplete="off" aria-label={t.listNameLabel} hidden />
+        <div class="list-tools">
+          <button type="button" id="turns-toggle" class="icon-btn" aria-pressed="false" aria-label={t.turnsToggle} title={t.turnsToggle}>
+            <Fragment set:html={ICONS.clock} />
+          </button>
+          <button type="button" id="rename" class="icon-btn" aria-label={t.renameList} title={t.renameList}>
+            <Fragment set:html={ICONS.pencil} />
+          </button>
+          <button type="button" id="delete" class="icon-btn" aria-label={t.deleteList} title={t.deleteList}>
+            <Fragment set:html={ICONS.trash} />
+          </button>
+        </div>
+      </div>
+      <p class="lede">{t.lede}</p>
+
+      <fieldset id="modes" class="seg" hidden>
+        <legend class="sr-only">{t.modeLabel}</legend>
+        <label><input type="radio" name="mode" value="draw" checked /><span>{t.modeDraw}</span></label>
+        <label><input type="radio" name="mode" value="turns" /><span>{t.modeTurns}</span></label>
+        <label><input type="radio" name="mode" value="ranking" /><span>{t.modeRanking}</span></label>
+      </fieldset>
+
+      <form id="draw-form" class="form" novalidate>
+        <div class="field">
+          <div class="field-head">
+            <label class="label" for="person-input">{t.participantsLabel}</label>
+            <span id="count" class="count" aria-live="polite">{t.participant(0)}</span>
+          </div>
+          <ul id="people" class="tagbox" role="list">
+            <li class="person-new">
+              <input
+                id="person-input"
+                class="person-input"
+                type="text"
+                maxlength="40"
+                spellcheck="false"
+                autocomplete="off"
+                autocapitalize="words"
+                enterkeyhint="done"
+                aria-describedby="names-hint"
+                placeholder={t.personPlaceholder} />
+            </li>
+          </ul>
+          <p id="names-hint" class="hint">{t.peopleHint}</p>
+          <p id="saved" class="saved">{t.savedHere}</p>
+        </div>
+
+        <div class="field draw-only">
+          <label class="label" for="groups">{t.groupsLabel}</label>
+          <div class="stepper">
+            <button type="button" data-step="-1" aria-label={t.groupsLess}>−</button>
+            <input id="groups" type="number" inputmode="numeric" min="1" step="1" value="1" aria-describedby="groups-hint" />
+            <button type="button" data-step="1" aria-label={t.groupsMore}>+</button>
+          </div>
+          <p id="groups-hint" class="hint">{t.groupsHint}</p>
+        </div>
+
+        <p id="error" class="error draw-only" aria-live="polite" hidden></p>
+
+        <div class="actions draw-only">
+          <button type="submit" class="btn btn-primary">{t.draw}</button>
+          <button type="button" id="clear" class="btn btn-ghost">{t.clear}</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="results" class="results" aria-labelledby="results-title">
+      <div class="results-head">
+        <h2 id="results-title">{t.results}</h2>
+        <div id="result-actions" class="result-actions" hidden>
+          <button type="button" id="again" class="btn btn-ghost">{t.again}</button>
+          <button type="button" id="share" class="btn btn-ghost">{t.share}</button>
+        </div>
+      </div>
+      <div id="output" class="output">
+        <div class="empty">
           <svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor">
             <circle cx="16" cy="5" r="3.2" /><circle cx="25.5" cy="10.5" r="3.2" /><circle cx="25.5" cy="21.5" r="3.2" />
-            <circle cx="16" cy="27" r="3.2" /><circle cx="6.5" cy="21.5" r="3.2" /><circle cx="6.5" cy="10.5" r="3.2" opacity="0.4" />
+            <circle cx="16" cy="27" r="3.2" /><circle cx="6.5" cy="21.5" r="3.2" /><circle cx="6.5" cy="10.5" r="3.2" />
           </svg>
-          <span>Ronda</span>
+          <p>{t.empty}</p>
         </div>
-        <p class="kicker">{t.kicker}</p>
+      </div>
+      <p id="status" class="status"></p>
+    </section>
 
-        <nav class="lang" aria-label={t.langLabel}>
-          <a href="/" lang="es" hreflang="es" data-lang="es" aria-current={lang === 'es' ? 'true' : undefined}>ES</a>
-          <a href="/en/" lang="en" hreflang="en" data-lang="en" aria-current={lang === 'en' ? 'true' : undefined}>EN</a>
-        </nav>
+    <section id="turns" class="turns turns-only" aria-labelledby="turns-title">
+      <div class="results-head">
+        <h2 id="turns-title">{t.turnsTitle}</h2>
+        <span id="turns-total" class="count" hidden></span>
+      </div>
 
-        <button
-          type="button"
-          id="theme-toggle"
-          class="theme-toggle"
-          popovertarget="theme-menu"
-          aria-label={t.themeButton}
-          data-current="system">
-          <svg class="icon-system" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" />
-          </svg>
-          <svg class="icon-light" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round">
-            <circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
-          </svg>
-          <svg class="icon-dark" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round">
-            <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" />
-          </svg>
-        </button>
-        <div id="theme-menu" class="theme-menu" popover>
-          <fieldset>
-            <legend>{t.themeLegend}</legend>
-            <label><input type="radio" name="theme" value="system" /> {t.themeSystem}</label>
-            <label><input type="radio" name="theme" value="light" /> {t.themeLight}</label>
-            <label><input type="radio" name="theme" value="dark" /> {t.themeDark}</label>
-          </fieldset>
-        </div>
-      </header>
-
-      <nav class="tabs" aria-label={t.listsLabel}>
-        <div id="tabs" class="tabs-scroll">
-          <button type="button" class="tab" aria-current="true">{t.defaultListName(1)}<small>0</small></button>
-        </div>
-        <button type="button" id="new-list" class="tab add">+ {t.newList}</button>
-      </nav>
-
-      <main id="layout" class="layout" data-mode="draw">
-        <section class="panel" aria-labelledby="list-name">
-          <h1 class="sr-only">{t.titleStart}{t.titleEm}</h1>
-          <div class="listname">
-            <h2 id="list-name" class="list-title">{t.defaultListName(1)}</h2>
-            <input id="list-name-input" class="list-title-input" maxlength="40" autocomplete="off" aria-label={t.listNameLabel} hidden />
-            <div class="list-tools">
-              <button type="button" id="turns-toggle" class="icon-btn" aria-pressed="false" aria-label={t.turnsToggle} title={t.turnsToggle}>
-                <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2.5 2M9 2h6" /></svg>
-              </button>
-              <button type="button" id="rename" class="icon-btn" aria-label={t.renameList} title={t.renameList}>
-                <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
-              </button>
-              <button type="button" id="delete" class="icon-btn" aria-label={t.deleteList} title={t.deleteList}>
-                <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg>
-              </button>
-            </div>
-          </div>
-          <p class="lede">{t.lede}</p>
-
-          <fieldset id="modes" class="seg" hidden>
-            <legend class="sr-only">{t.modeLabel}</legend>
-            <label><input type="radio" name="mode" value="draw" checked /><span>{t.modeDraw}</span></label>
-            <label><input type="radio" name="mode" value="turns" /><span>{t.modeTurns}</span></label>
-            <label><input type="radio" name="mode" value="ranking" /><span>{t.modeRanking}</span></label>
-          </fieldset>
-
-          <form id="draw-form" class="form" novalidate>
-            <div class="field">
-              <div class="field-head">
-                <label class="label" for="person-input">{t.participantsLabel}</label>
-                <span id="count" class="count" aria-live="polite">{t.participant(0)}</span>
-              </div>
-              <ul id="people" class="tagbox" role="list">
-                <li class="person-new">
-                  <input
-                    id="person-input"
-                    class="person-input"
-                    type="text"
-                    maxlength="40"
-                    spellcheck="false"
-                    autocomplete="off"
-                    autocapitalize="words"
-                    enterkeyhint="done"
-                    aria-describedby="names-hint"
-                    placeholder={t.personPlaceholder} />
-                </li>
-              </ul>
-              <p id="names-hint" class="hint">{t.peopleHint}</p>
-              <p id="saved" class="saved">{t.savedHere}</p>
-            </div>
-
-            <div class="field draw-only">
-              <label class="label" for="groups">{t.groupsLabel}</label>
-              <div class="stepper">
-                <button type="button" data-step="-1" aria-label={t.groupsLess}>−</button>
-                <input id="groups" type="number" inputmode="numeric" min="1" step="1" value="1" aria-describedby="groups-hint" />
-                <button type="button" data-step="1" aria-label={t.groupsMore}>+</button>
-              </div>
-              <p id="groups-hint" class="hint">{t.groupsHint}</p>
-            </div>
-
-            <p id="error" class="error draw-only" aria-live="polite" hidden></p>
-
-            <div class="actions draw-only">
-              <button type="submit" class="btn btn-primary">{t.draw}</button>
-              <button type="button" id="clear" class="btn btn-ghost">{t.clear}</button>
-            </div>
-          </form>
-        </section>
-
-        <section id="results" class="results" aria-labelledby="results-title">
-          <div class="results-head">
-            <h2 id="results-title">{t.results}</h2>
-            <div id="result-actions" class="result-actions" hidden>
-              <button type="button" id="again" class="btn btn-ghost">{t.again}</button>
-              <button type="button" id="share" class="btn btn-ghost">{t.share}</button>
-            </div>
-          </div>
-          <div id="output" class="output">
-            <div class="empty">
-              <svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor">
-                <circle cx="16" cy="5" r="3.2" /><circle cx="25.5" cy="10.5" r="3.2" /><circle cx="25.5" cy="21.5" r="3.2" />
-                <circle cx="16" cy="27" r="3.2" /><circle cx="6.5" cy="21.5" r="3.2" /><circle cx="6.5" cy="10.5" r="3.2" />
-              </svg>
-              <p>{t.empty}</p>
-            </div>
-          </div>
-          <p id="status" class="status"></p>
-        </section>
-
-        <section id="turns" class="turns turns-only" aria-labelledby="turns-title">
-          <div class="results-head">
-            <h2 id="turns-title">{t.turnsTitle}</h2>
-            <span id="turns-total" class="count" hidden></span>
-          </div>
-
-          <div id="turns-setup" class="turns-setup">
-            <div class="field">
-              <span id="budget-label" class="label">{t.turnsBudgetLabel}</span>
-              <div class="budget">
-                <div id="budget-presets" class="chips" role="group" aria-labelledby="budget-label"></div>
-                <label class="budget-custom">
-                  {t.turnsCustom}
-                  <input id="budget-custom" type="number" inputmode="numeric" min="1" max="60" step="1" aria-label={t.turnsCustomLabel(60)} />
-                  {t.turnsUnit}
-                </label>
-              </div>
-            </div>
-            <fieldset id="turn-order" class="field order-field">
-              <legend class="label">{t.turnsOrderLabel}</legend>
-              <div class="seg">
-                <label><input type="radio" name="turn-order" value="draw" checked /><span>{t.turnsOrderDraw}</span></label>
-                <label><input type="radio" name="turn-order" value="list" /><span>{t.turnsOrderList}</span></label>
-              </div>
-            </fieldset>
-            <div id="queue" class="field" hidden>
-              <div class="field-head">
-                <span id="queue-title" class="label">{t.queueTitle}</span>
-                <span id="queue-count" class="count"></span>
-              </div>
-              <ol id="queue-list" class="queue-list" aria-labelledby="queue-title"></ol>
-            </div>
-            <p id="turns-days" class="hint" hidden></p>
-            <p class="hint"><span id="order-hint">{t.turnsHintDraw}</span> {t.turnsStartHint}</p>
-            <div class="actions">
-              <button type="button" id="turns-start" class="btn btn-primary">{t.turnsStart}</button>
-            </div>
-          </div>
-
-          <div id="turns-live" class="turns-live" hidden>
-            <div id="now" class="now" data-state="idle">
-              <div class="now-head">
-                <p id="now-label" class="now-label"></p>
-                <button type="button" id="turns-float" class="btn btn-ghost btn-small" hidden>{t.floatOpen}</button>
-              </div>
-              <p id="now-name" class="now-name"></p>
-              <p id="now-clock" class="now-clock" role="timer" aria-live="off">00:00</p>
-              <p id="now-of" class="now-of"></p>
-              <div id="now-bar" class="bar" aria-hidden="true"><i></i></div>
-              <div class="now-controls">
-                <button type="button" id="turns-pause" class="btn btn-clock" data-act="pause" aria-label={t.turnsPause} title={t.turnsPause} hidden>
-                  <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" /></svg>
-                  <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z" /></svg>
-                </button>
-                <button type="button" id="turns-next" class="btn btn-next"><span id="turns-next-label"></span></button>
-              </div>
-            </div>
-            <div id="now-slot" class="now-slot" hidden>
-              <p>{t.floatNote}</p>
-              <button type="button" id="turns-unfloat" class="btn btn-ghost btn-small">{t.floatBack}</button>
-            </div>
-            <ul id="tiles" class="tiles" role="list"></ul>
-            <div class="actions turns-end">
-              <button type="button" id="turns-finish" class="btn btn-ghost btn-small">{t.turnsFinish}</button>
-              <button type="button" id="turns-discard" class="btn btn-text btn-small">{t.turnsDiscard}</button>
-            </div>
-          </div>
-          <p id="turns-announce" class="sr-only" aria-live="polite"></p>
-        </section>
-
-        <section id="ranking" class="ranking ranking-only" aria-labelledby="ranking-title">
-          <div class="results-head">
-            <h2 id="ranking-title">{t.rankTitle}</h2>
-            <div class="result-actions">
-              <button type="button" id="rank-copy" class="btn btn-ghost" hidden>{t.rankCopy}</button>
-              <button type="button" id="rank-download" class="btn btn-ghost" hidden>{t.rankDownload}</button>
-              <button type="button" id="rank-share" class="btn btn-ghost" hidden>{t.rankShare}</button>
-            </div>
-          </div>
-          <p id="rank-empty" class="hint">{t.rankEmpty}</p>
-          <div id="rank-body" class="rank-body" hidden>
-            <p id="rank-meta" class="count"></p>
-            <p class="hint">{t.rankHow}</p>
-            <div id="podium" class="podium" aria-hidden="true"></div>
-            <p id="rank-none" class="hint" hidden>{t.rankNoRows}</p>
-            <table id="rank-table" class="rank-table">
-              <caption class="sr-only">{t.rankTableLabel}</caption>
-              <thead>
-                <tr><th scope="col">{t.rankColPos}</th><th scope="col">{t.rankColPerson}</th><th scope="col">{t.rankColAvg}</th><th scope="col">{t.rankColDays}</th></tr>
-              </thead>
-              <tbody id="rank-rows"></tbody>
-            </table>
-            <div id="rank-few" class="rank-few" hidden>
-              <h3>{t.rankFewTitle}</h3>
-              <p id="rank-few-hint" class="hint"></p>
-              <ul id="rank-few-list" class="few"></ul>
-            </div>
-            <div class="rank-history">
-              <h3>{t.rankHistory}</h3>
-              <ul id="history" class="history"></ul>
-            </div>
-          </div>
-          <div class="rank-settings">
-            <label class="budget-custom" for="min-days">
-              {t.rankMinLabel}
-              <input id="min-days" type="number" inputmode="numeric" min="1" max="99" step="1" />
+      <div id="turns-setup" class="turns-setup">
+        <div class="field">
+          <span id="budget-label" class="label">{t.turnsBudgetLabel}</span>
+          <div class="budget">
+            <div id="budget-presets" class="chips" role="group" aria-labelledby="budget-label"></div>
+            <label class="budget-custom">
+              {t.turnsCustom}
+              <input id="budget-custom" type="number" inputmode="numeric" min="1" max="60" step="1" aria-label={t.turnsCustomLabel(60)} />
+              {t.turnsUnit}
             </label>
-            <button type="button" id="rank-reset" class="btn btn-ghost" hidden>{t.rankReset}</button>
           </div>
-        </section>
-      </main>
-
-      <section class="data" aria-labelledby="data-title">
-        <h2 id="data-title">{t.backupTitle}</h2>
-        <p class="hint">{t.backupHint}</p>
-        <div class="actions">
-          <button type="button" id="backup-export" class="btn btn-ghost">{t.backupExport}</button>
-          <button type="button" id="backup-import" class="btn btn-ghost">{t.backupImport}</button>
-          <input id="backup-file" type="file" accept="application/json,.json" hidden />
         </div>
-      </section>
-      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+        <fieldset id="turn-order" class="field order-field">
+          <legend class="label">{t.turnsOrderLabel}</legend>
+          <div class="seg">
+            <label><input type="radio" name="turn-order" value="draw" checked /><span>{t.turnsOrderDraw}</span></label>
+            <label><input type="radio" name="turn-order" value="list" /><span>{t.turnsOrderList}</span></label>
+          </div>
+        </fieldset>
+        <div id="queue" class="field" hidden>
+          <div class="field-head">
+            <span id="queue-title" class="label">{t.queueTitle}</span>
+            <span id="queue-count" class="count"></span>
+          </div>
+          <ol id="queue-list" class="queue-list" aria-labelledby="queue-title"></ol>
+        </div>
+        <p id="turns-days" class="hint" hidden></p>
+        <p class="hint"><span id="order-hint">{t.turnsHintDraw}</span> {t.turnsStartHint}</p>
+        <div class="actions">
+          <button type="button" id="turns-start" class="btn btn-primary">{t.turnsStart}</button>
+        </div>
+      </div>
+
+      <div id="turns-live" class="turns-live" hidden>
+        <div id="now" class="now" data-state="idle">
+          <div class="now-head">
+            <p id="now-label" class="now-label"></p>
+            <button type="button" id="turns-float" class="btn btn-ghost btn-small" hidden>{t.floatOpen}</button>
+          </div>
+          <p id="now-name" class="now-name"></p>
+          <p id="now-clock" class="now-clock" role="timer" aria-live="off">00:00</p>
+          <p id="now-of" class="now-of"></p>
+          <div id="now-bar" class="bar" aria-hidden="true"><i></i></div>
+          <div class="now-controls">
+            <button type="button" id="turns-pause" class="btn btn-clock" data-act="pause" aria-label={t.turnsPause} title={t.turnsPause} hidden>
+              <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" /></svg>
+              <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z" /></svg>
+            </button>
+            <button type="button" id="turns-next" class="btn btn-next"><span id="turns-next-label"></span></button>
+          </div>
+        </div>
+        <div id="now-slot" class="now-slot" hidden>
+          <p>{t.floatNote}</p>
+          <button type="button" id="turns-unfloat" class="btn btn-ghost btn-small">{t.floatBack}</button>
+        </div>
+        <ul id="tiles" class="tiles" role="list"></ul>
+        <div class="actions turns-end">
+          <button type="button" id="turns-finish" class="btn btn-ghost btn-small">{t.turnsFinish}</button>
+          <button type="button" id="turns-discard" class="btn btn-text btn-small">{t.turnsDiscard}</button>
+        </div>
+      </div>
+      <p id="turns-announce" class="sr-only" aria-live="polite"></p>
+    </section>
+
+    <section id="ranking" class="ranking ranking-only" aria-labelledby="ranking-title">
+      <div class="results-head">
+        <h2 id="ranking-title">{t.rankTitle}</h2>
+        <div class="result-actions">
+          <button type="button" id="rank-copy" class="btn btn-ghost" hidden>{t.rankCopy}</button>
+          <button type="button" id="rank-download" class="btn btn-ghost" hidden>{t.rankDownload}</button>
+          <button type="button" id="rank-share" class="btn btn-ghost" hidden>{t.rankShare}</button>
+        </div>
+      </div>
+      <p id="rank-empty" class="hint">{t.rankEmpty}</p>
+      <div id="rank-body" class="rank-body" hidden>
+        <p id="rank-meta" class="count"></p>
+        <p class="hint">{t.rankHow}</p>
+        <div id="podium" class="podium" aria-hidden="true"></div>
+        <p id="rank-none" class="hint" hidden>{t.rankNoRows}</p>
+        <table id="rank-table" class="rank-table">
+          <caption class="sr-only">{t.rankTableLabel}</caption>
+          <thead>
+            <tr><th scope="col">{t.rankColPos}</th><th scope="col">{t.rankColPerson}</th><th scope="col">{t.rankColAvg}</th><th scope="col">{t.rankColDays}</th></tr>
+          </thead>
+          <tbody id="rank-rows"></tbody>
+        </table>
+        <div id="rank-few" class="rank-few" hidden>
+          <h3>{t.rankFewTitle}</h3>
+          <p id="rank-few-hint" class="hint"></p>
+          <ul id="rank-few-list" class="few"></ul>
+        </div>
+        <div class="rank-history">
+          <h3>{t.rankHistory}</h3>
+          <ul id="history" class="history"></ul>
+        </div>
+      </div>
+      <div class="rank-settings">
+        <label class="budget-custom" for="min-days">
+          {t.rankMinLabel}
+          <input id="min-days" type="number" inputmode="numeric" min="1" max="99" step="1" />
+        </label>
+        <button type="button" id="rank-reset" class="btn btn-ghost" hidden>{t.rankReset}</button>
+      </div>
+    </section>
+  </main>
+
+  <section class="data" aria-labelledby="data-title">
+    <h2 id="data-title">{t.backupTitle}</h2>
+    <p class="hint">{t.backupHint}</p>
+    <div class="actions">
+      <button type="button" id="backup-export" class="btn btn-ghost">{t.backupExport}</button>
+      <button type="button" id="backup-import" class="btn btn-ghost">{t.backupImport}</button>
+      <input id="backup-file" type="file" accept="application/json,.json" hidden />
     </div>
+  </section>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <Fragment slot="after">
 
     <dialog id="delete-dialog" class="dialog" aria-labelledby="delete-title">
       <form method="dialog">
@@ -358,5 +261,5 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
       import '../scripts/app';
       import '../scripts/pwa';
     </script>
-  </body>
-</html>
+  </Fragment>
+</Base>

@@ -1,0 +1,95 @@
+---
+// Help text in Spanish. Button names match the app's labels in src/i18n/messages.ts, so people find them on screen.
+// When a feature changes, update this file and DocsEn.astro.
+import Icon from '../Icon.astro';
+---
+
+<nav class="doc-toc" aria-labelledby="toc-title">
+  <h2 id="toc-title">En esta página</h2>
+  <ol>
+    <li><a href="#listas">Listas</a></li>
+    <li><a href="#sortear">Sortear</a></li>
+    <li><a href="#turnos">Turnos</a></li>
+    <li><a href="#reunion">Durante la reunión</a></li>
+    <li><a href="#ranking">Ranking</a></li>
+    <li><a href="#datos">Tus datos</a></li>
+    <li><a href="#mas">Más</a></li>
+  </ol>
+</nav>
+
+<section id="listas" aria-labelledby="listas-h">
+  <h2 id="listas-h">Listas</h2>
+  <p>Cada lista es una pestaña arriba, con su cantidad de personas. Tocá <b>+ Nueva lista</b> para sumar otra.</p>
+  <ul>
+    <li><strong>Agregar:</strong> escribí un nombre y apretá <kbd>Enter</kbd>. Si pegás varias líneas, se suma una persona por línea.</li>
+    <li><strong>Editar un nombre:</strong> tocalo.</li>
+    <li><strong>Quitar:</strong> tocá <Icon name="x" label="quitar" /> en la persona, o apretá <kbd>Borrar</kbd> dos veces con el campo vacío.</li>
+    <li><strong>Renombrar o borrar la lista:</strong> <Icon name="pencil" label="lápiz" /> y <Icon name="trash" label="tacho" />, al lado del nombre.</li>
+  </ul>
+  <p class="doc-tip">Un nombre no se puede repetir en la misma lista. Entran hasta 200 personas.</p>
+</section>
+
+<section id="sortear" aria-labelledby="sortear-h">
+  <h2 id="sortear-h">Sortear</h2>
+  <p>Elegí la <b>cantidad de grupos</b> y tocá <b>Sortear</b>.</p>
+  <ul>
+    <li><strong>1 grupo:</strong> te da un orden al azar.</li>
+    <li><strong>2 o más:</strong> grupos lo más parejos posible (10 personas en 3 grupos: 4, 3 y 3).</li>
+  </ul>
+  <p><b>Sortear de nuevo</b> mezcla otra vez. <b>Compartir</b> abre el menú del teléfono o copia el resultado.</p>
+</section>
+
+<section id="turnos" aria-labelledby="turnos-h">
+  <h2 id="turnos-h">Turnos</h2>
+  <p>Para reuniones donde habla una persona por vez. Se prenden o apagan por lista con <Icon name="clock" label="reloj" />, al lado del nombre de la lista. La primera lista ya viene con turnos; si los apagás, queda solo el sorteo.</p>
+  <h3>Antes de empezar</h3>
+  <ul>
+    <li><strong>Tiempo por persona:</strong> todos tienen el mismo, de 1 a 60 minutos.</li>
+    <li><strong>Orden:</strong> <b>Sorteado</b> mezcla cada vez que empezás. <b>Como la lista</b> usa el orden de la lista.</li>
+    <li><strong>Fila de hoy</strong> (con <i>Como la lista</i>): muestra quién habla en qué puesto. Arrastrá desde <Icon name="grip" label="manija" /> o usá <Icon name="up" label="subir" /> <Icon name="down" label="bajar" /> para cambiar el orden.</li>
+    <li><strong>No está:</strong> tocá <Icon name="away" label="no está" /> en la persona (en la lista o en la fila). Queda tachada y fuera de los turnos de hoy.</li>
+  </ul>
+  <p>Cuando esté todo, tocá <b>Empezar turnos</b>.</p>
+</section>
+
+<section id="reunion" aria-labelledby="reunion-h">
+  <h2 id="reunion-h">Durante la reunión</h2>
+  <ul>
+    <li><Icon name="play" label="empezar" tone="go" /> arranca el reloj de quien tiene la palabra y <Icon name="pause" label="pausar" /> lo pausa.</li>
+    <li><b>Siguiente</b> le pasa la palabra a la próxima persona, con el reloj quieto hasta que toque <b>Empezar a hablar</b>.</li>
+    <li>Tocá a cualquier persona para darle la palabra en el momento.</li>
+    <li>Si alguien se pasa, el reloj sigue en rojo con <strong>+m:ss</strong>. Nunca corta a nadie y no suena.</li>
+  </ul>
+  <h3>Atajos de teclado</h3>
+  <p><kbd>Espacio</kbd> arranca, pausa o reanuda el reloj. <kbd>→</kbd> pasa la palabra.</p>
+  <h3>Ventana flotante</h3>
+  <p>En Chrome y Edge de computadora, <b>Flotar</b> deja el reloj en una ventanita encima de todo, para que puedas cambiar de pestaña o de app.</p>
+  <p>Al final, <b>Terminar y guardar el día</b> lo suma al ranking. <b>Descartar día</b> lo borra.</p>
+  <p class="doc-tip">La pantalla no se apaga mientras alguien habla. Si recargás la página, el reloj sigue bien.</p>
+</section>
+
+<section id="ranking" aria-labelledby="ranking-h">
+  <h2 id="ranking-h">Ranking</h2>
+  <p>Con los días guardados, Ronda muestra <strong>quién habló menos en promedio</strong>: el porcentaje de su tiempo que usó cada persona, contando solo los días que vino. Faltar no suma ni resta.</p>
+  <ul>
+    <li>Podés elegir el <b>mínimo de días</b> para entrar al ranking.</li>
+    <li>En <b>Historial</b> podés borrar un día suelto; <b>Reiniciar puntaje</b> borra todos.</li>
+    <li><b>Copiar</b>, <b>descargar</b> o <b>compartir imagen</b> te da el podio listo para mandar.</li>
+  </ul>
+</section>
+
+<section id="datos" aria-labelledby="datos-h">
+  <h2 id="datos-h">Tus datos</h2>
+  <p>Todo se guarda <strong>solo en este navegador</strong>. No se manda a ningún lado y no hay cuenta.</p>
+  <p>Para no perderlos o pasarlos a otro dispositivo, abajo de todo está <b>Copia de seguridad</b>: <b>Exportar</b> baja un archivo e <b>Importar</b> lo vuelve a cargar. Antes de importar te muestra qué va a cambiar y nunca borra listas.</p>
+  <p class="doc-tip">Si borrás los datos del navegador, se borran tus listas. Exportá una copia de vez en cuando.</p>
+</section>
+
+<section id="mas" aria-labelledby="mas-h">
+  <h2 id="mas-h">Más</h2>
+  <ul>
+    <li><strong>Tema:</strong> sistema, claro u oscuro, desde el menú de arriba a la derecha.</li>
+    <li><strong>Idioma:</strong> ES o EN, arriba.</li>
+    <li><strong>Instalar:</strong> desde el menú del navegador ("Agregar a pantalla de inicio" o "Instalar app"). Después de la primera visita funciona sin conexión.</li>
+  </ul>
+</section>

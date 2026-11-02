@@ -1,4 +1,5 @@
 import { draw, formatResult, validateDraw, type DrawResult } from '../lib/draw';
+import { ICONS } from '../lib/icons';
 import { messages } from '../i18n/messages';
 import {
   MAX_PEOPLE, activeList, addList, addPeople, clearPeople, removeList, removePerson, renameList, renamePerson, setActive,
@@ -135,7 +136,7 @@ function chip(person: Person): HTMLElement {
     toggle.className = 'person-away';
     toggle.setAttribute('aria-pressed', String(away));
     toggle.setAttribute('aria-label', away ? t.awayBackToggle(person.name) : t.awayToggle(person.name));
-    toggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="8" /><path d="M6.3 6.3l11.4 11.4" /></svg>';
+    toggle.innerHTML = ICONS.away;
     item.append(name, toggle, remove);
   } else item.append(name, remove);
   return item;

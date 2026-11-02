@@ -3,7 +3,8 @@
 Source of truth for tokens is `src/styles/global.css`. This file records the decisions behind them and
 the rules for the turns and ranking feature. Mocks: `docs/turnos.html` (proposals A, B, C; chosen: A with B's turns and podium) and `docs/inicio-y-paletas.html`
 (turn order control and dark palettes; chosen: B, the per-list "Order" control, with palette 2, "Noche tinta") and
-`docs/ordenar.html` (reordering the list; chosen: C, the editable line in the turns setup, plus an away toggle per row).
+`docs/ordenar.html` (reordering the list; chosen: C, the editable line in the turns setup, plus an away toggle per row) and
+`docs/documentacion.html` (the help page).
 
 ## Direction
 Utility app for groups, mobile first, used live in meetings and classes. Calm editorial: warm near-neutral
@@ -114,6 +115,13 @@ Verify at 375, 768 and 1280px: no horizontal scroll, 44px targets.
 ## Content
 Voice: plain, direct, Spanish first (`es`) with `en` parity in `src/i18n/messages.ts`. Sentence case, specific verbs
 ("Give the floor", "Finish and save the day"). Mock data in `docs/turnos.html` is labelled as example. No invented metrics.
+
+**Help page.** One page per language (`/documentation/`, `/en/documentation/`) with a table of contents and seven short
+sections. Text only, written for the person using the app, with the app's own icons inline (`.ic`, a 1.4em box centered
+on the line) and keys as `<kbd>`. Button names match the labels in `messages.ts` so people find them on screen; when a
+feature changes, update `DocsEs.astro` and `DocsEn.astro`. Not chosen: screenshots (they go stale) and live mocks (cost).
+The header link "¿Cómo funciona?" always shows its full text; under 400px it takes its own row (brand, ES/EN, theme and
+the link need 364px at 375px wide).
 
 ## Generic-tells review
 - Podium: kept because it makes the score scannable and is the base of the share image; there are no medals or confetti.

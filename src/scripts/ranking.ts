@@ -1,6 +1,7 @@
 // Ranking UI: podium, table, history and settings for one list. The maths lives in src/lib/turns.ts;
 // turns.ts owns the stored data and hands it over through `RankingHost`.
 import { messages } from '../i18n/messages';
+import { ICONS } from '../lib/icons';
 import type { SavedList } from '../lib/lists';
 import { MAX_MIN_DAYS, ranking, removeSession, resetSessions, setMinDays, type ListTurns, type Ranking, type Session } from '../lib/turns';
 import { confirmAction } from './confirm';
@@ -94,7 +95,7 @@ export function initRanking(host: RankingHost) {
         remove.type = 'button';
         remove.dataset.id = session.id;
         remove.setAttribute('aria-label', t.rankDeleteDay(dateOf(session)));
-        remove.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg>';
+        remove.innerHTML = ICONS.trash;
         item.append(el('span', undefined, t.rankDay(dateOf(session), present, session.entries.length)), remove);
         return item;
       }),

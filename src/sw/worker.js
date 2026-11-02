@@ -1,6 +1,6 @@
 // Service worker for offline use. Served as /sw.js by src/pages/sw.js.ts, which stamps a build version into the cache name.
 const CACHE = 'ronda-__VERSION__';
-const PAGES = ['/', '/en/'];
+const PAGES = ['/', '/en/', '/documentation/', '/en/documentation/'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

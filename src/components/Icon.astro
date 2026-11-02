@@ -1,0 +1,13 @@
+---
+// An app icon inside running text (the help page). The label says what the icon is, in the page's language.
+import { ICONS, type IconName } from '../lib/icons';
+
+interface Props {
+  name: IconName;
+  label: string;
+  tone?: 'go';
+}
+const { name, label, tone } = Astro.props;
+---
+
+<span class:list={['ic', tone]} role="img" aria-label={label} set:html={ICONS[name]} />
