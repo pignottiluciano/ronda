@@ -13,7 +13,7 @@ Use it to set speaking turns in a meeting, make teams in a class, pair people up
 - **Draw again** and **Share** (the system share sheet, or copy to the clipboard).
 - Several named lists, shown as tabs: create, switch, rename and delete them. Each keeps its own participants and number of groups. Everything is saved in the browser (`localStorage`) and restored on return. **Clear list** empties the current one.
 - Optional **turns** per list (switch it on with the clock button next to rename). The list then opens on Turns and Ranking; the plain draw is hidden, because starting a day already draws the order.
-  - Everyone gets the same time: presets of 2 to 15 minutes, or any value from 1 to 60. Press **Start turns** and the order is drawn at random, again each time.
+  - Everyone gets the same time: presets of 2 to 15 minutes, or any value from 1 to 60. Choose the **order** per list: **Drawn** (drawn again at every start) or **As listed**. With As listed, **Today's line** shows who speaks in which position: drag a row by its handle or use the up and down buttons to reorder the list, and mark anyone who is not here right there.
   - The speaker's clock **counts down**, and the bar drains. Going over is shown as `+mm:ss` in red and keeps counting; it is never cut off, and that time counts in the ranking. There is no sound.
   - **Next** hands the floor to the next person with the clock stopped ("Up now"); they press **Start talking** when they begin. The first person of the day starts at once. Tap a person's tile to give them the floor and start their clock right away. Two fixed controls: the round ▶ / ⏸ button runs the clock and **Next** passes the floor. **Space** starts, pauses or resumes the clock and **→** passes the floor (not while typing or on a focused button). Colors by state: green speaking, coral up now, amber paused, red over time.
   - Mark someone as **not here** and they stay out of the turns and of today's score.
@@ -45,7 +45,7 @@ Logic without DOM or storage lives in `src/lib` (with tests); the browser code t
 
 ## Design decisions
 
-- **Look:** the "Sereno" proposal (bordered surfaces, no shadows) with the "Tinta y coral" palette: warm, nearly grey neutrals and color only in the accent.
+- **Look:** the "Sereno" proposal (bordered surfaces, no shadows) with the "Tinta y coral" palette: warm, nearly grey neutrals in light, a cool ink night ("Noche tinta") in dark, and color only in the accent.
 - **Type:** Fraunces for titles and group names, Figtree for everything else. They are downloaded at build time and served from the site itself (Astro's fonts API), with no requests to Google.
 - **Color:** every token has a light and a dark value through `light-dark()`.
 

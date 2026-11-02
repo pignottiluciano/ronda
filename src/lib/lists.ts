@@ -100,6 +100,17 @@ export function removePerson(store: ListStore, listId: string, personId: string)
   return mapList(store, listId, (list) => ({ ...list, people: list.people.filter((p) => p.id !== personId) }));
 }
 
+/** Puts a person at `toIndex` (clamped). Same store back when nothing moves. */
+export function movePerson(store: ListStore, listId: string, personId: string, toIndex: number): ListStore {
+  const people = store.lists.find((list) => list.id === listId)?.people ?? [];
+  const from = people.findIndex((p) => p.id === personId);
+  const to = Math.max(0, Math.min(people.length - 1, Math.trunc(toIndex)));
+  if (from === -1 || from === to) return store;
+  const next = people.filter((p) => p.id !== personId);
+  next.splice(to, 0, people[from]!);
+  return mapList(store, listId, (list) => ({ ...list, people: next }));
+}
+
 export function clearPeople(store: ListStore, listId: string): ListStore {
   return mapList(store, listId, (list) => ({ ...list, people: [] }));
 }

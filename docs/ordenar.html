@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ronda · Ordenar la lista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+/* Page chrome: fixed neutral. */
+* { box-sizing: border-box; margin: 0; }
+body { background: #111; color: #eee; font-family: "Figtree", sans-serif; line-height: 1.5; padding: 0 16px 80px; }
+.bar-top { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; padding: 16px 0; background: #111; border-bottom: 1px solid #333; margin-bottom: 24px; }
+@media (max-width: 700px) { .bar-top { position: static; } }
+.bar-top fieldset { border: 0; padding: 0; }
+.bar-top legend { font-size: 0.75rem; color: #aaa; text-transform: uppercase; letter-spacing: 0.06em; padding: 0; margin-bottom: 4px; }
+.pick { display: flex; flex-wrap: wrap; gap: 4px; }
+.pick label { position: relative; }
+.pick input { position: absolute; opacity: 0; inset: 0; }
+.pick span { display: block; padding: 6px 12px; border: 1px solid #444; border-radius: 8px; font-size: 0.875rem; cursor: pointer; }
+.pick input:checked + span { background: #eee; color: #111; border-color: #eee; font-weight: 600; }
+.pick input:focus-visible + span { outline: 2px solid #8cf; outline-offset: 2px; }
+.wrap { max-width: 1180px; margin: 0 auto; }
+h1 { font-family: "Fraunces", serif; font-weight: 500; font-size: 2rem; letter-spacing: -0.02em; }
+.board { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; margin-top: 24px; }
+.notes { flex: 1 1 320px; max-width: 520px; display: grid; gap: 16px; color: #ccc; }
+.notes h2 { font-family: "Fraunces", serif; font-weight: 600; font-size: 1.5rem; color: #fff; }
+.notes h3 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: #999; margin-bottom: 4px; }
+.notes ul { padding-left: 1.1em; display: grid; gap: 4px; }
+.notes kbd { font: inherit; font-size: 0.8em; padding: 1px 6px; border: 1px solid #555; border-radius: 4px; }
+
+/* App frame with Ronda's real tokens (light and "Noche tinta" dark). */
+.phone {
+  --bg: light-dark(oklch(0.975 0.008 70), oklch(0.18 0.015 255));
+  --surface: light-dark(oklch(0.995 0.004 70), oklch(0.25 0.018 255));
+  --ink: light-dark(oklch(0.24 0.015 40), oklch(0.93 0.008 250));
+  --muted: light-dark(oklch(0.5 0.02 45), oklch(0.77 0.015 250));
+  --line: light-dark(oklch(0.89 0.012 60), oklch(0.42 0.02 255));
+  --accent: light-dark(oklch(0.55 0.16 33), oklch(0.75 0.14 38));
+  --accent-ink: light-dark(oklch(0.53 0.16 33), oklch(0.77 0.13 38));
+  --accent-soft: light-dark(oklch(0.94 0.04 40), oklch(0.32 0.045 38));
+  --on-accent: light-dark(oklch(0.99 0.005 60), oklch(0.2 0.02 40));
+  --control: light-dark(oklch(0.62 0.02 50), oklch(0.62 0.02 255));
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --t-xs: 0.833rem; --t-sm: 0.9375rem; --radius: 16px; --radius-sm: 10px; --tap: 44px;
+  color-scheme: dark;
+  width: min(380px, 100%); min-height: 760px; border: 1px solid #333; border-radius: 36px; background: var(--bg); color: var(--ink);
+  padding: 20px 16px; display: grid; align-content: start; gap: var(--s4); position: relative; overflow: hidden;
+}
+.phone button { font: inherit; color: inherit; }
+.phone :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.list-title { font-family: "Fraunces", serif; font-weight: 600; font-size: 1.75rem; letter-spacing: -0.02em; }
+.label { font-weight: 600; font-size: var(--t-sm); }
+.hint { font-size: var(--t-xs); color: var(--muted); }
+.field-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); min-height: 36px; }
+.count { font-size: var(--t-xs); color: var(--muted); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); min-height: var(--tap); padding: 0 var(--s5); border: 1px solid transparent; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer; background: transparent; }
+.btn-primary { background: var(--accent); color: var(--on-accent); }
+.btn-ghost { border-color: var(--control); }
+.btn-small { min-height: 36px; padding: 0 var(--s4); font-size: var(--t-sm); }
+.btn-link { min-height: 0; padding: 0; border: 0; color: var(--accent-ink); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; font-size: inherit; }
+.btn svg { width: 18px; height: 18px; flex: none; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--s4); display: grid; gap: var(--s3); }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: 3px; border: 1px solid var(--control); border-radius: var(--radius-sm); background: var(--surface); }
+.seg span { display: grid; place-items: center; min-height: 40px; border-radius: 7px; font-weight: 600; font-size: var(--t-sm); color: var(--muted); }
+.seg .on { background: var(--accent); color: var(--on-accent); }
+
+/* Badges (today's tag box). */
+.tagbox { display: flex; flex-wrap: wrap; gap: var(--s2); padding: var(--s2); border: 1px solid var(--control); border-radius: var(--radius-sm); background: var(--surface); }
+.person { display: inline-flex; align-items: center; min-height: 32px; padding-right: 2px; border-radius: 999px; background: var(--accent-soft); font-weight: 600; font-size: var(--t-sm); }
+.person span { padding: 0 var(--s2) 0 var(--s3); }
+.person i { font-style: normal; display: grid; place-items: center; width: 28px; height: 28px; color: var(--muted); }
+.person.is-away { background: transparent; border: 1px dashed var(--control); color: var(--muted); }
+.person.is-away span { text-decoration: line-through; }
+.person-input { flex: 1 1 7rem; min-height: 32px; color: var(--muted); font-size: var(--t-sm); display: flex; align-items: center; padding: 0 var(--s1); }
+
+/* Order rows, shared by the three proposals. */
+.rows { -webkit-user-select: none; user-select: none; list-style: none; padding: 0; display: grid; gap: var(--s2); counter-reset: n; position: relative; }
+.row { counter-increment: n; display: flex; align-items: center; gap: var(--s2); min-height: 52px; padding: 0 var(--s1) 0 var(--s2); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 150ms; }
+.row::before { content: counter(n); flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); font-size: var(--t-xs); font-weight: 700; font-variant-numeric: tabular-nums; }
+.row-name { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.row.is-away .row-name, .row.is-away .row-pick { color: var(--muted); }
+.rows-away .row.is-away .row-name { text-decoration: line-through; }
+.rows-away .row.is-away { counter-increment: none; border-style: dashed; background: transparent; }
+.rows-away .row.is-away::before { content: '–'; background: transparent; color: var(--muted); }
+.away { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; }
+.away svg { width: 18px; height: 18px; }
+.away:hover, .away[aria-pressed='true'] { color: var(--accent-ink); }
+.person .away { width: 28px; height: 28px; }
+.row-away { margin-left: var(--s2); font-size: var(--t-xs); font-weight: 400; color: var(--muted); }
+.handle { flex: none; display: grid; place-items: center; width: 36px; height: 44px; color: var(--muted); cursor: grab; touch-action: none; border-radius: 8px; }
+.handle svg { width: 18px; height: 18px; }
+.row.is-dragging { border-color: var(--accent); box-shadow: 0 10px 24px -12px rgb(0 0 0 / 0.6); position: relative; z-index: 2; }
+.row.is-dragging .handle { cursor: grabbing; }
+.mv { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); cursor: pointer; }
+.mv:disabled { color: var(--line); cursor: default; }
+.mv svg { width: 20px; height: 20px; }
+.row.is-moved { animation: flash 600ms ease-out; }
+@keyframes flash { from { background: var(--accent-soft); } }
+@media (prefers-reduced-motion: reduce) { .row { transition: none; } .row.is-moved { animation: none; } }
+
+/* B: pick and place. */
+.rows.is-picking .row:not(.is-picked) { opacity: 0.85; }
+.row.is-picked { border: 2px solid var(--accent); background: var(--accent-soft); }
+.row-pick { flex: 1; display: flex; align-items: center; min-height: 50px; border: 0; background: transparent; text-align: left; cursor: pointer; font-weight: 600; padding: 0; }
+.slot { display: none; }
+.rows.is-picking .slot { display: block; }
+.slot button { width: 100%; min-height: 36px; border: 1px dashed var(--accent); border-radius: var(--radius-sm); background: transparent; color: var(--accent-ink); font-size: var(--t-xs); font-weight: 600; cursor: pointer; }
+.slot { counter-increment: none; }
+.pickbar { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); padding: var(--s2) var(--s3); border-radius: var(--radius-sm); background: var(--accent-soft); font-size: var(--t-sm); }
+
+/* A: the order sheet. */
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+.sheet-head h3 { font-family: "Fraunces", serif; font-weight: 600; font-size: 1.25rem; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body>
+<div class="bar-top">
+  <fieldset><legend>Propuesta</legend><div class="pick">
+    <label><input type="radio" name="prop" value="A" checked><span>A · Modo Ordenar</span></label>
+    <label><input type="radio" name="prop" value="B"><span>B · Tocar y ubicar</span></label>
+    <label><input type="radio" name="prop" value="C"><span>C · Fila en Turnos</span></label>
+  </div></fieldset>
+  <fieldset><legend>Tema</legend><div class="pick">
+    <label><input type="radio" name="theme" value="dark" checked><span>Oscuro</span></label>
+    <label><input type="radio" name="theme" value="light"><span>Claro</span></label>
+  </div></fieldset>
+  <button type="button" id="reset" class="pick" style="background:none;border:1px solid #444;border-radius:8px;color:#eee;padding:6px 12px;cursor:pointer;font:inherit;font-size:.875rem">Reiniciar orden</button>
+</div>
+
+<div class="wrap">
+  <h1>Ordenar la lista</h1>
+  <div class="board">
+    <div class="phone" id="phone"></div>
+    <div class="notes" id="notes"></div>
+  </div>
+</div>
+
+<script>
+const START = ['Ana', 'Bruno', 'Carla', 'Diego', 'Eva', 'Fede', 'Gabi'];
+const AWAY = new Set(['Eva']); // mutable: the away toggles in C change it
+const state = { prop: 'A', open: false, people: [...START], picked: null };
+
+const icon = {
+  grip: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>',
+  up: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg>',
+  down: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+  away: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M6.3 6.3l11.4 11.4"/></svg>',
+  sort: '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4"/></svg>',
+};
+
+const NOTES = {
+  A: `<h2>A · Modo "Ordenar"</h2>
+    <p>Un botón <strong>Ordenar</strong> junto a Participantes cambia los badges por una lista numerada. Cada fila tiene manija para arrastrar y botones subir y bajar. <strong>Listo</strong> vuelve a los badges.</p>
+    <div><h3>Por qué</h3><ul><li>Los badges quedan como hoy: sin controles extra para algo que se hace pocas veces.</li><li>La lista vertical muestra el orden real, 1 a N.</li></ul></div>
+    <div><h3>Fundamento</h3><ul><li>Arrastrar en una lista vertical es preciso en el celular; en badges que se acomodan en varias filas, no.</li><li>Subir y bajar cubren teclado y lector (WCAG 2.5.7) con botones de 44px.</li></ul></div>
+    <div><h3>Contras</h3><ul><li>Un modo más que entender. Lejos de los turnos, que es donde importa el orden.</li></ul></div>
+    <div><h3>Probá</h3><ul><li>Arrastrá desde ⋮⋮, o usá ↑ ↓. Con teclado: <kbd>Tab</kbd> hasta las flechas y <kbd>Enter</kbd>; el foco sigue a la persona.</li></ul></div>`,
+  B: `<h2>B · Tocar y ubicar</h2>
+    <p>Mismo modo Ordenar, pero sin arrastre ni flechas: tocás a una persona, aparecen huecos "Poner acá" entre las filas, y tocás dónde va.</p>
+    <div><h3>Por qué</h3><ul><li>Dos toques para llevar a alguien del 7 al 1, sin precisión de dedo ni 6 toques de flechas.</li><li>Fila limpia: solo número y nombre.</li></ul></div>
+    <div><h3>Fundamento</h3><ul><li>Un solo gesto (tocar) para todo: igual con dedo, mouse, teclado y lector. No necesita alternativa al arrastre porque no hay arrastre.</li><li>Patrón conocido de iOS y Android para mover ítems en listas.</li></ul></div>
+    <div><h3>Contras</h3><ul><li>Menos obvio la primera vez: hay que leer el aviso "Tocá dónde va". Con muchos huecos, la lista se alarga mientras elegís.</li></ul></div>
+    <div><h3>Probá</h3><ul><li>Tocá un nombre y después un hueco. Teclado: <kbd>Enter</kbd> elige, <kbd>Tab</kbd> a un hueco, <kbd>Enter</kbd> ubica, <kbd>Esc</kbd> cancela.</li></ul></div>`,
+  C: `<h2>C · Fila editable en Turnos</h2>
+    <p>Sin modo nuevo en Participantes. Cuando el orden es <strong>Como la lista</strong>, la configuración de turnos muestra "Fila de hoy" con manija, flechas y el botón <strong>no está</strong> (⊘). Ese orden es el de la lista.</p>
+    <p>Quien no está queda tachado, con borde punteado y sin número: los números son el orden real en que van a hablar. El botón es el mismo dato que el ⊘ de los badges de arriba; tocá uno y cambia el otro.</p>
+    <div><h3>Por qué</h3><ul><li>Se ordena donde el orden importa, justo antes de tocar "Empezar turnos".</li><li>Los "no está" se ven en su lugar: queda claro quién arranca.</li></ul></div>
+    <div><h3>Fundamento</h3><ul><li>El orden solo cambia algo en turnos con "Como la lista"; en sorteo se mezcla igual. Mostrarlo ahí evita un control que no hace nada en otros modos.</li><li>Cero pasos extra: no hay que entrar y salir de un modo.</li></ul></div>
+    <div><h3>Contras</h3><ul><li>Cinco controles por fila: en nombres largos el nombre pasa a dos líneas.</li><li>La configuración de turnos se alarga con listas grandes (hasta 200). Hay que limitar la altura o colapsar.</li><li>No se puede ordenar una lista sin turnos.</li></ul></div>
+    <div><h3>Probá</h3><ul><li>Igual que A: arrastre desde ⋮⋮ o flechas ↑ ↓.</li></ul></div>`,
+};
+
+const live = () => document.getElementById('live');
+const say = (text) => { live().textContent = ''; requestAnimationFrame(() => (live().textContent = text)); };
+const pos = (name) => `${name}, posición ${state.people.indexOf(name) + 1} de ${state.people.length}`;
+
+function move(name, to) {
+  const from = state.people.indexOf(name);
+  to = Math.max(0, Math.min(state.people.length - 1, to));
+  if (from === to) return false;
+  state.people.splice(from, 1);
+  state.people.splice(to, 0, name);
+  return true;
+}
+
+const badges = () => `<div class="tagbox">${state.people.map((n) => `<span class="person ${AWAY.has(n) ? 'is-away' : ''}"><span>${n}</span><button type="button" class="away" data-away="${n}" aria-pressed="${AWAY.has(n)}" aria-label="${awayLabel(n)}">${icon.away}</button><i aria-hidden="true">×</i></span>`).join('')}<span class="person-input">Agregar persona…</span></div>`;
+
+const awayLabel = (n) => (AWAY.has(n) ? `${n} no está hoy. Marcar como presente` : `Marcar a ${n} como ausente hoy`);
+
+const arrowRows = (withAway = false) => `<ol class="rows ${withAway ? 'rows-away' : ''}" id="rows" aria-label="Orden de la lista">${state.people.map((n, i) => `
+  <li class="row ${AWAY.has(n) ? 'is-away' : ''}" data-name="${n}">
+    <span class="handle" aria-hidden="true">${icon.grip}</span>
+    <span class="row-name">${n}${AWAY.has(n) && !withAway ? '<span class="row-away"> · no está</span>' : ''}</span>
+    ${withAway ? `<button type="button" class="away" data-away="${n}" aria-pressed="${AWAY.has(n)}" aria-label="${awayLabel(n)}">${icon.away}</button>` : ''}
+    <button type="button" class="mv" data-dir="-1" aria-label="Subir a ${n}" ${i === 0 ? 'disabled' : ''}>${icon.up}</button>
+    <button type="button" class="mv" data-dir="1" aria-label="Bajar a ${n}" ${i === state.people.length - 1 ? 'disabled' : ''}>${icon.down}</button>
+  </li>`).join('')}</ol>`;
+
+function pickRows() {
+  const picking = state.picked !== null;
+  const slot = (i) => `<li class="slot"><button type="button" data-slot="${i}">Poner acá</button></li>`;
+  const from = state.people.indexOf(state.picked);
+  let html = '';
+  state.people.forEach((n, i) => {
+    if (picking && i !== from && i !== from + 1) html += slot(i);
+    html += `<li class="row ${AWAY.has(n) ? 'is-away' : ''} ${n === state.picked ? 'is-picked' : ''}" data-name="${n}"><button type="button" class="row-pick" aria-pressed="${n === state.picked}">${n}${AWAY.has(n) ? '<span class="row-away"> · no está</span>' : ''}</button></li>`;
+  });
+  if (picking && from !== state.people.length - 1) html += slot(state.people.length);
+  return `${picking ? `<div class="pickbar"><span>Tocá dónde va <strong>${state.picked}</strong></span><button type="button" class="btn btn-small btn-ghost" data-cancel>Cancelar</button></div>` : '<p class="hint">Tocá a una persona para moverla.</p>'}
+    <ol class="rows ${picking ? 'is-picking' : ''}" id="rows" aria-label="Orden de la lista">${html}</ol>`;
+}
+
+function render(focus) {
+  const p = document.getElementById('phone');
+  const head = `<h2 class="list-title">Lista 1</h2>`;
+  const liveRegion = '<p id="live" class="sr-only" aria-live="polite"></p>';
+  if (state.prop === 'C') {
+    p.innerHTML = `${head}
+      <div class="field-head"><span class="label">Participantes</span><span class="count">${state.people.length} participantes</span></div>${badges()}
+      <div class="card">
+        <span class="label">Orden</span>
+        <div class="seg"><span>Sorteado</span><span class="on">Como la lista</span></div>
+        <div class="field-head"><span class="label">Fila de hoy</span><span class="count">${state.people.length - AWAY.size} presentes</span></div>
+        ${arrowRows(true)}
+        <p class="hint">Hablan en este orden; quien no está se saltea. Moverlos acá cambia el orden de la lista.</p>
+        <button type="button" class="btn btn-primary">Empezar turnos</button>
+      </div>${liveRegion}`;
+  } else if (!state.open) {
+    p.innerHTML = `${head}
+      <div class="field-head"><span class="label">Participantes</span><button type="button" class="btn btn-ghost btn-small" data-open>${icon.sort}Ordenar</button></div>
+      ${badges()}
+      <div class="card"><span class="label">Orden</span><div class="seg"><span>Sorteado</span><span class="on">Como la lista</span></div>
+        <p class="hint">Hablan en el orden de la lista. <button type="button" class="btn btn-link" data-open>Cambiar orden</button></p>
+        <button type="button" class="btn btn-primary">Empezar turnos</button></div>${liveRegion}`;
+  } else {
+    p.innerHTML = `${head}
+      <div class="sheet-head"><h3 id="sheet-title">Ordenar participantes</h3><button type="button" class="btn btn-primary btn-small" data-close>Listo</button></div>
+      ${state.prop === 'A' ? '<p class="hint">Arrastrá desde ⋮⋮ o usá las flechas. Se guarda solo.</p>' + arrowRows() : pickRows()}${liveRegion}`;
+  }
+  document.getElementById('notes').innerHTML = NOTES[state.prop];
+  if (focus) p.querySelector(focus)?.focus();
+}
+
+// Clicks: open/close, arrows, pick and place.
+document.getElementById('phone').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  const row = b.closest('.row');
+  if (b.dataset.away) {
+    const n = b.dataset.away, inRows = !!b.closest('.rows');
+    AWAY.has(n) ? AWAY.delete(n) : AWAY.add(n);
+    render(inRows ? `.row[data-name="${n}"] .away` : `.person .away[data-away="${n}"]`);
+    return say(AWAY.has(n) ? `${n} no está hoy.` : `${n} vuelve.`);
+  }
+  if ('open' in b.dataset) { state.open = true; return render('[data-close]'); }
+  if ('close' in b.dataset) { state.open = false; state.picked = null; return render('[data-open]'); }
+  if (b.dataset.dir) {
+    const name = row.dataset.name, dir = +b.dataset.dir;
+    if (!move(name, state.people.indexOf(name) + dir)) return;
+    const atEdge = (dir < 0 && state.people.indexOf(name) === 0) || (dir > 0 && state.people.indexOf(name) === state.people.length - 1);
+    render(`.row[data-name="${name}"] .mv[data-dir="${atEdge ? -dir : dir}"]`);
+    document.querySelector(`.row[data-name="${name}"]`).classList.add('is-moved');
+    return say(pos(name));
+  }
+  if (b.classList.contains('row-pick')) {
+    const name = row.dataset.name;
+    state.picked = state.picked === name ? null : name;
+    render(state.picked ? '[data-slot]' : `.row[data-name="${name}"] .row-pick`);
+    return say(state.picked ? `${name} elegido. Elegí dónde ponerlo.` : 'Cancelado.');
+  }
+  if (b.dataset.slot !== undefined) {
+    const name = state.picked, from = state.people.indexOf(name);
+    let to = +b.dataset.slot; if (to > from) to -= 1;
+    move(name, to); state.picked = null;
+    render(`.row[data-name="${name}"] .row-pick`);
+    document.querySelector(`.row[data-name="${name}"]`).classList.add('is-moved');
+    return say(pos(name));
+  }
+  if ('cancel' in b.dataset) { const n = state.picked; state.picked = null; render(`.row[data-name="${n}"] .row-pick`); say('Cancelado.'); }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && state.picked) { const n = state.picked; state.picked = null; render(`.row[data-name="${n}"] .row-pick`); say('Cancelado.'); }
+});
+
+// Drag from the handle with pointer events (touch and mouse). The list holds the capture, so moving rows in the DOM keeps it.
+document.getElementById('phone').addEventListener('pointerdown', (e) => {
+  const handle = e.target.closest('.handle'); if (!handle) return;
+  e.preventDefault();
+  const list = handle.closest('.rows'), row = handle.closest('.row');
+  list.setPointerCapture(e.pointerId);
+  row.classList.add('is-dragging');
+  const onMove = (ev) => {
+    // Loop: a fast pointer can cross several rows between two events.
+    for (let prev; (prev = row.previousElementSibling) && ev.clientY < prev.getBoundingClientRect().top + prev.offsetHeight / 2;) list.insertBefore(row, prev);
+    for (let next; (next = row.nextElementSibling) && ev.clientY > next.getBoundingClientRect().top + next.offsetHeight / 2;) list.insertBefore(next, row);
+  };
+  const onUp = () => {
+    list.removeEventListener('pointermove', onMove);
+    state.people = [...list.children].map((li) => li.dataset.name);
+    const name = row.dataset.name;
+    render(); say(pos(name));
+    document.querySelector(`.row[data-name="${name}"]`)?.classList.add('is-moved');
+  };
+  list.addEventListener('pointermove', onMove);
+  list.addEventListener('pointerup', onUp, { once: true });
+  list.addEventListener('pointercancel', onUp, { once: true });
+});
+
+document.querySelector('.bar-top').addEventListener('change', (e) => {
+  if (e.target.name === 'prop') { state.prop = e.target.value; state.open = false; state.picked = null; render(); }
+  if (e.target.name === 'theme') document.getElementById('phone').style.colorScheme = e.target.value;
+});
+document.getElementById('reset').addEventListener('click', () => { state.people = [...START]; AWAY.clear(); AWAY.add('Eva'); state.picked = null; render(); });
+
+render();
+</script>
+</body>
+</html>

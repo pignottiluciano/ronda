@@ -502,6 +502,25 @@ button, input, textarea { font: inherit; color: inherit; }
 .tile[data-over='true'] .tile-state { color: var(--danger); font-weight: 600; }
 .tile-away { min-height: var(--tap); border: 0; border-top: 1px solid var(--line); background: transparent; color: var(--muted); font-size: var(--t-xs); cursor: pointer; }
 .tile-away:hover { color: var(--ink); background: var(--accent-soft); }
+
+/* "Fila de hoy": numbers count present people only, so they are the speaking order. */
+.queue-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); max-height: min(60vh, 28rem); overflow-y: auto; counter-reset: queue; -webkit-user-select: none; user-select: none; }
+.queue-row { counter-increment: queue; display: flex; align-items: center; gap: var(--s1); min-height: 52px; padding-left: var(--s2); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
+.queue-row::before { content: counter(queue); flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); font-size: var(--t-xs); font-weight: 700; font-variant-numeric: tabular-nums; }
+.queue-row.is-away { counter-increment: none; border: 1px dashed var(--control); background: transparent; }
+.queue-row.is-away::before { content: '–'; background: transparent; color: var(--muted); }
+.queue-row.is-dragging { border-color: var(--accent); }
+.queue-handle { flex: none; display: grid; place-items: center; width: 32px; height: var(--tap); color: var(--muted); cursor: grab; touch-action: none; }
+.queue-row.is-dragging .queue-handle { cursor: grabbing; }
+.queue-handle svg { width: 18px; height: 18px; }
+.queue-name { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.queue-row.is-away .queue-name { color: var(--muted); text-decoration: line-through; }
+.queue-away, .queue-move { flex: none; display: grid; place-items: center; width: var(--tap); height: var(--tap); border: 0; border-radius: var(--radius-sm); background: transparent; cursor: pointer; }
+.queue-away { color: var(--muted); }
+.queue-away:hover, .queue-away[aria-pressed='true'] { color: var(--accent-ink); }
+.queue-move:disabled { color: var(--line); cursor: default; }
+.queue-away svg { width: 18px; height: 18px; }
+.queue-move svg { width: 20px; height: 20px; }
 .turns-end { margin-top: var(--s2); }
 
 /* ---------- Ranking ---------- */

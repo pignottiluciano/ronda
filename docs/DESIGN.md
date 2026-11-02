@@ -2,7 +2,8 @@
 
 Source of truth for tokens is `src/styles/global.css`. This file records the decisions behind them and
 the rules for the turns and ranking feature. Mocks: `docs/turnos.html` (proposals A, B, C; chosen: A with B's turns and podium) and `docs/inicio-y-paletas.html`
-(turn order control and dark palettes; chosen: B, the per-list "Order" control, with palette 2, "Noche tinta").
+(turn order control and dark palettes; chosen: B, the per-list "Order" control, with palette 2, "Noche tinta") and
+`docs/ordenar.html` (reordering the list; chosen: C, the editable line in the turns setup, plus an away toggle per row).
 
 ## Direction
 Utility app for groups, mobile first, used live in meetings and classes. Calm editorial: warm near-neutral
@@ -82,6 +83,18 @@ form with no control. The switch "Use turns" lives in the list tools next to ren
 Active tile: `--accent` border and `--accent-soft` fill. Absent: dashed border, no fill. Over time: ring full, label `+m:ss`.
 The tile is a `<button>`; the ring is `aria-hidden`; the active one has `aria-current="true"`.
 Controls: a square icon button for the clock (▶ green to start, ⏸ neutral to pause, ▶ amber to resume) and a wide Next button (coral; outlined while the clock is the next press, so two filled buttons never sit together). "Not here" lives on each tile; Finish is secondary and Discard is red text. State colors: `--go` speaking, `--accent` up now, `--hold` paused, `--danger` over time. The floating card (320×170) drops the label, "of 05:00" and the Float button, and puts name and clock on one row.
+
+**Today's line (Fila de hoy).** Shown in the turns setup only when the order is "As listed" and no day is in progress,
+because that is the only place where list order changes anything (the draw shuffles anyway). One row per person in list
+order: drag handle, name, away toggle, up and down buttons (44px each). The number counts present people only, so it is
+the real speaking order; an absent row shows "–", a dashed `--control` border and a struck-through name (not color alone).
+The away toggle is the same data as the badge one. Moving a row moves the person in the list, so the badges follow.
+Keyboard and screen readers use the arrows (the handle is `aria-hidden` and not focusable); after a move the focus stays
+on the same person, on the other arrow when its own got disabled at an edge, and the live region says "Diego, position 2 of 5".
+Drag uses pointer events on the handle (touch and mouse, no library); release reports the move once, a cancelled pointer
+restores the order. Height caps at `min(60vh, 28rem)` with scroll for long lists.
+Not chosen: a separate "Sort" mode on the badges (A: one more mode, far from where order matters) and tap-to-place (B: less
+obvious the first time).
 
 **Podium.** The three lowest averages, lowest in the middle and tallest, Fraunces percentages inside the steps; fewer than
 three people shows only those. Below it, the ranking table: position, name, bar plus percent, days present.

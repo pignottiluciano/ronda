@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   activeList, addList, addPeople, clearPeople, createStore, MAX_PEOPLE, nameKey, parseStore, removeList,
-  removePerson, renameList, renamePerson, setActive, setTurns, updateList,
+  movePerson, removePerson, renameList, renamePerson, setActive, setTurns, updateList,
 } from '../src/lib/lists.ts';
 
 const names = (store) => activeList(store).people.map((p) => p.name);
@@ -137,4 +137,20 @@ test('parseStore reads the turns flag, defaulting to off for older data and for 
   assert.equal(parse({}), false);
   assert.equal(parse({ turns: true }), true);
   assert.equal(parse({ turns: 'yes' }), false);
+});
+
+test('move puts a person at a new position, clamps the index and leaves no-ops and other lists alone', () => {
+  const store = addList(createStore('Uno', ['Ana', 'Bruno', 'Carla', 'Diego']), 'Dos');
+  const first = store.lists[0];
+  const id = (name) => first.people.find((p) => p.name === name).id;
+  const order = (s) => s.lists[0].people.map((p) => p.name);
+  assert.deepEqual(order(movePerson(store, first.id, id('Diego'), 0)), ['Diego', 'Ana', 'Bruno', 'Carla']);
+  assert.deepEqual(order(movePerson(store, first.id, id('Ana'), 3)), ['Bruno', 'Carla', 'Diego', 'Ana']);
+  assert.deepEqual(order(movePerson(store, first.id, id('Bruno'), 2)), ['Ana', 'Carla', 'Bruno', 'Diego']);
+  assert.deepEqual(order(movePerson(store, first.id, id('Ana'), 99)), ['Bruno', 'Carla', 'Diego', 'Ana']);
+  assert.deepEqual(order(movePerson(store, first.id, id('Diego'), -5)), ['Diego', 'Ana', 'Bruno', 'Carla']);
+  assert.equal(movePerson(store, first.id, id('Carla'), 2), store);
+  assert.equal(movePerson(store, first.id, 'nobody', 0), store);
+  assert.equal(movePerson(store, 'no-list', id('Ana'), 1), store);
+  assert.equal(movePerson(store, first.id, id('Diego'), 0).lists[1], store.lists[1]);
 });

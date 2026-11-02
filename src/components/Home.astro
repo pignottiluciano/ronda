@@ -232,6 +232,13 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
                 <label><input type="radio" name="turn-order" value="list" /><span>{t.turnsOrderList}</span></label>
               </div>
             </fieldset>
+            <div id="queue" class="field" hidden>
+              <div class="field-head">
+                <span id="queue-title" class="label">{t.queueTitle}</span>
+                <span id="queue-count" class="count"></span>
+              </div>
+              <ol id="queue-list" class="queue-list" aria-labelledby="queue-title"></ol>
+            </div>
             <p id="turns-days" class="hint" hidden></p>
             <p class="hint"><span id="order-hint">{t.turnsHintDraw}</span> {t.turnsStartHint}</p>
             <div class="actions">

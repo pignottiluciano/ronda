@@ -2,7 +2,7 @@ import { draw, formatResult, validateDraw, type DrawResult } from '../lib/draw';
 import { messages } from '../i18n/messages';
 import {
   MAX_PEOPLE, activeList, addList, addPeople, clearPeople, removeList, removePerson, renameList, renamePerson, setActive,
-  setTurns, updateList,
+  movePerson, setTurns, updateList,
   type ListStore, type Person,
 } from '../lib/lists';
 import { readStore, writeStore } from './storage';
@@ -48,6 +48,7 @@ const turns = initTurns({
     updateCount();
     markStale();
   },
+  movePerson: (id, toIndex) => commit(movePerson(store, activeList(store).id, id, toIndex)),
 });
 
 function setStatus(message: string) {

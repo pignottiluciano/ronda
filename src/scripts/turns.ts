@@ -10,6 +10,7 @@ import {
 } from '../lib/turns';
 import { confirmAction } from './confirm';
 import { createFloat, floatSupported } from './float';
+import { createQueueEditor } from './queue-editor';
 import { initRanking } from './ranking';
 import { readTurns, writeTurns } from './storage';
 import { holdScreen, releaseScreen } from './wakelock';
@@ -20,6 +21,8 @@ export interface TurnsHost {
   say(message: string): void;
   /** Absences changed: badges, the count and the draw must follow. */
   absenceChanged(): void;
+  /** Puts a person at `toIndex` in the list (the list order is the speaking order with "as listed"). */
+  movePerson(id: string, toIndex: number): void;
 }
 
 type Mode = 'draw' | 'turns' | 'ranking';
@@ -46,6 +49,8 @@ export function initTurns(host: TurnsHost) {
   const startButton = $<HTMLButtonElement>('turns-start');
   const orderField = $<HTMLFieldSetElement>('turn-order');
   const orderHint = $('order-hint');
+  const queueBox = $('queue');
+  const queueCount = $('queue-count');
   const now = $('now');
   const nowLabel = $('now-label');
   const nowName = $('now-name');
@@ -82,6 +87,19 @@ export function initTurns(host: TurnsHost) {
     announce.textContent = message;
   }
 
+  const queueEditor = createQueueEditor({
+    list: $<HTMLOListElement>('queue-list'),
+    onMove(id, toIndex) {
+      host.movePerson(id, toIndex); // app.ts saves the list and refreshes us
+      const people = host.list().people;
+      const away = new Set(turns().absent);
+      const present = people.filter((p) => !away.has(p.id));
+      const position = away.has(id) ? people.findIndex((p) => p.id === id) + 1 : present.findIndex((p) => p.id === id) + 1;
+      say(t.queueMoved(nameOf(id), position, away.has(id) ? people.length : present.length));
+    },
+    onToggleAway: (id) => toggleAbsent(id),
+  });
+
   const rankingView = initRanking({ list: host.list, turns, update, say: host.say });
 
   // ---- Rendering ----
@@ -106,7 +124,13 @@ export function initTurns(host: TurnsHost) {
     }
     custom.value = (BUDGET_PRESETS as readonly number[]).includes(minutes) ? '' : String(minutes);
     for (const radio of orderField.querySelectorAll<HTMLInputElement>('input')) radio.checked = radio.value === current.order;
-    orderHint.textContent = current.order === 'list' ? t.turnsHintList : t.turnsHintDraw;
+    orderHint.textContent = current.order === 'list' ? t.queueHint : t.turnsHintDraw;
+    queueBox.hidden = current.order !== 'list';
+    if (current.order === 'list') {
+      const away = new Set(current.absent);
+      queueCount.textContent = t.queuePresent(ids().filter((id) => !away.has(id)).length);
+      queueEditor.render(host.list().people, away);
+    }
     const saved = current.sessions.length;
     days.hidden = saved === 0;
     days.textContent = saved === 0 ? '' : t.turnsDays(saved);
