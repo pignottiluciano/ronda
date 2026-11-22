@@ -2,6 +2,14 @@
 
 Notable changes to Ronda. Versions follow semver; dates are when the release reached `main`.
 
+## Unreleased
+
+### Added
+- **Undo after passing the floor.** Next, tapping a person and finishing the day show a message with "Undo" for 6 seconds (longer while the pointer or keyboard is on it). Undo puts the turns back as they were, so the time in between counts for whoever had the floor; undoing a finished day removes it from the ranking and returns to Turns. The offer goes away as soon as anything else changes the turns.
+
+### Changed
+- The page leaves room at the bottom so the message no longer covers the last controls.
+
 ## 0.1.0 — 2026-11-22
 
 ### Added

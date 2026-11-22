@@ -45,7 +45,7 @@ let selectedId: string | null = null; // badge selected by the first Backspace
 const turns = initTurns({
   list: () => activeList(store),
   listIds: () => store.lists.map((list) => list.id),
-  say: (message) => setStatus(message),
+  say: (message, undo) => setStatus(message, undo),
   absenceChanged: () => {
     renderPeople();
     updateCount();
@@ -54,9 +54,9 @@ const turns = initTurns({
   movePerson: (id, toIndex) => commit(movePerson(store, activeList(store).id, id, toIndex)),
 });
 
-function setStatus(message: string) {
+function setStatus(message: string, undo?: () => void) {
   status.textContent = message;
-  notify(message);
+  notify(message, undo);
 }
 
 function persist() {

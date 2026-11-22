@@ -19,7 +19,8 @@ import { holdScreen, releaseScreen } from './wakelock';
 export interface TurnsHost {
   list(): SavedList;
   listIds(): string[];
-  say(message: string): void;
+  /** `undo`: the message offers to take the last step back. */
+  say(message: string, undo?: () => void): void;
   /** Absences changed: badges, the count and the draw must follow. */
   absenceChanged(): void;
   /** Puts a person at `toIndex` in the list (the list order is the speaking order with "as listed"). */
@@ -83,7 +84,9 @@ export function initTurns(host: TurnsHost) {
   const turns = (): ListTurns => store[listId()] ?? emptyTurns();
   const nameOf = (id: string) => host.list().people.find((p) => p.id === id)?.name ?? '';
 
+  let undoFrom: ListTurns | null = null; // the state an offered undo starts from, while the offer is on screen
   function update(next: ListTurns) {
+    if (undoFrom && next !== undoFrom) dropUndo(); // anything else that changes the turns retires the offer
     store = { ...store, [listId()]: next };
     if (!writeTurns(store)) host.say(t.saveFailed);
     render();
@@ -91,6 +94,29 @@ export function initTurns(host: TurnsHost) {
 
   function say(message: string) {
     announce.textContent = message;
+  }
+
+  // Passing or taking the floor happens at once, so a wrong tap is undone instead of confirmed. Undo puts back the turns
+  // as they were, so the time in between counts for whoever had the floor. It only applies while nothing else
+  // changed since (another tap, another list): `after` is the exact state the step left.
+  function dropUndo() {
+    undoFrom = null;
+    host.say('');
+  }
+
+  function stepWithUndo(message: string, next: ListTurns, back: () => void = () => {}) {
+    const before = turns();
+    update(next);
+    const after = turns();
+    undoFrom = after;
+    host.say(message, () => {
+      if (turns() !== after) return; // another list, or the offer outlived its state
+      undoFrom = null;
+      back(); // before the redraw, which reads it
+      update(before);
+      host.absenceChanged(); // the step may have cleared today's absences (finishing a day does)
+      host.say(t.undoDone);
+    });
   }
 
   // A drawn order waiting to be reviewed (orden "Sorteado", before the day starts). `touched`: someone moved it, so
@@ -439,10 +465,7 @@ export function initTurns(host: TurnsHost) {
     const id = item.dataset.id!;
     if ((event.target as Element).closest('.tile-away')) return toggleAbsent(id);
     const next = speak(turns(), id, Date.now());
-    if (next !== turns()) {
-      say(t.turnsSpeaking(nameOf(id)));
-      update(next);
-    }
+    if (next !== turns()) stepWithUndo(t.turnsSpeaking(nameOf(id)), next);
   });
 
   // Space starts, pauses or resumes the clock; the right arrow passes the floor. Never while typing or on a focused control,
@@ -485,20 +508,15 @@ export function initTurns(host: TurnsHost) {
   nextButton.addEventListener('click', () => {
     const up = nextId(turns(), ids());
     if (!up) return finishDay(); // everyone has spoken: the button closes the day
-    if (turns().current?.activeId == null) {
-      say(t.turnsSpeaking(nameOf(up)));
-      return update(speak(turns(), up, Date.now())); // the first one starts at once
-    }
-    say(t.turnsUp(nameOf(up)));
-    update(handOver(turns(), up, Date.now())); // then each one waits for their own click to start
+    if (turns().current?.activeId == null) return stepWithUndo(t.turnsSpeaking(nameOf(up)), speak(turns(), up, Date.now())); // the first one starts at once
+    stepWithUndo(t.turnsUp(nameOf(up)), handOver(turns(), up, Date.now())); // then each one waits for their own click to start
   });
 
   function finishDay() {
     const saved = finish(turns(), host.list().people, Date.now());
     mode = 'ranking'; // the day just saved is in the score now
-    update(saved);
+    stepWithUndo(t.turnsSaved(saved.sessions.length), saved, () => (mode = 'turns'));
     host.absenceChanged(); // a finished day clears today's absences
-    host.say(t.turnsSaved(saved.sessions.length));
   }
 
   $('turns-finish').addEventListener('click', finishDay);
