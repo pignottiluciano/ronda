@@ -1,8 +1,8 @@
 # Changelog
 
-Notable changes to Ronda. Dates are when a branch was merged.
+Notable changes to Ronda. Versions follow semver; dates are when the release reached `main`.
 
-## Unreleased (branch `mejoras`)
+## 0.1.0 — 2026-11-22
 
 ### Added
 - **Review a drawn order before starting.** With the "Drawn" order, the first press draws and shows the order in the same editor as "Today's queue" (drag, arrows, absent). People can be moved so someone who leaves early speaks first. "Draw again" and switching to the list order ask first when the order was moved. The draft survives a reload (`ListTurns.draft`) and only changes today's order, never the list's.
