@@ -24,7 +24,7 @@ Observadas en producción a 375 px (oscuro) y 1280 px (claro) con 6 personas y u
 
 Pendiente de diseño:
 - **Copia de seguridad dentro del menú "⋯".** Estaba en el mock; quedó al pie porque el menú es compartido con la página de ayuda, que no tiene esos botones.
-- **El toast tapa contenido** (vimos "Turnos" e "Historial" tapados). Moverlo arriba de la zona de botones o acortar su duración.
+- ~~**El toast tapa contenido**~~ Hecho: la página deja lugar abajo para el aviso.
 - **La imagen para compartir** sigue dibujando el podio con menos de tres días.
 
 ## 2. Propuestas de producto
@@ -32,7 +32,7 @@ Pendiente de diseño:
 | # | Qué | Por qué | Para qué | Fundamento | Estado |
 |---|---|---|---|---|---|
 | 1 | **Mover el orden sorteado antes de empezar** | Hoy "Sorteado" arranca el día al instante; si alguien se tiene que ir antes, no hay cómo ponerlo primero | Ajustar el orden a la realidad de la reunión sin perder el sorteo | Ver sección 3 y el mock | Hecho (opción A) |
-| 2 | **Deshacer** en el toast tras Siguiente o tocar a otra persona | Tocar una fila da la palabra y arranca el reloj al instante; un toque errado ensucia el día | Corregir sin descartar el día | Uso en vivo, teléfono sobre la mesa: el error es barato de cometer y hoy caro de arreglar | Pendiente |
+| 2 | **Deshacer** en el toast tras Siguiente o tocar a otra persona | Tocar una fila da la palabra y arranca el reloj al instante; un toque errado ensucia el día | Corregir sin descartar el día | Uso en vivo, teléfono sobre la mesa: el error es barato de cometer y hoy caro de arreglar | Hecho (también al terminar el día) |
 | 3 | **Calculadora inversa**: "tenemos 30 min" → tiempo por persona | Quien facilita piensa en la duración de la reunión, no en minutos por persona | Configurar en un paso | Ya existen presentes y presupuesto; es una división | Pendiente |
 | 4 | **Aviso de último minuto** (ámbar al 20% restante) | Hoy la única señal es el rojo, cuando ya se pasó | Que quien habla cierre solo | Respeta "sin sonido" y "no castigar": avisa antes, no después | Hecho (tramos, diseño #11) |
 | 5 | **Pantalla completa** de la tarjeta | Flotar solo existe en Chrome y Edge de escritorio | Proyectar o compartir pantalla en Safari, Firefox y móvil | La Fullscreen API está en casi todos; reutiliza la misma tarjeta | Pendiente |
@@ -43,7 +43,7 @@ Pendiente de diseño:
 
 No haría: cuentas, sincronización ni sonido. Rompen "sin backend" y decisiones ya tomadas en `DESIGN.md`.
 
-Orden sugerido para lo pendiente: 2 (Deshacer) y 5 (Pantalla completa), baratos y sobre el uso en vivo; después 3 y 8.
+Orden sugerido para lo pendiente: 5 (Pantalla completa), barato y sobre el uso en vivo; después 3 y 8.
 
 ## 3. Mover el orden sorteado antes de empezar
 

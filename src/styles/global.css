@@ -67,7 +67,7 @@ button, input, textarea { font: inherit; color: inherit; }
 
 /* ---------- Layout ---------- */
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
-.page { max-width: 70rem; margin: 0 auto; padding: var(--s4) var(--s4) var(--s8); }
+.page { max-width: 70rem; margin: 0 auto; padding: var(--s4) var(--s4) calc(var(--s8) + var(--s7)); } /* room under the last control for the toast */
 
 .top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); min-height: 3.25rem; }
 .brand { display: flex; align-items: center; gap: var(--s2); color: inherit; text-decoration: none; font-family: var(--font-head); font-weight: 600; font-size: var(--t-lg); letter-spacing: -0.02em; }
@@ -371,7 +371,11 @@ button, input, textarea { font: inherit; color: inherit; }
 .status { margin-top: var(--s4); min-height: 1.5em; font-size: var(--t-sm); color: var(--muted); }
 
 /* Feedback that must be seen in every mode. In the draw mode the status line already shows it, so the toast is only announced. */
-.toast { position: fixed; left: 50%; bottom: var(--s5); z-index: 20; transform: translateX(-50%); width: max-content; max-width: min(92vw, 30rem); padding: var(--s3) var(--s4); border-radius: var(--radius-sm); background: var(--ink); color: var(--bg); font-size: var(--t-sm); }
+.toast { position: fixed; left: 50%; bottom: var(--s5); z-index: 20; transform: translateX(-50%); display: flex; align-items: center; gap: var(--s3); width: max-content; max-width: min(92vw, 30rem); padding: var(--s3) var(--s4); border-radius: var(--radius-sm); background: var(--ink); color: var(--bg); font-size: var(--t-sm); }
+.toast:has(.toast-undo) { padding-block: var(--s1); padding-right: var(--s1); }
+.toast-undo { flex: none; min-height: var(--tap); padding: 0 var(--s3); border: 0; border-radius: var(--radius-sm); background: transparent; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 0.2em; cursor: pointer; }
+.toast-undo:hover { background: color-mix(in oklch, var(--bg) 15%, transparent); }
+.toast-undo:focus-visible { outline: 2px solid var(--bg); outline-offset: -4px; }
 .toast:empty { display: none; }
 .layout[data-mode='draw'] ~ .toast { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
