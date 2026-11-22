@@ -1,7 +1,7 @@
 # Ideas y mejoras · Ronda
 
-Registro de la revisión de diseño y producto. Todo lo de abajo está en local, sin commit ni deploy, salvo que se diga otra cosa.
-Mocks: [`mejoras-diseno.html`](mejoras-diseno.html) (diseño) y [`orden-sorteado.html`](orden-sorteado.html) (mover el orden sorteado).
+Registro de la revisión de diseño y producto. Lo marcado **Hecho** está en la rama `mejoras` (commit `b5947a5`, subida a origin, sin PR ni deploy).
+Mocks: [`mejoras-diseno.html`](mejoras-diseno.html) (diseño), [`orden-sorteado.html`](orden-sorteado.html) (mover el orden sorteado), [`turnos-lista.html`](turnos-lista.html) (fila del día como lista) y [`tarjeta-compacta.html`](tarjeta-compacta.html) (tarjeta de quien habla).
 
 ## 1. Mejoras de diseño
 
@@ -9,15 +9,17 @@ Observadas en producción a 375 px (oscuro) y 1280 px (claro) con 6 personas y u
 
 | # | Problema | Cambio | Estado |
 |---|---|---|---|
-| 1 | Con 6 personas el reloj queda debajo de la primera pantalla del teléfono | Con un día en curso, la caja de participantes se pliega a "5 participantes · 1 no está · Editar" (solo teléfono) | Hecho en local |
-| 2 | La bajada habla de sorteo y grupos en listas que solo usan turnos; la marca dice "Sorteos y grupos" | Bajada según el modo; marca y título "Turnos, sorteos y grupos" (es y en) | Hecho en local |
-| 3 | En pausa la tarjeta dice "Habla ahora" y hay dos botones rellenos juntos | Rótulo "En pausa"; Siguiente queda con borde, Reanudar es el único relleno | Hecho en local |
-| 4 | La tarjeta cuenta lo que queda y el anillo lo usado | Un solo sentido: lo que le queda a quien habla o espera, lo usado a quien terminó ("Listo · usó") | Hecho en local |
-| 5 | Baldosas de ~190 px que repiten "No está", también en quien ya habló | En teléfono, filas de 56 px con "No está" como ícono; sin "No está" en quien terminó | Hecho en local |
-| 6 | Cabecera de tres filas a 375 px | Por debajo de 640 px: marca y un menú "⋯" con ayuda, idioma y tema | Hecho en local |
-| 7 | El redondeo muestra "42%" y "42%" en puestos distintos | Un decimal solo donde el redondeo igualaría puestos distintos (`rankPercents`) | Hecho en local |
-| 8 | Con un día guardado el podio se ve definitivo | Podio desde el tercer día (`PODIUM_MIN_DAYS`); antes, aviso y tabla | Hecho en local |
-| 9 | La fila de hoy mide ~650 px en desktop | Tope de 32 rem | Hecho en local |
+| 1 | Con 6 personas el reloj queda debajo de la primera pantalla del teléfono | Con un día en curso, la caja de participantes se pliega a "5 participantes · 1 no está · Editar" (solo teléfono) | Hecho |
+| 2 | La bajada habla de sorteo y grupos en listas que solo usan turnos; la marca dice "Sorteos y grupos" | Bajada según el modo; marca y título "Turnos, sorteos y grupos" (es y en) | Hecho |
+| 3 | En pausa la tarjeta dice "Habla ahora" y hay dos botones rellenos juntos | Rótulo "En pausa"; Siguiente queda con borde, Reanudar es el único relleno | Hecho |
+| 4 | La tarjeta cuenta lo que queda y el anillo lo usado | Un solo sentido: lo que le queda a quien habla o espera, lo usado a quien terminó ("Listo · usó") | Hecho |
+| 5 | Baldosas de ~190 px que repiten "No está", también en quien ya habló | Filas en todos los anchos (opción 1 del mock de lista): anillo, nombre, estado, tiempo y "No está" como ícono; sin "No está" en quien terminó. La ganancia es lectura, no espacio | Hecho |
+| 6 | Cabecera de tres filas a 375 px | Por debajo de 640 px: marca y un menú "⋯" con ayuda, idioma y tema | Hecho |
+| 7 | El redondeo muestra "42%" y "42%" en puestos distintos | Un decimal solo donde el redondeo igualaría puestos distintos (`rankPercents`) | Hecho |
+| 8 | Con un día guardado el podio se ve definitivo | Podio desde el tercer día (`PODIUM_MIN_DAYS`); antes, aviso y tabla | Hecho |
+| 9 | La fila de hoy mide ~650 px en desktop | Tope de 32 rem | Hecho |
+| 10 | La tarjeta de quien habla ocupa demasiado | Tarjeta compacta (opción B): reloj a la izquierda, nombre al medio, flotar como ícono; barra debajo que se vacía | Hecho |
+| 11 | La única señal de tiempo es el rojo, cuando ya se pasó | Tramos: verde, ámbar desde el 80% usado, rojo al pasarse; reloj y barra cambian juntos, sin animación con movimiento reducido | Hecho |
 | — | El badge de persona (editar, no está, quitar) | Se queda como está, por decisión | — |
 
 Pendiente de diseño:
@@ -27,21 +29,21 @@ Pendiente de diseño:
 
 ## 2. Propuestas de producto
 
-| # | Qué | Por qué | Para qué | Fundamento |
-|---|---|---|---|---|
-| 1 | **Mover el orden sorteado antes de empezar** | Hoy "Sorteado" arranca el día al instante; si alguien se tiene que ir antes, no hay cómo ponerlo primero | Ajustar el orden a la realidad de la reunión sin perder el sorteo | Ver sección 3 y el mock |
-| 2 | **Deshacer** en el toast tras Siguiente o tocar a otra persona | Tocar una fila da la palabra y arranca el reloj al instante; un toque errado ensucia el día | Corregir sin descartar el día | Uso en vivo, teléfono sobre la mesa: el error es barato de cometer y hoy caro de arreglar |
-| 3 | **Calculadora inversa**: "tenemos 30 min" → tiempo por persona | Quien facilita piensa en la duración de la reunión, no en minutos por persona | Configurar en un paso | Ya existen presentes y presupuesto; es una división |
-| 4 | **Aviso de último minuto** (ámbar al 20% restante) | Hoy la única señal es el rojo, cuando ya se pasó | Que quien habla cierre solo | Respeta "sin sonido" y "no castigar": avisa antes, no después |
-| 5 | **Pantalla completa** de la tarjeta | Flotar solo existe en Chrome y Edge de escritorio | Proyectar o compartir pantalla en Safari, Firefox y móvil | La Fullscreen API está en casi todos; reutiliza la misma tarjeta |
-| 6 | **Resumen al terminar el día** | Terminar salta al ranking, sin cierre | Ver duración total y quién se pasó; compartirlo | Cierra el ciclo diario; el ranking es acumulado, no del día |
-| 7 | **Orden "rotación justa"**: quien abrió ayer, cierra hoy | El sorteo puede repetir a la misma persona primera | Equidad sin gestión manual | Coherente con el valor del producto. Hay que verificar si los días guardados conservan el orden |
-| 8 | **Lista de ejemplo** en el primer uso | Navegador nuevo: caja vacía y un botón que no hace nada útil | Llegar al primer reloj en un clic | El valor se entiende viendo el reloj, no leyendo |
-| 9 | **Compartir lista por enlace** (nombres en el `#` de la URL) | Pasar la lista exige exportar e importar un JSON | Segundo facilitador, otro dispositivo | Sin backend; el `#` no viaja al servidor. Avisar que el enlace lleva los nombres |
+| # | Qué | Por qué | Para qué | Fundamento | Estado |
+|---|---|---|---|---|---|
+| 1 | **Mover el orden sorteado antes de empezar** | Hoy "Sorteado" arranca el día al instante; si alguien se tiene que ir antes, no hay cómo ponerlo primero | Ajustar el orden a la realidad de la reunión sin perder el sorteo | Ver sección 3 y el mock | Hecho (opción A) |
+| 2 | **Deshacer** en el toast tras Siguiente o tocar a otra persona | Tocar una fila da la palabra y arranca el reloj al instante; un toque errado ensucia el día | Corregir sin descartar el día | Uso en vivo, teléfono sobre la mesa: el error es barato de cometer y hoy caro de arreglar | Pendiente |
+| 3 | **Calculadora inversa**: "tenemos 30 min" → tiempo por persona | Quien facilita piensa en la duración de la reunión, no en minutos por persona | Configurar en un paso | Ya existen presentes y presupuesto; es una división | Pendiente |
+| 4 | **Aviso de último minuto** (ámbar al 20% restante) | Hoy la única señal es el rojo, cuando ya se pasó | Que quien habla cierre solo | Respeta "sin sonido" y "no castigar": avisa antes, no después | Hecho (tramos, diseño #11) |
+| 5 | **Pantalla completa** de la tarjeta | Flotar solo existe en Chrome y Edge de escritorio | Proyectar o compartir pantalla en Safari, Firefox y móvil | La Fullscreen API está en casi todos; reutiliza la misma tarjeta | Pendiente |
+| 6 | **Resumen al terminar el día** | Terminar salta al ranking, sin cierre | Ver duración total y quién se pasó; compartirlo | Cierra el ciclo diario; el ranking es acumulado, no del día | Pendiente |
+| 7 | **Orden "rotación justa"**: quien abrió ayer, cierra hoy | El sorteo puede repetir a la misma persona primera | Equidad sin gestión manual | Coherente con el valor del producto. Hay que verificar si los días guardados conservan el orden | Pendiente |
+| 8 | **Lista de ejemplo** en el primer uso | Navegador nuevo: caja vacía y un botón que no hace nada útil | Llegar al primer reloj en un clic | El valor se entiende viendo el reloj, no leyendo | Pendiente |
+| 9 | **Compartir lista por enlace** (nombres en el `#` de la URL) | Pasar la lista exige exportar e importar un JSON | Segundo facilitador, otro dispositivo | Sin backend; el `#` no viaja al servidor. Avisar que el enlace lleva los nombres | Pendiente |
 
 No haría: cuentas, sincronización ni sonido. Rompen "sin backend" y decisiones ya tomadas en `DESIGN.md`.
 
-Orden sugerido: 1 (mover el orden sorteado, opción A elegida), 2 y 4 (baratos y sobre el uso en vivo), después 3 y 5.
+Orden sugerido para lo pendiente: 2 (Deshacer) y 5 (Pantalla completa), baratos y sobre el uso en vivo; después 3 y 8.
 
 ## 3. Mover el orden sorteado antes de empezar
 
@@ -60,7 +62,7 @@ Hoy la única salida es pasar a "Como la lista", reordenar a mano y perder el so
 | B · Fijar antes del sorteo | Cada persona puede marcarse "Primero" o "Al final"; el sorteo mezcla al resto | Expresa la intención ("se va temprano") y sobrevive a volver a sortear | Concepto nuevo; no sirve para orden fino |
 | C · "Que siga" durante el día | En la fila de alguien que espera, una acción lo pone como próximo | Cubre lo que pasa a mitad de la reunión | No resuelve el arranque |
 
-**Decisión: A.** B y C quedan como no elegidas. C se puede retomar si aparece el caso "se tiene que ir ya" con el día empezado; B si la misma persona siempre se va temprano.
+**Decisión: A. Hecho:** `ListTurns.draft`, `drawDraft`, `moveDraft`, `draftOrder` y `clearDraft` en `src/lib/turns.ts`, con tests. B y C quedan como no elegidas. C se puede retomar si aparece el caso "se tiene que ir ya" con el día empezado; B si la misma persona siempre se va temprano.
 
 **Desktop** (mock, sección A): la fila sorteada va en la columna derecha, con Tiempo y Orden arriba; los badges de la izquierda siguen en el orden de la lista. Todo el bloque de la derecha (selectores, fila, ayuda y botones) toma el tope de 32 rem de la fila. Hoy el selector de orden y "Empezar" ocupan 624 px y la fila 512 px.
 
