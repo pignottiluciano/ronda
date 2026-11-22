@@ -9,6 +9,7 @@ export const ICONS = {
   pencil: stroke('<path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />'),
   trash: stroke('<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />'),
   away: stroke('<circle cx="12" cy="12" r="8" /><path d="M6.3 6.3l11.4 11.4" />'),
+  float: stroke('<rect x="3" y="5" width="18" height="14" rx="2" /><rect x="12" y="11" width="7" height="6" rx="1" />'),
   x: stroke('<path d="M7 7l10 10M17 7 7 17" />', '2'),
   up: stroke('<path d="m6 15 6-6 6 6" />', '2'),
   down: stroke('<path d="m6 9 6 6 6-6" />', '2'),

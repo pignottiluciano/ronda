@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ronda · Tarjeta compacta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+/* Page chrome: fixed neutral, same as the other mocks in docs/. */
+* { box-sizing: border-box; margin: 0; }
+body { background: #111; color: #eee; font-family: "Figtree", sans-serif; line-height: 1.5; padding: 0 16px 80px; }
+.wrap { max-width: 1260px; margin: 0 auto; }
+.bar-top { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; padding: 16px 0; background: #111; border-bottom: 1px solid #333; }
+@media (max-width: 700px) { .bar-top { position: static; } }
+h1 { font-family: "Fraunces", serif; font-weight: 500; font-size: 1.75rem; letter-spacing: -0.02em; }
+.picks { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; }
+.pick { display: flex; gap: 4px; border: 0; padding: 0; align-items: center; }
+.pick legend { float: left; margin-right: 6px; font-size: 0.75rem; color: #999; text-transform: uppercase; letter-spacing: 0.06em; }
+.pick label { position: relative; }
+.pick input { position: absolute; opacity: 0; inset: 0; }
+.pick span { display: block; padding: 6px 12px; border: 1px solid #444; border-radius: 8px; font-size: 0.875rem; cursor: pointer; }
+.pick input:checked + span { background: #eee; color: #111; border-color: #eee; font-weight: 600; }
+.pick input:focus-visible + span { outline: 2px solid #8cf; outline-offset: 2px; }
+.intro { margin-top: 24px; color: #bbb; max-width: 85ch; display: grid; gap: 8px; }
+.intro b { color: #fff; }
+.board { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; margin-top: 32px; }
+.col { display: grid; gap: 10px; width: min(500px, 100%); }
+.col > h2 { font-family: "Fraunces", serif; font-weight: 600; font-size: 1.35rem; color: #fff; letter-spacing: -0.02em; }
+.col > h2 small { font: 600 0.75rem "Figtree", sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: #999; margin-right: 8px; }
+.rec { display: inline-block; margin-left: 8px; padding: 2px 10px; border-radius: 999px; background: #eee; color: #111; font: 700 0.75rem "Figtree", sans-serif; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; }
+.rec.off { background: transparent; color: #999; border: 1px solid #555; }
+.why { color: #bbb; font-size: 0.9375rem; }
+.size { font-size: 0.8125rem; color: #999; font-variant-numeric: tabular-nums; }
+.notes { display: grid; gap: 4px; padding-left: 1.1em; color: #ccc; font-size: 0.875rem; }
+.section { margin-top: 56px; padding-top: 24px; border-top: 1px solid #333; }
+.section > h2 { font-family: "Fraunces", serif; font-weight: 600; font-size: 1.5rem; color: #fff; }
+
+/* App frame with Ronda's real tokens. */
+.app {
+  --bg: light-dark(oklch(0.975 0.008 70), oklch(0.18 0.015 255));
+  --surface: light-dark(oklch(0.995 0.004 70), oklch(0.25 0.018 255));
+  --ink: light-dark(oklch(0.24 0.015 40), oklch(0.93 0.008 250));
+  --muted: light-dark(oklch(0.5 0.02 45), oklch(0.77 0.015 250));
+  --line: light-dark(oklch(0.89 0.012 60), oklch(0.42 0.02 255));
+  --accent: light-dark(oklch(0.55 0.16 33), oklch(0.75 0.14 38));
+  --on-accent: light-dark(oklch(0.99 0.005 60), oklch(0.2 0.02 40));
+  --danger: light-dark(oklch(0.45 0.18 27), oklch(0.7 0.18 25));
+  --go: light-dark(oklch(0.5 0.13 150), oklch(0.8 0.15 160));
+  --hold-ink: light-dark(oklch(0.48 0.1 70), oklch(0.86 0.14 88));
+  --control: light-dark(oklch(0.62 0.02 50), oklch(0.62 0.02 255));
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px;
+  --t-xs: 0.833rem; --t-sm: 0.9375rem; --t-lg: 1.2rem; --t-xl: 1.44rem; --radius: 16px; --radius-sm: 10px; --tap: 44px;
+  color-scheme: dark;
+  border: 1px solid #333; border-radius: 16px; background: var(--bg); color: var(--ink); padding: 20px;
+}
+body:has(#t-light:checked) .app { color-scheme: light; }
+.app button { font: inherit; color: inherit; cursor: pointer; }
+.row { display: flex; align-items: center; gap: var(--s2); }
+.push { margin-left: auto; }
+.muted { color: var(--muted); }
+
+/* Card shared bits. --used goes 0..1 (and past 1 when over); the script sets it per tick, like the app does. */
+.now { --used: 0; --state: var(--go); display: grid; background: var(--surface); border: 1px solid var(--state); border-radius: var(--radius); }
+.now-label { font-size: var(--t-xs); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; color: var(--go); }
+.now-name { font-family: "Fraunces", serif; font-weight: 600; letter-spacing: -0.02em; }
+.clock { font-weight: 700; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+/* Clock color modes. Neutral: ink, red only when over (today). Same as the bar: follows --fill all the time.
+   Only at the end: ink most of the turn, amber in the last 20%, red when over. All of them pass 3:1 as large text on --surface. */
+.clock { transition: color 600ms ease-out; }
+.now.over .clock { color: var(--danger); }
+body:has(#c-bar:checked) .now .clock { color: var(--fill); }
+body:has(#c-end:checked) .now.late .clock { color: var(--hold-ink); }
+@media (prefers-reduced-motion: reduce) { .clock, .bar i { transition: none; } }
+.of { font-size: var(--t-sm); color: var(--muted); font-variant-numeric: tabular-nums; }
+.bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 100%; border-radius: 4px; transform-origin: left; transform: scaleX(calc(1 - min(var(--used), 1))); background: var(--fill); transition: transform 250ms linear, background-color 600ms ease-out; }
+.ctl { display: flex; gap: var(--s3); }
+.clock-btn { flex: none; width: 56px; min-height: var(--tap); display: grid; place-items: center; border: 1px solid var(--control); border-radius: var(--radius-sm); background: transparent; }
+.app .next { flex: 1; min-height: var(--tap); border: 1px solid var(--accent); border-radius: var(--radius-sm); background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.ghost { min-height: 36px; padding: 0 var(--s4); border: 1px solid var(--line); border-radius: var(--radius-sm); background: transparent; font-weight: 600; font-size: var(--t-sm); }
+.icon { width: var(--tap); height: var(--tap); display: grid; place-items: center; border: 1px solid var(--line); border-radius: var(--radius-sm); background: transparent; color: var(--muted); }
+.icon svg { width: 18px; height: 18px; }
+
+/* Bar color modes (picked at the top). Continuous: green mixes into red as the time goes. Steps: green, amber in the last 20%, red when over. */
+body:has(#b-cont:checked) .now { --fill: color-mix(in oklch, var(--danger) calc(min(var(--used), 1) * 100%), var(--go)); }
+body:has(#b-steps:checked) .now { --fill: var(--go); }
+body:has(#b-steps:checked) .now.late { --fill: var(--hold-ink); }
+body:has(#b-steps:checked) .now.over, body:has(#b-cont:checked) .now.over { --fill: var(--danger); }
+body:has(#b-today:checked) .now { --fill: var(--go); }
+body:has(#b-today:checked) .now.over { --fill: var(--danger); }
+.now.over { --state: var(--danger); }
+
+/* Today (reference). */
+.today { gap: var(--s2); padding: var(--s4) var(--s5) var(--s5); }
+.today .now-name { font-size: var(--t-xl); }
+.today .clock { font-size: 4rem; }
+.today .ctl { margin-top: var(--s2); }
+
+/* A: name and clock on one line. */
+.a { grid-template-columns: minmax(0, 1fr) auto; column-gap: var(--s4); row-gap: var(--s2); padding: var(--s3) var(--s4) var(--s4); align-items: end; }
+.a .head { grid-column: 1 / -1; display: flex; align-items: center; gap: var(--s2); min-height: 36px; }
+.a .who { display: grid; gap: 2px; min-width: 0; }
+.a .now-name { font-size: var(--t-xl); line-height: 1.15; overflow-wrap: anywhere; }
+.a .clock { font-size: 3rem; text-align: right; }
+.a .bar, .a .ctl { grid-column: 1 / -1; }
+.a .ctl { margin-top: var(--s1); }
+
+/* B: one strip with the controls on the same line as the clock. */
+.b { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: 'clock who float' 'bar bar bar' 'ctl ctl ctl'; column-gap: var(--s4); row-gap: var(--s3); padding: var(--s3) var(--s4) var(--s4); align-items: center; }
+.b .clock { grid-area: clock; font-size: 3rem; }
+.b .who { grid-area: who; display: grid; min-width: 0; line-height: 1.2; }
+.b .now-name { font-size: var(--t-lg); overflow-wrap: anywhere; }
+.b .float { grid-area: float; }
+.b .bar { grid-area: bar; }
+.b .ctl { grid-area: ctl; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar-top">
+    <h1>Ronda · Tarjeta compacta</h1>
+    <div class="picks">
+      <fieldset class="pick"><legend>Barra</legend>
+        <label><input type="radio" name="bar" id="b-cont" checked><span>Verde → rojo</span></label>
+        <label><input type="radio" name="bar" id="b-steps"><span>Por tramos</span></label>
+        <label><input type="radio" name="bar" id="b-today"><span>Como hoy</span></label>
+      </fieldset>
+      <fieldset class="pick"><legend>Reloj</legend>
+        <label><input type="radio" name="clock" id="c-end" checked><span>Solo al final</span></label>
+        <label><input type="radio" name="clock" id="c-bar"><span>Igual que la barra</span></label>
+        <label><input type="radio" name="clock" id="c-none"><span>Neutro</span></label>
+      </fieldset>
+      <fieldset class="pick"><legend>Tema</legend>
+        <label><input type="radio" name="theme" id="t-dark" checked><span>Oscuro</span></label>
+        <label><input type="radio" name="theme" id="t-light"><span>Claro</span></label>
+      </fieldset>
+    </div>
+  </div>
+
+  <div class="intro">
+    <p><b>Hoy</b> la tarjeta de quien habla mide 301 px de alto en desktop. El nombre, el reloj y "de 10:00" van cada uno en su propia línea, y el reloj mide 4 rem.</p>
+    <p>A baja a unos 205 px y B a unos 163 px (medidos abajo de cada tarjeta), sin achicar el reloj por debajo de 3 rem, el mínimo que fija <code>DESIGN.md</code> para leerlo con el teléfono sobre la mesa. Los botones siguen midiendo 44 px.</p>
+    <p><b>Las tarjetas corren solas:</b> 10 minutos comprimidos en 12 segundos, y después 3 segundos pasado de tiempo, en bucle. Con los selectores de arriba cambiás el color de la barra y del reloj.</p>
+  </div>
+
+  <div class="board">
+    <div class="col">
+      <h2><small>Hoy</small>Como está <span class="rec off">Referencia</span></h2>
+      <div class="app">
+        <div class="now today">
+          <div class="row"><p class="now-label js-label">Habla ahora</p><button class="push ghost">Flotar</button></div>
+          <p class="now-name">Bruno</p>
+          <p class="clock js-clock">10:00</p>
+          <p class="of">de 10:00</p>
+          <div class="bar"><i></i></div>
+          <div class="ctl"><button class="clock-btn">❚❚</button><button class="next">Siguiente: Fede</button></div>
+        </div>
+      </div>
+      <p class="size js-size"></p>
+    </div>
+
+    <div class="col">
+      <h2><small>A</small>Nombre y reloj en una línea <span class="rec off">No elegida</span></h2>
+      <div class="app">
+        <div class="now a">
+          <div class="head"><p class="now-label js-label">Habla ahora</p><button class="push icon" aria-label="Flotar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="6" rx="1"/></svg></button></div>
+          <div class="who"><p class="now-name">Bruno</p><p class="of">de 10:00</p></div>
+          <p class="clock js-clock">10:00</p>
+          <div class="bar"><i></i></div>
+          <div class="ctl"><button class="clock-btn">❚❚</button><button class="next">Siguiente: Fede</button></div>
+        </div>
+      </div>
+      <p class="size js-size"></p>
+      <ul class="notes">
+        <li>Mismo orden de lectura que hoy: quién, cuánto le queda y la barra. Solo cambia la disposición.</li>
+        <li>"Flotar" pasa a ícono, con su nombre como etiqueta accesible y como <code>title</code>.</li>
+        <li>En el teléfono, igual; el reloj queda en 3 rem.</li>
+      </ul>
+    </div>
+
+    <div class="col">
+      <h2><small>B</small>Reloj primero, una franja <span class="rec">Elegida</span></h2>
+      <div class="app">
+        <div class="now b">
+          <p class="clock js-clock">10:00</p>
+          <div class="who"><p class="now-label js-label">Habla ahora</p><p class="now-name">Bruno</p><p class="of">de 10:00</p></div>
+          <button class="icon float" aria-label="Flotar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="6" rx="1"/></svg></button>
+          <div class="bar"><i></i></div>
+          <div class="ctl"><button class="clock-btn">❚❚</button><button class="next">Siguiente: Fede</button></div>
+        </div>
+      </div>
+      <p class="size js-size"></p>
+      <ul class="notes">
+        <li>El reloj va a la izquierda y es lo primero que se lee. Se parece a la ventana flotante.</li>
+        <li>Con nombres largos el texto pasa a dos líneas y la tarjeta crece un poco.</li>
+      </ul>
+    </div>
+  </div>
+
+  <section class="section">
+    <h2>La barra: de verde a rojo</h2>
+    <ul class="notes" style="margin-top:12px;max-width:85ch">
+      <li><b>Verde → rojo (lo que pediste).</b> El color se mezcla de a poco con el tiempo usado: verde al empezar, rojo al llegar a 10:00. En CSS es <code>color-mix()</code> sobre la misma variable que ya mueve la barra, sin JS nuevo, y el ancho se suaviza con una transición de 250 ms. Ojo: hoy el rojo significa "se pasó del tiempo", y con la mezcla la barra ya se ve casi roja al 90%. Lo que distingue al que se pasó es el reloj en rojo con <code>+m:ss</code>, que no cambia.</li>
+      <li><b>Por tramos.</b> Verde hasta el 80%, ámbar en el último 20% (el mismo ámbar de la pausa) y rojo solo al pasarse. Los colores siguen significando una sola cosa cada uno, y el ámbar funciona como aviso de "andá cerrando".</li>
+      <li>Las dos respetan "reducir movimiento": el color cambia igual, porque es dato, pero sin la transición.</li>
+    </ul>
+    <h2 style="margin-top:32px">El reloj también cambia de color</h2>
+    <ul class="notes" style="margin-top:12px;max-width:85ch">
+      <li><b>Solo al final (recomendado).</b> El reloj queda neutro casi todo el turno; pasa a ámbar en el último 20% y a rojo al pasarse. Un número grande de color todo el tiempo cansa y se lee peor de lejos; si el color aparece solo cuando importa, el cambio se nota.</li>
+      <li><b>Igual que la barra.</b> El reloj sigue el mismo color que la barra en todo momento. Es coherente, pero el verde ya dice "habla ahora" en el rótulo y en el borde: con el reloj también en verde, la tarjeta queda cargada.</li>
+      <li><b>Neutro.</b> Como hoy: solo se pone rojo al pasarse.</li>
+      <li>Los tres pasan 3:1 de contraste como texto grande sobre la tarjeta, en claro y en oscuro: usan los mismos tonos que ya se usan como texto (<code>--go</code>, <code>--hold-ink</code>, <code>--danger</code>). El color acompaña al número, nunca lo reemplaza.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+// Fake clock: a 10:00 budget compressed into 12 s, then 3 s over, on a loop.
+const BUDGET = 600, RUN = 12000, OVER = 3000;
+const cards = [...document.querySelectorAll('.now')];
+const pad = (n) => String(n).padStart(2, '0');
+const fmt = (s) => `${pad(Math.floor(s / 60))}:${pad(Math.floor(s % 60))}`;
+const frozen = Number(new URLSearchParams(location.search).get('t')); // ?t=0.7 freezes at 70% used (for the PNG)
+function tick() {
+  const t = frozen ? frozen * RUN : Date.now() % (RUN + OVER);
+  const spoken = (t / RUN) * BUDGET; // seconds used
+  const used = spoken / BUDGET;
+  const over = spoken > BUDGET;
+  const text = over ? `+${fmt(spoken - BUDGET)}` : fmt(Math.ceil(BUDGET - spoken));
+  for (const card of cards) {
+    card.style.setProperty('--used', used.toFixed(4));
+    card.classList.toggle('over', over);
+    card.classList.toggle('late', !over && used >= 0.8);
+    card.querySelector('.js-clock').textContent = text;
+  }
+}
+setInterval(tick, 250);
+tick();
+// Measured height of each card, so the comparison is real numbers.
+for (const card of cards) card.closest('.col').querySelector('.js-size').textContent = `Tarjeta: ${Math.round(card.getBoundingClientRect().height)} px de alto, ${Math.round(card.getBoundingClientRect().width)} px de ancho`;
+</script>
+</body>
+</html>

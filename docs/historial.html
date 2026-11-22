@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ronda · Historial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+/* Page chrome: fixed neutral, same as the other mocks in docs/. */
+* { box-sizing: border-box; margin: 0; }
+body { background: #111; color: #eee; font-family: "Figtree", sans-serif; line-height: 1.5; padding: 0 16px 80px; }
+.wrap { max-width: 1260px; margin: 0 auto; }
+.bar-top { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; padding: 16px 0; background: #111; border-bottom: 1px solid #333; }
+@media (max-width: 700px) { .bar-top { position: static; } }
+h1 { font-family: "Fraunces", serif; font-weight: 500; font-size: 1.75rem; letter-spacing: -0.02em; }
+.pick { display: flex; gap: 4px; border: 0; padding: 0; }
+.pick label { position: relative; }
+.pick input { position: absolute; opacity: 0; inset: 0; }
+.pick span { display: block; padding: 6px 12px; border: 1px solid #444; border-radius: 8px; font-size: 0.875rem; cursor: pointer; }
+.pick input:checked + span { background: #eee; color: #111; border-color: #eee; font-weight: 600; }
+.intro { margin-top: 24px; color: #bbb; max-width: 80ch; display: grid; gap: 8px; }
+.intro b { color: #fff; }
+.board { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; margin-top: 32px; }
+.col { display: grid; gap: 10px; width: min(560px, 100%); }
+.col > h2 { font-family: "Fraunces", serif; font-weight: 600; font-size: 1.4rem; color: #fff; letter-spacing: -0.02em; }
+.col > h2 small { font: 600 0.75rem "Figtree", sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: #999; margin-right: 8px; }
+.note { color: #aaa; font-size: 0.875rem; max-width: 60ch; }
+.note b { color: #eee; }
+
+/* App tokens: copied from src/styles/global.css. */
+.app {
+  color-scheme: dark;
+  --s1: 0.25rem; --s2: 0.5rem; --s3: 0.75rem; --s4: 1rem; --s5: 1.5rem;
+  --t-xs: 0.833rem; --t-sm: 0.9375rem; --t-md: 1rem;
+  --bg: light-dark(oklch(0.975 0.008 70), oklch(0.18 0.015 255));
+  --surface: light-dark(oklch(0.995 0.004 70), oklch(0.25 0.018 255));
+  --ink: light-dark(oklch(0.24 0.015 40), oklch(0.93 0.008 250));
+  --muted: light-dark(oklch(0.5 0.02 45), oklch(0.77 0.015 250));
+  --line: light-dark(oklch(0.89 0.012 60), oklch(0.42 0.02 255));
+  --accent-ink: light-dark(oklch(0.53 0.16 33), oklch(0.77 0.13 38));
+  --danger: light-dark(oklch(0.45 0.18 27), oklch(0.7 0.18 25));
+  --hold-ink: light-dark(oklch(0.48 0.1 70), oklch(0.86 0.14 88));
+  --radius: 1rem; --radius-sm: 0.625rem; --tap: 2.75rem;
+  background: var(--bg); color: var(--ink); border: 1px solid #333; border-radius: 24px; padding: 20px;
+}
+body.light .app { color-scheme: light; }
+.app h3 { font-size: var(--t-md); font-weight: 700; }
+.app svg { width: 1.125rem; height: 1.125rem; }
+.icon-btn { display: inline-grid; place-items: center; width: var(--tap); height: var(--tap); border: 1px solid var(--line); border-radius: var(--radius-sm); background: transparent; color: var(--muted); flex: none; }
+
+/* Hoy */
+.now-list { list-style: none; padding: 0; margin-top: var(--s2); display: grid; }
+.now-list li { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: var(--tap); border-bottom: 1px solid var(--line); font-size: var(--t-sm); }
+
+/* A · Fila con detalle, papelera suelta */
+.a-list { list-style: none; padding: 0; margin-top: var(--s2); display: grid; }
+.a-list li { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) 0; border-bottom: 1px solid var(--line); }
+.a-list li:first-child { border-top: 1px solid var(--line); }
+.a-main { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.a-date { font-size: var(--t-sm); font-weight: 600; }
+.a-date span { color: var(--muted); font-weight: 400; }
+.a-meta { font-size: var(--t-xs); color: var(--muted); }
+.a-meta .over { color: var(--hold-ink); }
+.ghost { display: inline-grid; place-items: center; width: var(--tap); height: var(--tap); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--muted); flex: none; }
+.ghost.hover { background: color-mix(in oklch, var(--danger) 14%, transparent); color: var(--danger); }
+
+/* B · Borrar solo en modo edición */
+.b-head { display: flex; align-items: center; justify-content: space-between; }
+.link-btn { border: 0; background: none; color: var(--accent-ink); font: 600 var(--t-sm) "Figtree", sans-serif; min-height: var(--tap); padding: 0 var(--s2); }
+.b-list { list-style: none; padding: 0; margin-top: var(--s1); display: grid; gap: var(--s2); }
+.b-list li { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
+.b-list .a-main { gap: 4px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: var(--t-xs); color: var(--muted); padding: 1px 8px; border: 1px solid var(--line); border-radius: 999px; }
+.chip.over { color: var(--hold-ink); border-color: color-mix(in oklch, var(--hold-ink) 50%, transparent); }
+.del { display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 0 var(--s3); border: 1px solid color-mix(in oklch, var(--danger) 55%, transparent); border-radius: var(--radius-sm); background: transparent; color: var(--danger); font: 600 var(--t-xs) "Figtree", sans-serif; flex: none; }
+.state { font: 600 0.7rem "Figtree", sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: #888; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar-top">
+    <h1>Ronda · Historial</h1>
+    <fieldset class="pick">
+      <label><input type="radio" name="theme" checked onchange="document.body.classList.remove('light')"><span>Oscuro</span></label>
+      <label><input type="radio" name="theme" onchange="document.body.classList.add('light')"><span>Claro</span></label>
+    </fieldset>
+  </div>
+
+  <div class="intro">
+    <p><b>Problema.</b> Cada fila mide lo mismo que su botón (44 px), así que las papeleras con borde quedan apiladas una contra otra y pesan más que la fecha. Dos días del mismo domingo se leen iguales: falta la hora. Y la fila no dice nada del día más allá de los presentes.</p>
+    <p>Los datos nuevos ya están guardados en cada día (<code>endedAt</code>, <code>spokenMs</code>, <code>budgetMs</code>): hora, duración y cuántos se pasaron. No hace falta guardar nada más.</p>
+  </div>
+
+  <div class="board">
+    <div class="col">
+      <h2><small>Hoy</small>Como está</h2>
+      <div class="app">
+        <h3>Historial</h3>
+        <ul class="now-list">
+          <li><span>dom, 22 nov · 6 de 6 presentes</span><span class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></span></li>
+          <li><span>dom, 22 nov · 5 de 6 presentes</span><span class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></span></li>
+          <li><span>vie, 20 nov · 6 de 6 presentes</span><span class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="board">
+    <div class="col">
+      <h2><small>Opción A</small>Fila con detalle</h2>
+      <div class="app">
+        <h3>Historial</h3>
+        <ul class="a-list">
+          <li><div class="a-main"><span class="a-date">dom, 22 nov <span>· 11:40</span></span><span class="a-meta">6 de 6 · 28 min · <span class="over">2 se pasaron</span></span></div>
+            <button class="ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></li>
+          <li><div class="a-main"><span class="a-date">dom, 22 nov <span>· 10:05</span></span><span class="a-meta">5 de 6 · 22 min · nadie se pasó</span></div>
+            <button class="ghost hover"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></li>
+          <li><div class="a-main"><span class="a-date">vie, 20 nov <span>· 09:30</span></span><span class="a-meta">6 de 6 · 31 min · <span class="over">1 se pasó</span></span></div>
+            <button class="ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button></li>
+        </ul>
+        <p class="state">Segunda fila: puntero encima de la papelera</p>
+      </div>
+      <p class="note"><b>Cambio chico.</b> Fila de dos líneas (~64 px), así entre papelera y papelera queda aire. La papelera pierde el borde: es gris y se pone roja al pasar o enfocar; el área de toque sigue en 44 px. La hora aparece solo en la fila de fecha, en gris. Borrar sigue pidiendo confirmación como hoy.</p>
+    </div>
+
+    <div class="col">
+      <h2><small>Opción B</small>Borrar en modo edición</h2>
+      <div class="app">
+        <div class="b-head"><h3>Historial</h3><button class="link-btn">Editar</button></div>
+        <ul class="b-list">
+          <li><div class="a-main"><span class="a-date">dom, 22 nov <span>· 11:40</span></span><div class="chips"><span class="chip">6 de 6</span><span class="chip">28 min</span><span class="chip over">2 se pasaron</span></div></div></li>
+          <li><div class="a-main"><span class="a-date">dom, 22 nov <span>· 10:05</span></span><div class="chips"><span class="chip">5 de 6</span><span class="chip">22 min</span></div></div></li>
+          <li><div class="a-main"><span class="a-date">vie, 20 nov <span>· 09:30</span></span><div class="chips"><span class="chip">6 de 6</span><span class="chip">31 min</span><span class="chip over">1 se pasó</span></div></div></li>
+        </ul>
+        <p class="state">Tocando "Editar"</p>
+        <div class="b-head" style="margin-top:8px"><h3>Historial</h3><button class="link-btn">Listo</button></div>
+        <ul class="b-list">
+          <li><div class="a-main"><span class="a-date">dom, 22 nov <span>· 11:40</span></span><div class="chips"><span class="chip">6 de 6</span><span class="chip">28 min</span><span class="chip over">2 se pasaron</span></div></div><button class="del">Borrar</button></li>
+          <li><div class="a-main"><span class="a-date">dom, 22 nov <span>· 10:05</span></span><div class="chips"><span class="chip">5 de 6</span><span class="chip">22 min</span></div></div><button class="del">Borrar</button></li>
+        </ul>
+      </div>
+      <p class="note"><b>Más ordenado, un toque más.</b> Cada día es una tarjeta separada por 8 px, sin botones a la vista. "Editar" muestra "Borrar" en rojo con texto; "Listo" lo oculta. Mismo patrón que "Editar" de participantes con el día en curso. Borrar un día pasa a ser algo deliberado.</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

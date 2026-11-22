@@ -1,9 +1,8 @@
 // Ranking UI: podium, table, history and settings for one list. The maths lives in src/lib/turns.ts;
 // turns.ts owns the stored data and hands it over through `RankingHost`.
 import { messages } from '../i18n/messages';
-import { ICONS } from '../lib/icons';
 import type { SavedList } from '../lib/lists';
-import { MAX_MIN_DAYS, ranking, removeSession, resetSessions, setMinDays, type ListTurns, type Ranking, type Session } from '../lib/turns';
+import { MAX_MIN_DAYS, PODIUM_MIN_DAYS, rankPercents, ranking, removeSession, resetSessions, setMinDays, type ListTurns, type Ranking, type Session } from '../lib/turns';
 import { confirmAction } from './confirm';
 import { canCopyImage, canShareImageFile, copyImage, downloadBlob, shareImage } from './share';
 import { MAX_IMAGE_ROWS, renderRankingImage } from './share-image';
@@ -19,13 +18,14 @@ const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as 
 const lang = document.documentElement.lang === 'en' ? 'en' : 'es';
 const t = messages[lang];
 const dayFormat = new Intl.DateTimeFormat(lang, { weekday: 'short', day: 'numeric', month: 'short' });
-const percentOf = (score: number) => Math.round(score * 100);
+const timeFormat = new Intl.DateTimeFormat(lang, { hour: '2-digit', minute: '2-digit' });
 
 export function initRanking(host: RankingHost) {
   const empty = $('rank-empty');
   const body = $('rank-body');
   const meta = $('rank-meta');
   const podium = $('podium');
+  const early = $('rank-early');
   const none = $('rank-none');
   const table = $('rank-scroll'); // the scrollable wrapper of the table: hiding it hides both
   const rows = $('rank-rows');
@@ -33,6 +33,8 @@ export function initRanking(host: RankingHost) {
   const fewHint = $('rank-few-hint');
   const fewList = $('rank-few-list');
   const history = $('history');
+  const historyBox = $('rank-history');
+  const historyEdit = $<HTMLButtonElement>('history-edit');
   const minDays = $<HTMLInputElement>('min-days');
   const shareButton = $<HTMLButtonElement>('rank-share');
   const copyButton = $<HTMLButtonElement>('rank-copy');
@@ -50,33 +52,33 @@ export function initRanking(host: RankingHost) {
     return node;
   };
 
-  function renderPodium(top: Ranking['rows']) {
+  function renderPodium(top: Ranking['rows'], percent: Map<string, string>) {
     // Lowest in the middle, second on the left, third on the right.
     const slots = [top[1], top[0], top[2]].filter((row): row is Ranking['rows'][number] => row !== undefined);
     podium.replaceChildren(
       ...slots.map((row) => {
         const item = el('div', 'podium-item');
         item.dataset.pos = String(row.position);
-        item.append(el('span', 'podium-av', ([...row.name][0] ?? '').toLocaleUpperCase()), el('span', 'podium-name', row.name), el('span', 'podium-step', `${percentOf(row.score)}%`));
+        item.append(el('span', 'podium-av', ([...row.name][0] ?? '').toLocaleUpperCase()), el('span', 'podium-name', row.name), el('span', 'podium-step', percent.get(row.personId) ?? ''));
         return item;
       }),
     );
     podium.hidden = slots.length === 0;
   }
 
-  function renderRows(list: Ranking['rows']) {
+  function renderRows(list: Ranking['rows'], percent: Map<string, string>, podiumShown: boolean) {
     rows.replaceChildren(
       ...list.map((row) => {
         const tr = el('tr');
-        tr.dataset.first = String(row.position === 1);
+        tr.dataset.first = String(podiumShown && row.position === 1);
         const avg = el('td');
-        avg.title = t.rankAvgLabel(percentOf(row.score));
+        avg.title = t.rankAvgLabel(percent.get(row.personId) ?? '');
         const cell = el('div', 'rank-avg');
         const bar = el('span', 'bar');
         const fill = el('i');
         fill.style.transform = `scaleX(${Math.min(1, row.score)})`;
         bar.append(fill);
-        cell.append(bar, el('span', undefined, `${percentOf(row.score)}%`));
+        cell.append(bar, el('span', undefined, percent.get(row.personId) ?? ''));
         avg.append(cell);
         tr.append(el('td', undefined, String(row.position)), el('td', undefined, row.name), avg, el('td', undefined, String(row.days)));
         return tr;
@@ -86,23 +88,40 @@ export function initRanking(host: RankingHost) {
 
   const dateOf = (session: Session) => dayFormat.format(new Date(session.endedAt));
 
+  // Deleting a day is rare and cannot be undone, so the buttons only show while editing.
+  function setHistoryEditing(on: boolean) {
+    historyBox.dataset.editing = String(on);
+    historyEdit.setAttribute('aria-pressed', String(on));
+    historyEdit.textContent = on ? t.peopleEditDone : t.peopleEdit;
+  }
+
   function renderHistory(turns: ListTurns) {
     history.replaceChildren(
       ...[...turns.sessions].reverse().map((session) => {
         const item = el('li');
-        const present = session.entries.filter((e) => !e.absent).length;
-        const remove = el('button', 'icon-btn');
+        const date = dateOf(session);
+        const time = timeFormat.format(new Date(session.endedAt));
+        const present = session.entries.filter((e) => !e.absent);
+        const over = present.filter((e) => e.spokenMs > session.budgetMs).length;
+        const minutes = Math.max(1, Math.round(present.reduce((sum, e) => sum + e.spokenMs, 0) / 60_000));
+        const main = el('div', 'history-main');
+        const when = el('span', 'history-date', date);
+        when.append(el('span', 'history-time', ` · ${time}`));
+        const facts = el('div', 'history-facts');
+        facts.append(el('span', 'fact', t.rankDayPresent(present.length, session.entries.length)), el('span', 'fact', t.rankDayMinutes(minutes)));
+        if (over > 0) facts.append(el('span', 'fact fact-over', t.rankDayOver(over)));
+        main.append(when, facts);
+        const remove = el('button', 'btn btn-small history-delete', t.rankDayDeleteConfirm);
         remove.type = 'button';
         remove.dataset.id = session.id;
-        remove.setAttribute('aria-label', t.rankDeleteDay(dateOf(session)));
-        remove.innerHTML = ICONS.trash;
-        item.append(el('span', undefined, t.rankDay(dateOf(session), present, session.entries.length)), remove);
+        remove.setAttribute('aria-label', t.rankDeleteDay(`${date} · ${time}`)); // two days can share a date
+        item.append(main, remove);
         return item;
       }),
     );
   }
 
-  function prepareImage(list: SavedList, rk: Ranking, turns: ListTurns) {
+  function prepareImage(list: SavedList, rk: Ranking, turns: ListTurns, percent: Map<string, string>) {
     if (rk.rows.length === 0) return null;
     const shown = rk.rows.slice(0, MAX_IMAGE_ROWS);
     const last = turns.sessions.at(-1);
@@ -110,7 +129,7 @@ export function initRanking(host: RankingHost) {
       title: list.name,
       subtitle: t.imageSubtitle,
       dateLabel: last ? dayFormat.format(new Date(last.endedAt)) : '',
-      rows: shown.map((row) => ({ position: row.position, name: row.name, percent: `${percentOf(row.score)}%`, days: t.imageDays(row.days) })),
+      rows: shown.map((row) => ({ position: row.position, name: row.name, percent: percent.get(row.personId) ?? '', days: t.imageDays(row.days) })),
       more: rk.rows.length > shown.length ? t.imageMore(rk.rows.length - shown.length) : null,
       footer: location.host,
     });
@@ -128,19 +147,27 @@ export function initRanking(host: RankingHost) {
     for (const button of [shareButton, copyButton, downloadButton]) button.hidden = true;
     minDays.value = String(turns.minDays);
     prepared = null;
-    if (!has) return;
+    if (!has) {
+      setHistoryEditing(false);
+      return;
+    }
 
     const rk = ranking(turns, list.people);
     meta.textContent = t.rankMeta(turns.sessions.length, turns.minDays);
     none.hidden = rk.rows.length > 0;
     table.hidden = rk.rows.length === 0;
-    renderPodium(rk.rows.slice(0, 3));
-    renderRows(rk.rows);
+    const percents = rankPercents(rk.rows, lang);
+    const percent = new Map(rk.rows.map((row, i) => [row.personId, percents[i]!]));
+    const podiumShown = turns.sessions.length >= PODIUM_MIN_DAYS;
+    early.hidden = podiumShown || rk.rows.length === 0;
+    early.textContent = t.rankEarly(turns.sessions.length);
+    renderPodium(podiumShown ? rk.rows.slice(0, 3) : [], percent);
+    renderRows(rk.rows, percent, podiumShown);
     few.hidden = rk.fewData.length === 0;
     fewHint.textContent = t.rankFewHint(turns.minDays);
     fewList.replaceChildren(...rk.fewData.map((row) => el('li', undefined, `${row.name} · ${t.imageDays(row.days)}`)));
     renderHistory(turns);
-    prepared = prepareImage(list, rk, turns);
+    prepared = prepareImage(list, rk, turns, percent);
     shareButton.hidden = prepared === null || !shareable;
     copyButton.hidden = prepared === null || !copyable;
     downloadButton.hidden = prepared === null;
@@ -173,6 +200,9 @@ export function initRanking(host: RankingHost) {
 
   minDays.max = String(MAX_MIN_DAYS);
   minDays.addEventListener('change', () => host.update(setMinDays(host.turns(), Number(minDays.value)))); // invalid: the field goes back
+
+  setHistoryEditing(false);
+  historyEdit.addEventListener('click', () => setHistoryEditing(historyEdit.getAttribute('aria-pressed') !== 'true'));
 
   history.addEventListener('click', async (event) => {
     const button = (event.target as Element).closest<HTMLElement>('button[data-id]');

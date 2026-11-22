@@ -19,7 +19,7 @@ export type BackupError = 'json' | 'format' | 'version' | 'size';
 
 export type ParsedBackup = { ok: true; backup: Backup; error?: undefined } | { ok: false; error: BackupError; backup?: undefined };
 
-const withoutVolatile = (turns: ListTurns): ListTurns => ({ ...turns, current: null, absent: [] });
+const withoutVolatile = (turns: ListTurns): ListTurns => ({ ...turns, current: null, draft: null, absent: [] });
 
 export function createBackup(store: ListStore, turns: TurnsStore, now: number): Backup {
   const ids = store.lists.map((list) => list.id);

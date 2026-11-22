@@ -3,10 +3,11 @@
 import { messages } from '../i18n/messages';
 import { formatClock, formatRemaining } from '../lib/clock';
 import { shuffle } from '../lib/draw';
+import { ICONS } from '../lib/icons';
 import type { SavedList } from '../lib/lists';
 import {
-  BUDGET_PRESETS, MAX_BUDGET_MINUTES, cancelSession, emptyTurns, finish, handOver, isValidBudgetMinutes, nextId, pause, queue,
-  setAbsent, setBudgetMinutes, setOrder, speak, spokenMs, startSession, syncPeople, type ListTurns, type TurnsStore,
+  BUDGET_PRESETS, MAX_BUDGET_MINUTES, cancelSession, draftOrder, drawDraft, emptyTurns, finish, handOver, isValidBudgetMinutes, moveDraft,
+  nextId, pause, queue, setAbsent, setBudgetMinutes, setOrder, speak, spokenMs, startSession, syncPeople, type ListTurns, type TurnsStore,
 } from '../lib/turns';
 import { confirmAction } from './confirm';
 import { createFloat, floatSupported } from './float';
@@ -26,6 +27,9 @@ export interface TurnsHost {
 }
 
 type Mode = 'draw' | 'turns' | 'ranking';
+
+/** Share of the budget after which the clock and the bar turn amber: the last 20% is the time to wrap up. */
+const LATE_SHARE = 0.8;
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const t = messages[document.documentElement.lang === 'en' ? 'en' : 'es'];
@@ -47,10 +51,12 @@ export function initTurns(host: TurnsHost) {
   const custom = $<HTMLInputElement>('budget-custom');
   const days = $('turns-days');
   const startButton = $<HTMLButtonElement>('turns-start');
+  const redrawButton = $<HTMLButtonElement>('turns-redraw');
   const orderField = $<HTMLFieldSetElement>('turn-order');
   const orderHint = $('order-hint');
   const queueBox = $('queue');
   const queueCount = $('queue-count');
+  const queueTitle = $('queue-title');
   const now = $('now');
   const nowLabel = $('now-label');
   const nowName = $('now-name');
@@ -87,11 +93,24 @@ export function initTurns(host: TurnsHost) {
     announce.textContent = message;
   }
 
+  // A drawn order waiting to be reviewed (orden "Sorteado", before the day starts). `touched`: someone moved it, so
+  // drawing again or switching to the list order asks first. It lives in memory; after a reload the draft stays, the question does not.
+  let touched = false;
+  const reviewing = (current: ListTurns = turns()) => current.order === 'draw' && !current.current && draftOrder(current, ids()) !== null;
+  function linePeople() {
+    const people = host.list().people;
+    const line = reviewing() ? draftOrder(turns(), ids()) : null;
+    return line ? line.map((id) => people.find((p) => p.id === id)!) : people;
+  }
+
   const queueEditor = createQueueEditor({
     list: $<HTMLOListElement>('queue-list'),
     onMove(id, toIndex) {
-      host.movePerson(id, toIndex); // app.ts saves the list and refreshes us
-      const people = host.list().people;
+      if (reviewing()) {
+        touched = true;
+        update(moveDraft(turns(), ids(), id, toIndex)); // only today's order changes
+      } else host.movePerson(id, toIndex); // the list order is the order: app.ts saves the list and refreshes us
+      const people = linePeople();
       const away = new Set(turns().absent);
       const present = people.filter((p) => !away.has(p.id));
       const position = away.has(id) ? people.findIndex((p) => p.id === id) + 1 : present.findIndex((p) => p.id === id) + 1;
@@ -124,13 +143,19 @@ export function initTurns(host: TurnsHost) {
     }
     custom.value = (BUDGET_PRESETS as readonly number[]).includes(minutes) ? '' : String(minutes);
     for (const radio of orderField.querySelectorAll<HTMLInputElement>('input')) radio.checked = radio.value === current.order;
-    orderHint.textContent = current.order === 'list' ? t.queueHint : t.turnsHintDraw;
-    queueBox.hidden = current.order !== 'list';
-    if (current.order === 'list') {
+    const review = reviewing(current);
+    orderHint.textContent = current.order === 'list' ? t.queueHint : review ? t.queueHintDraft : t.turnsHintDraw;
+    queueBox.hidden = current.order !== 'list' && !review;
+    queueTitle.textContent = review ? t.queueTitleDraft : t.queueTitle;
+    if (!queueBox.hidden) {
       const away = new Set(current.absent);
       queueCount.textContent = t.queuePresent(ids().filter((id) => !away.has(id)).length);
-      queueEditor.render(host.list().people, away);
-    }
+      const people = linePeople();
+      queueEditor.render(people, away);
+      const first = people.find((p) => !away.has(p.id));
+      startButton.textContent = review ? t.turnsBegin(first?.name ?? '') : t.turnsStart;
+    } else startButton.textContent = current.order === 'draw' ? t.turnsDraw : t.turnsStart;
+    redrawButton.hidden = !review;
     const saved = current.sessions.length;
     days.hidden = saved === 0;
     days.textContent = saved === 0 ? '' : t.turnsDays(saved);
@@ -156,18 +181,18 @@ export function initTurns(host: TurnsHost) {
     const ring = document.createElement('span');
     ring.className = 'ring';
     ring.setAttribute('aria-hidden', 'true');
-    const time = document.createElement('span');
-    time.className = 'ring-time';
-    ring.append(time);
     const label = document.createElement('span');
     label.className = 'tile-name';
     label.textContent = name;
     const state = document.createElement('span');
     state.className = 'tile-state';
-    main.append(ring, label, state);
-    const away = document.createElement('button');
+    const time = document.createElement('span');
+    time.className = 'tile-time';
+    main.append(ring, label, state, time);
+    const away = document.createElement('button'); // an icon; its label says what it does
     away.type = 'button';
     away.className = 'tile-away';
+    away.innerHTML = ICONS.away;
     li.append(main, away);
     return { li, main, time, state, ring, away };
   }
@@ -204,17 +229,19 @@ export function initTurns(host: TurnsHost) {
       const over = !away && ms > budget;
       const holding = active && !running && ms === 0; // has the floor, clock not started
       const state = away ? 'absent' : running ? 'speaking' : holding ? 'holding' : active ? 'paused' : ms > 0 ? 'done' : id === up ? 'next' : 'waiting';
-      const clock = over ? `+${formatClock(ms - budget)}` : formatClock(ms);
+      // One clock for everyone, like the card: time left, and for someone who already spoke, time used.
+      const left = !away && state !== 'done';
+      const clock = over ? `+${formatClock(ms - budget)}` : left ? formatRemaining(ms, budget) : formatClock(ms);
+      const share = over ? 100 : left ? 100 - (ms / budget) * 100 : (ms / budget) * 100; // the ring drains while there is time left
       tile.li.dataset.state = state;
       tile.li.dataset.over = String(over);
-      tile.ring.style.setProperty('--p', String(Math.min(100, (ms / budget) * 100)));
+      tile.ring.style.setProperty('--p', String(Math.max(0, Math.min(100, share))));
       tile.time.textContent = away ? '—' : clock;
-      tile.state.textContent = over ? t.stateOver : { absent: t.stateAbsent, speaking: t.stateSpeaking, holding: t.turnsUpNext, paused: t.statePaused, done: t.stateDone, next: t.stateNext, waiting: t.stateWaiting }[state];
+      tile.state.textContent = over ? t.stateOver : { absent: t.stateAbsent, speaking: t.stateSpeakingLeft, holding: t.turnsUpNext, paused: t.statePausedLeft, done: t.stateDoneUsed, next: t.stateNext, waiting: t.stateWaiting }[state];
       tile.main.disabled = away;
       tile.main.setAttribute('aria-label', t.tileGive(nameOf(id), clock));
       if (active) tile.main.setAttribute('aria-current', 'true');
       else tile.main.removeAttribute('aria-current');
-      tile.away.textContent = away ? t.backButton : t.awayButton;
       tile.away.setAttribute('aria-label', away ? t.awayBackToggle(nameOf(id)) : t.awayToggle(nameOf(id)));
     }
 
@@ -224,18 +251,20 @@ export function initTurns(host: TurnsHost) {
     const waiting = activeId !== null && session.activeSince === null && activeMs === 0; // has the floor, clock not started
     now.dataset.state = activeId === null ? 'idle' : session.activeSince !== null ? 'speaking' : waiting ? 'waiting' : 'paused';
     now.dataset.over = String(activeOver);
-    nowLabel.textContent = activeId === null ? '' : waiting ? t.turnsUpNext : t.turnsNow;
+    now.dataset.late = String(activeId !== null && !activeOver && activeMs >= budget * LATE_SHARE);
+    const paused = activeId !== null && session.activeSince === null && !waiting;
+    nowLabel.textContent = activeId === null ? '' : waiting ? t.turnsUpNext : paused ? t.statePaused : t.turnsNow;
     nowName.textContent = activeId === null ? t.turnsNobody : nameOf(activeId);
     nowClock.textContent = formatRemaining(activeMs, budget);
     nowOf.textContent = t.turnsOf(formatClock(budget));
-    barFill.style.transform = `scaleX(${Math.max(0, 1 - activeMs / budget)})`; // drains as the time goes
+    barFill.style.transform = `scaleX(${activeOver ? 1 : Math.max(0, 1 - activeMs / budget)})`; // drains as the time goes; full and red once over
     pauseButton.hidden = activeId === null;
     const act = session.activeSince !== null ? 'pause' : waiting ? 'go' : 'resume';
     const actLabel = { pause: t.turnsPause, go: t.turnsGo, resume: t.turnsResume }[act];
     pauseButton.dataset.act = act;
     pauseButton.setAttribute('aria-label', actLabel);
     pauseButton.title = actLabel;
-    nextButton.dataset.quiet = String(waiting); // the clock is the next press, so passing the floor steps back
+    nextButton.dataset.quiet = String(waiting || paused); // the clock is the next press, so passing the floor steps back
     const nextText = up === null ? t.turnsAllSpoke : activeId === null ? t.turnsBegin(nameOf(up)) : t.turnsNext(nameOf(up));
     nextLabel.textContent = nextText;
     nextButton.title = nextText; // a long name is cut to two lines on the button
@@ -294,6 +323,9 @@ export function initTurns(host: TurnsHost) {
     const session = current.current !== null;
     setup.hidden = session;
     live.hidden = !session;
+    // On a phone a day in progress folds the people box into one line, so the clock is on the first screen.
+    layout.dataset.live = String(session && mode === 'turns');
+    if (!session) setEditing(false);
     total.hidden = !session;
     if (mode === 'turns') renderBudget(current);
     if (!session) float.close();
@@ -302,10 +334,20 @@ export function initTurns(host: TurnsHost) {
       paint(Date.now());
     }
     floatButton.hidden = !floatSupported() || !session;
-    floatButton.textContent = float.isOpen() ? t.floatBack : t.floatOpen;
+    const floatLabel = float.isOpen() ? t.floatBack : t.floatOpen;
+    floatButton.setAttribute('aria-label', floatLabel);
+    floatButton.title = floatLabel;
     if (mode === 'ranking') rankingView.render();
     syncRuntime();
   }
+
+  const editPeople = $<HTMLButtonElement>('people-edit');
+  function setEditing(on: boolean) {
+    layout.toggleAttribute('data-editing', on);
+    editPeople.setAttribute('aria-expanded', String(on));
+    editPeople.textContent = on ? t.peopleEditDone : t.peopleEdit;
+  }
+  editPeople.addEventListener('click', () => setEditing(!layout.hasAttribute('data-editing')));
 
   // ---- Public ----
 
@@ -363,15 +405,32 @@ export function initTurns(host: TurnsHost) {
   });
   custom.max = String(MAX_BUDGET_MINUTES);
 
-  orderField.addEventListener('change', (event) => {
-    update(setOrder(turns(), (event.target as HTMLInputElement).value === 'list' ? 'list' : 'draw'));
+  orderField.addEventListener('change', async (event) => {
+    const order = (event.target as HTMLInputElement).value === 'list' ? 'list' : 'draw';
+    if (touched && reviewing() && order === 'list' && !(await confirmAction({ title: t.orderChangeTitle, body: t.orderChangeBody, confirm: t.orderChangeConfirm }))) return render(); // the radio goes back
+    touched = false;
+    update(setOrder(turns(), order));
   });
 
   startButton.addEventListener('click', () => {
     const present = ids().filter((id) => !turns().absent.includes(id));
     if (present.length === 0) return host.say(t.turnsNeedPeople);
-    // A drawn order is drawn again on every start; list order needs none (startSession keeps the list's).
-    update(startSession(turns(), ids(), Date.now(), turns().order === 'draw' ? shuffle(present) : []));
+    const line = turns().order === 'draw' ? draftOrder(turns(), ids()) : null;
+    if (turns().order === 'draw' && !line) {
+      // A drawn order is drawn first and reviewed; the next press starts the day with it. Everyone is in the draw: the absent keep a place.
+      touched = false;
+      say(t.queueDrawn);
+      return update(drawDraft(turns(), shuffle(ids())));
+    }
+    touched = false;
+    update(startSession(turns(), ids(), Date.now(), line ?? [])); // list order needs none (startSession keeps the list's)
+  });
+
+  redrawButton.addEventListener('click', async () => {
+    if (touched && !(await confirmAction({ title: t.redrawTitle, body: t.redrawBody, confirm: t.redrawConfirm }))) return;
+    touched = false;
+    say(t.queueDrawn);
+    update(drawDraft(turns(), shuffle(ids())));
   });
 
   tiles.addEventListener('click', (event) => {

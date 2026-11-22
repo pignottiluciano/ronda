@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ronda · Mejoras de diseño</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+/* Page chrome: fixed neutral, same as the other mocks in docs/. */
+* { box-sizing: border-box; margin: 0; }
+body { background: #111; color: #eee; font-family: "Figtree", sans-serif; line-height: 1.5; padding: 0 16px 80px; }
+.wrap { max-width: 1180px; margin: 0 auto; }
+.bar-top { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; padding: 16px 0; background: #111; border-bottom: 1px solid #333; }
+@media (max-width: 700px) { .bar-top { position: static; } }
+h1 { font-family: "Fraunces", serif; font-weight: 500; font-size: 1.75rem; letter-spacing: -0.02em; }
+.pick { display: flex; gap: 4px; border: 0; padding: 0; }
+.pick label { position: relative; }
+.pick input { position: absolute; opacity: 0; inset: 0; }
+.pick span { display: block; padding: 6px 12px; border: 1px solid #444; border-radius: 8px; font-size: 0.875rem; cursor: pointer; }
+.pick input:checked + span { background: #eee; color: #111; border-color: #eee; font-weight: 600; }
+.pick input:focus-visible + span { outline: 2px solid #8cf; outline-offset: 2px; }
+.intro { margin: 24px 0 0; color: #bbb; max-width: 70ch; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; padding: 0; list-style: none; }
+.toc a { display: block; padding: 4px 10px; border: 1px solid #444; border-radius: 999px; color: #ddd; font-size: 0.8125rem; text-decoration: none; }
+.toc a:hover { border-color: #999; }
+
+.item { margin-top: 56px; padding-top: 24px; border-top: 1px solid #333; scroll-margin-top: 80px; }
+.item > h2 { font-family: "Fraunces", serif; font-weight: 600; font-size: 1.5rem; color: #fff; letter-spacing: -0.02em; }
+.item > h2 small { font: 600 0.75rem "Figtree", sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: #999; margin-right: 8px; }
+.why { margin-top: 6px; color: #bbb; max-width: 75ch; }
+.board { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; margin-top: 20px; }
+.col { display: grid; gap: 8px; width: min(360px, 100%); }
+.col.wide { width: min(720px, 100%); }
+.tag { justify-self: start; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.tag.now-tag { background: #333; color: #ccc; }
+.tag.new-tag { background: #eee; color: #111; }
+.note { font-size: 0.8125rem; color: #aaa; }
+
+/* App frame with Ronda's real tokens (light and "Noche tinta" dark). */
+.app {
+  --bg: light-dark(oklch(0.975 0.008 70), oklch(0.18 0.015 255));
+  --surface: light-dark(oklch(0.995 0.004 70), oklch(0.25 0.018 255));
+  --ink: light-dark(oklch(0.24 0.015 40), oklch(0.93 0.008 250));
+  --muted: light-dark(oklch(0.5 0.02 45), oklch(0.77 0.015 250));
+  --line: light-dark(oklch(0.89 0.012 60), oklch(0.42 0.02 255));
+  --accent: light-dark(oklch(0.55 0.16 33), oklch(0.75 0.14 38));
+  --accent-ink: light-dark(oklch(0.53 0.16 33), oklch(0.77 0.13 38));
+  --accent-soft: light-dark(oklch(0.94 0.04 40), oklch(0.32 0.045 38));
+  --on-accent: light-dark(oklch(0.99 0.005 60), oklch(0.2 0.02 40));
+  --danger: light-dark(oklch(0.45 0.18 27), oklch(0.7 0.18 25));
+  --go: light-dark(oklch(0.5 0.13 150), oklch(0.8 0.15 160));
+  --go-soft: light-dark(oklch(0.94 0.05 150), oklch(0.31 0.05 165));
+  --hold: light-dark(oklch(0.82 0.15 82), oklch(0.86 0.14 88));
+  --on-hold: oklch(0.25 0.05 70);
+  --hold-ink: light-dark(oklch(0.48 0.1 70), oklch(0.86 0.14 88));
+  --hold-soft: light-dark(oklch(0.95 0.06 85), oklch(0.32 0.04 85));
+  --control: light-dark(oklch(0.62 0.02 50), oklch(0.62 0.02 255));
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px;
+  --t-xs: 0.833rem; --t-sm: 0.9375rem; --t-lg: 1.2rem; --t-xl: 1.44rem; --radius: 16px; --radius-sm: 10px; --tap: 44px;
+  color-scheme: dark;
+  border: 1px solid #333; border-radius: 28px; background: var(--bg); color: var(--ink);
+  padding: 16px; display: grid; align-content: start; gap: var(--s3); position: relative; overflow: hidden; font-size: 1rem;
+}
+body:has(#t-light:checked) .app { color-scheme: light; }
+.app.desk { border-radius: 16px; padding: 24px; }
+.app button { font: inherit; color: inherit; cursor: pointer; }
+.app .head { font-family: "Fraunces", serif; font-weight: 600; letter-spacing: -0.02em; }
+.muted { color: var(--muted); }
+.xs { font-size: var(--t-xs); }
+.sm { font-size: var(--t-sm); }
+.row { display: flex; align-items: center; gap: var(--s2); }
+.push { margin-left: auto; }
+.fold { margin: 0 -16px; padding: 2px 16px; border-top: 2px dashed var(--danger); color: var(--danger); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* App pieces (copies of global.css, trimmed). */
+.brand { display: flex; align-items: center; gap: var(--s2); font-family: "Fraunces", serif; font-weight: 600; font-size: var(--t-lg); letter-spacing: -0.02em; }
+.brand i { width: 22px; height: 22px; border-radius: 50%; border: 5px dotted var(--accent); }
+.ibtn { display: grid; place-items: center; width: var(--tap); height: var(--tap); border: 1px solid var(--line); border-radius: var(--radius-sm); background: transparent; color: var(--muted); font-weight: 700; }
+.ibtn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink); }
+.lang { display: flex; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; font-size: var(--t-sm); font-weight: 600; }
+.lang b, .lang span { display: grid; place-items: center; min-width: 40px; height: 42px; }
+.lang b { background: var(--accent); color: var(--on-accent); }
+.lang span { color: var(--muted); }
+.tab { display: inline-flex; align-items: center; gap: var(--s2); min-height: 40px; padding: 0 var(--s4); border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-size: var(--t-sm); }
+.tab.cur { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+.tab.add { border-style: dashed; color: var(--accent-ink); font-weight: 600; background: transparent; }
+.title { font-family: "Fraunces", serif; font-weight: 500; font-size: 1.75rem; letter-spacing: -0.02em; line-height: 1.2; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: 3px; border: 1px solid var(--control); border-radius: var(--radius-sm); background: var(--surface); }
+.seg span { display: grid; place-items: center; min-height: 40px; border-radius: 7px; font-weight: 600; font-size: var(--t-sm); color: var(--muted); }
+.seg .cur { background: var(--accent); color: var(--on-accent); }
+.tagbox { display: flex; flex-wrap: wrap; gap: 6px; padding: var(--s3); background: var(--surface); border: 1px solid var(--control); border-radius: var(--radius-sm); }
+.person { display: inline-flex; align-items: center; gap: var(--s2); min-height: 32px; padding: 0 var(--s3); border-radius: 999px; background: var(--accent-soft); font-weight: 600; font-size: var(--t-sm); }
+.person em { font-style: normal; color: var(--muted); font-weight: 400; }
+.btn { display: inline-grid; place-items: center; min-height: var(--tap); padding: 0 var(--s5); border: 1px solid transparent; border-radius: var(--radius-sm); font-weight: 600; }
+.btn.ghost { background: transparent; border-color: var(--line); }
+.btn.small { min-height: 36px; padding: 0 var(--s4); font-size: var(--t-sm); }
+
+.now { display: grid; gap: var(--s2); padding: var(--s4) var(--s5) var(--s5); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.now.speaking { border-color: var(--go); }
+.now.paused { border-color: var(--hold-ink); }
+.now-label { font-size: var(--t-xs); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
+.speaking .now-label { color: var(--go); }
+.paused .now-label { color: var(--hold-ink); }
+.now-name { font-family: "Fraunces", serif; font-size: var(--t-xl); font-weight: 600; letter-spacing: -0.02em; }
+.now-clock { font-size: 3.5rem; font-weight: 700; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 4px; background: var(--go); }
+.paused .bar i { background: var(--hold-ink); }
+.ctl { display: flex; gap: var(--s3); margin-top: var(--s2); }
+.clock-btn { flex: none; width: 56px; min-height: var(--tap); display: grid; place-items: center; border: 1px solid var(--control); border-radius: var(--radius-sm); background: transparent; font-size: 0.9rem; }
+.clock-btn.resume { background: var(--hold); border-color: var(--hold); color: var(--on-hold); }
+.next { flex: 1; min-height: var(--tap); border: 1px solid var(--accent); border-radius: var(--radius-sm); background: var(--accent); color: var(--on-accent); font-weight: 600; }
+.next.quiet { background: transparent; color: var(--ink); }
+
+.tiles { display: grid; gap: var(--s3); grid-template-columns: 1fr 1fr; }
+.tile { --tile-bg: var(--surface); --arc: var(--accent); display: grid; background: var(--tile-bg); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; text-align: center; }
+.tile.speaking { --tile-bg: var(--go-soft); --arc: var(--go); border-color: var(--go); }
+.tile.paused { --tile-bg: var(--hold-soft); --arc: var(--hold-ink); border-color: var(--hold-ink); }
+.tile-main { display: grid; justify-items: center; gap: var(--s1); padding: var(--s3) var(--s2) var(--s2); }
+.ring { width: 76px; height: 76px; border-radius: 50%; background: conic-gradient(var(--arc) calc(var(--p, 0) * 1%), var(--line) 0); display: grid; place-items: center; }
+.ring b { width: 62px; height: 62px; border-radius: 50%; background: var(--tile-bg); display: grid; place-items: center; font-size: var(--t-sm); font-weight: 700; font-variant-numeric: tabular-nums; }
+.tile-name { font-weight: 600; font-size: var(--t-sm); }
+.tile-state { font-size: var(--t-xs); color: var(--muted); }
+.speaking .tile-state { color: var(--go); font-weight: 600; }
+.paused .tile-state { color: var(--hold-ink); font-weight: 600; }
+.tile-away { min-height: var(--tap); display: grid; place-items: center; border-top: 1px solid var(--line); color: var(--muted); font-size: var(--t-xs); }
+
+/* Proposal 5: compact rows on phones. */
+.trows { display: grid; gap: var(--s2); }
+.trow { --tile-bg: var(--surface); --arc: var(--accent); display: flex; align-items: center; gap: var(--s3); min-height: 56px; padding: var(--s1) var(--s1) var(--s1) var(--s3); background: var(--tile-bg); border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.trow.speaking { --tile-bg: var(--go-soft); --arc: var(--go); border-color: var(--go); }
+.trow.done { padding-right: var(--s3); }
+.trow .ring { width: 36px; height: 36px; flex: none; }
+.trow .ring b { width: 26px; height: 26px; font-size: 0; }
+.trow .who { flex: 1; min-width: 0; display: grid; line-height: 1.25; }
+.trow .time { font-weight: 700; font-size: var(--t-sm); font-variant-numeric: tabular-nums; }
+.trow .away { display: grid; place-items: center; width: var(--tap); height: var(--tap); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--muted); }
+.trow.speaking .tile-state { color: var(--go); font-weight: 600; }
+
+/* Proposal 7: one menu. */
+.menu { display: grid; padding: var(--s2); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.menu > div { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: var(--tap); padding: 0 var(--s3); font-size: var(--t-sm); }
+.menu > div + div { border-top: 1px solid var(--line); }
+.menu .lang b, .menu .lang span { height: 32px; }
+
+/* Ranking. */
+.rank { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.rank th { padding: 0 var(--s2) var(--s2); border-bottom: 1px solid var(--line); font-size: var(--t-xs); font-weight: 600; color: var(--muted); text-align: left; text-transform: uppercase; letter-spacing: 0.06em; }
+.rank td { padding: var(--s3) var(--s2); border-bottom: 1px solid var(--line); font-size: var(--t-sm); }
+.rank td:first-child { width: 3em; color: var(--muted); font-weight: 700; }
+.rank td:last-child, .rank th:last-child { text-align: right; }
+.rank tr.first td { font-weight: 700; }
+.rank tr.first td:first-child { color: var(--accent-ink); }
+.podium { display: grid; grid-template-columns: repeat(3, 1fr); align-items: end; gap: var(--s2); text-align: center; }
+.podium div { display: grid; gap: var(--s1); font-weight: 600; font-size: var(--t-sm); }
+.podium b { display: grid; place-items: center; border: 1px solid var(--line); border-bottom: 0; border-radius: var(--radius) var(--radius) 0 0; background: var(--surface); font-family: "Fraunces", serif; font-size: var(--t-xl); }
+.podium .p1 b { height: 90px; background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink); }
+.podium .p2 b { height: 64px; }
+.podium .p3 b { height: 48px; }
+.callout { padding: var(--s3) var(--s4); border-left: 3px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; background: var(--accent-soft); font-size: var(--t-sm); }
+
+/* Queue (desktop). */
+.queue { display: grid; gap: var(--s2); }
+.qrow { display: flex; align-items: center; gap: var(--s2); min-height: 52px; padding: 0 var(--s2); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
+.qrow i { flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent-soft); color: var(--accent-ink); font: 700 var(--t-xs) "Figtree", sans-serif; }
+.qrow b { flex: 1; }
+.qrow span { color: var(--muted); letter-spacing: 0.5em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar-top">
+    <h1>Ronda · Mejoras de diseño</h1>
+    <fieldset class="pick">
+      <label><input type="radio" name="theme" id="t-dark" checked><span>Oscuro</span></label>
+      <label><input type="radio" name="theme" id="t-light"><span>Claro</span></label>
+    </fieldset>
+  </div>
+
+  <p class="intro">Nueve ajustes sobre lo que hoy está en producción. Cada uno muestra <b>Hoy</b> y <b>Propuesta</b>, con los tokens reales. Los nombres y tiempos son de ejemplo. El badge de persona (editar, no está, quitar) queda como está.</p>
+  <ul class="toc">
+    <li><a href="#m1">1 · Día en curso arriba</a></li>
+    <li><a href="#m2">2 · Texto por modo</a></li>
+    <li><a href="#m3">3 · Pausa</a></li>
+    <li><a href="#m4">4 · Un solo reloj</a></li>
+    <li><a href="#m5">5 · Filas en vez de baldosas</a></li>
+    <li><a href="#m6">6 · Cabecera</a></li>
+    <li><a href="#m7">7 · Empates</a></li>
+    <li><a href="#m8">8 · Podio con pocos días</a></li>
+    <li><a href="#m9">9 · Fila de hoy en desktop</a></li>
+  </ul>
+
+  <!-- 1 -->
+  <section class="item" id="m1">
+    <h2><small>1</small>El día en curso, arriba</h2>
+    <p class="why">En un teléfono de 375 × 812, con 6 personas, el reloj queda debajo de la primera pantalla. Mientras hay un día en curso, la lista se resume en una línea y el reloj es lo primero que se ve.</p>
+    <div class="board">
+      <div class="col">
+        <span class="tag now-tag">Hoy</span>
+        <div class="app">
+          <div class="row"><span class="title">Equipo</span><span class="push ibtn on">◷</span><span class="ibtn">✎</span><span class="ibtn">🗑</span></div>
+          <p class="muted sm">Sumá un nombre por vez o pegá la lista, elegí cuántos grupos querés y sorteá.</p>
+          <div class="seg"><span class="cur">Turnos</span><span>Ranking</span></div>
+          <div class="row sm"><b>Participantes</b><span class="push muted xs">6 participantes</span></div>
+          <div class="tagbox">
+            <span class="person">Ana <em>⊘ ×</em></span><span class="person">Bruno <em>⊘ ×</em></span><span class="person">Carla <em>⊘ ×</em></span>
+            <span class="person">Diego <em>⊘ ×</em></span><span class="person">Elena <em>⊘ ×</em></span><span class="person">Fede <em>⊘ ×</em></span>
+            <span class="muted sm" style="flex-basis:100%">Agregar persona…</span>
+          </div>
+          <p class="muted xs">Enter agrega. Pegá varias líneas para sumar de una vez. Tocá un nombre para editarlo.</p>
+          <p class="fold">Fin de la primera pantalla</p>
+          <div class="row"><span class="head" style="font-size:var(--t-xl)">Turnos</span><span class="push muted xs">Total 03:12</span></div>
+          <div class="now speaking">
+            <p class="now-label">Habla ahora</p><p class="now-name">Bruno</p><p class="now-clock">03:41</p>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <span class="tag new-tag">Propuesta</span>
+        <div class="app">
+          <div class="row"><span class="title">Equipo</span><span class="push ibtn on">◷</span><span class="ibtn">✎</span><span class="ibtn">🗑</span></div>
+          <div class="seg"><span class="cur">Turnos</span><span>Ranking</span></div>
+          <div class="row sm" style="min-height:var(--tap);padding:0 var(--s3);border:1px solid var(--line);border-radius:var(--radius-sm)">
+            <b>6 participantes</b><span class="muted xs">· 1 no está</span><button class="push btn small ghost" style="border:0;color:var(--accent-ink)">Editar</button>
+          </div>
+          <div class="now speaking">
+            <div class="row"><p class="now-label">Habla ahora</p><span class="push btn small ghost">Flotar</span></div>
+            <p class="now-name">Bruno</p><p class="now-clock">03:41</p><p class="muted sm">de 05:00</p>
+            <div class="bar"><i style="width:74%"></i></div>
+            <div class="ctl"><button class="clock-btn">❚❚</button><button class="next">Siguiente: Carla</button></div>
+          </div>
+          <p class="muted xs">"Editar" abre la caja de participantes en el mismo lugar. Sin día en curso, la pantalla es la de hoy.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="item" id="m2">
+    <h2><small>2</small>El texto cambia con el modo</h2>
+    <p class="why">Una lista con turnos no tiene sorteo ni grupos, pero la bajada los nombra. La marca dice "Sorteos y grupos" y la app abre en Turnos.</p>
+    <div class="board">
+      <div class="col">
+        <span class="tag now-tag">Hoy</span>
+        <div class="app">
+          <div class="row"><span class="brand"><i></i>Ronda</span><span class="muted sm">Sorteos y grupos</span></div>
+          <span class="title">Equipo</span>
+          <p class="muted">Sumá un nombre por vez o pegá la lista, elegí cuántos grupos querés y sorteá. Con un solo grupo obtenés un orden.</p>
+          <div class="seg"><span class="cur">Turnos</span><span>Ranking</span></div>
+        </div>
+      </div>
+      <div class="col">
+        <span class="tag new-tag">Propuesta</span>
+        <div class="app">
+          <div class="row"><span class="brand"><i></i>Ronda</span><span class="muted sm">Turnos, sorteos y grupos</span></div>
+          <span class="title">Equipo</span>
+          <p class="muted">Sumá a las personas, elegí cuánto tiempo tiene cada una y empezá. Habla una por vez.</p>
+          <div class="seg"><span class="cur">Turnos</span><span>Ranking</span></div>
+        </div>
+        <p class="note">Lista sin turnos: queda el texto actual del sorteo. Mismo cambio en <code>messages.ts</code> para inglés y en el título de la página.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="item" id="m3">
+    <h2><small>3</small>La pausa dice "En pausa"</h2>
+    <p class="why">En pausa, la tarjeta sigue diciendo "Habla ahora" y quedan dos botones rellenos juntos. DESIGN.md pide que el relleno vaya solo al próximo botón a tocar.</p>
+    <div class="board">
+      <div class="col">
+        <span class="tag now-tag">Hoy</span>
+        <div class="app">
+          <div class="now paused">
+            <p class="now-label">Habla ahora</p><p class="now-name">Bruno</p><p class="now-clock">03:41</p><p class="muted sm">de 05:00</p>
+            <div class="bar"><i style="width:74%"></i></div>
+            <div class="ctl"><button class="clock-btn resume">▶</button><button class="next">Siguiente: Carla</button></div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <span class="tag new-tag">Propuesta</span>
+        <div class="app">
+          <div class="now paused">
+            <p class="now-label">En pausa</p><p class="now-name">Bruno</p><p class="now-clock">03:41</p><p class="muted sm">de 05:00</p>
+            <div class="bar"><i style="width:74%"></i></div>
+            <div class="ctl"><button class="clock-btn resume">▶</button><button class="next quiet">Siguiente: Carla</button></div>
+          </div>
+        </div>
+        <p class="note">Rótulo igual al de la baldosa. Reanudar es el único relleno; Siguiente queda con borde.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="item" id="m4">
+    <h2><small>4</small>Un solo sentido de reloj</h2>
+    <p class="why">La tarjeta cuenta lo que queda (03:41) y el anillo de la misma persona cuenta lo usado (01:19). Dos números distintos para el mismo turno.</p>
+    <div class="board">
+      <div class="col">
+        <span class="tag now-tag">Hoy</span>
+        <div class="app">
+          <div class="tiles">
+            <div class="tile speaking"><div class="tile-main"><div class="ring" style="--p:26"><b>01:19</b></div><span class="tile-name">Bruno</span><span class="tile-state">Habla</span></div></div>
+            <div class="tile"><div class="tile-main"><div class="ring" style="--p:84"><b>04:12</b></div><span class="tile-name">Ana</span><span class="tile-state">Listo</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <span class="tag new-tag">Propuesta</span>
+        <div class="app">
+          <div class="tiles">
+            <div class="tile speaking"><div class="tile-main"><div class="ring" style="--p:74"><b>03:41</b></div><span class="tile-name">Bruno</span><span class="tile-state">Habla · le queda</span></div></div>
+            <div class="tile"><div class="tile-main"><div class="ring" style="--p:16"><b>04:12</b></div><span class="tile-name">Ana</span><span class="tile-state">Listo · usó</span></div></div>
+          </div>
+        </div>
+        <p class="note">Quien habla o espera: lo que le queda, igual que la tarjeta; el anillo se vacía como la barra. Quien terminó: lo que usó, con la palabra "usó".</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="item" id="m5">
+    <h2><small>5</small>Filas en el teléfono</h2>
+    <p class="why">Cada baldosa mide unos 190 px y repite "No está", también en quien ya habló. Seis personas ocupan casi tres pantallas. En filas entran las seis en una.</p>
+    <div class="board">
+      <div class="col">
+        <span class="tag now-tag">Hoy</span>
+        <div class="app">
+          <div class="tiles">
+            <div class="tile"><div class="tile-main"><div class="ring" style="--p:84"><b>04:12</b></div><span class="tile-name">Ana</span><span class="tile-state">Listo</span></div><span class="tile-away">No está</span></div>
+            <div class="tile speaking"><div class="tile-main"><div class="ring" style="--p:26"><b>01:19</b></div><span class="tile-name">Bruno</span><span class="tile-state">Habla</span></div><span class="tile-away">No está</span></div>
+            <div class="tile"><div class="tile-main"><div class="ring"><b>00:00</b></div><span class="tile-name">Carla</span><span class="tile-state">Sigue</span></div><span class="tile-away">No está</span></div>
+            <div class="tile"><div class="tile-main"><div class="ring"><b>00:00</b></div><span class="tile-name">Diego</span><span class="tile-state">Espera</span></div><span class="tile-away">No está</span></div>
+          </div>
+          <p class="muted xs">Elena y Fede quedan fuera de pantalla.</p>
+        </div>
+      </div>
+      <div class="col">
+        <span class="tag new-tag">Propuesta</span>
+        <div class="app">
+          <div class="trows">
+            <div class="trow done"><div class="ring" style="--p:84"><b></b></div><div class="who"><span class="tile-name">Ana</span><span class="tile-state">Listo · usó</span></div><span class="time">04:12</span></div>
+            <div class="trow speaking"><div class="ring" style="--p:74"><b></b></div><div class="who"><span class="tile-name">Bruno</span><span class="tile-state">Habla</span></div><span class="time">03:41</span><button class="away" aria-label="Bruno no está">⊘</button></div>
+            <div class="trow"><div class="ring" style="--p:100"><b></b></div><div class="who"><span class="tile-name">Carla</span><span class="tile-state">Sigue</span></div><span class="time">05:00</span><button class="away" aria-label="Carla no está">⊘</button></div>
+            <div class="trow"><div class="ring" style="--p:100"><b></b></div><div class="who"><span class="tile-name">Diego</span><span class="tile-state">Espera</span></div><span class="time">05:00</span><button class="away" aria-label="Diego no está">⊘</button></div>
+            <div class="trow"><div class="ring" style="--p:100"><b></b></div><div class="who"><span class="tile-name">Elena</span><span class="tile-state">Espera</span></div><span class="time">05:00</span><button class="away" aria-label="Elena no está">⊘</button></div>
+            <div class="trow"><div class="ring" style="--p:100"><b></b></div><div class="who"><span class="tile-name">Fede</span><span class="tile-state">Espera</span></div><span class="time">05:00</span><button class="away" aria-label="Fede no está">⊘</button></div>
+          </div>
+        </div>
+        <p class="note">Fila de 56 px; tocar la fila da la palabra, como hoy la baldosa. "No está" es el mismo ícono del badge (44 px) y no aparece en quien ya habló. Desde 900 px siguen las baldosas, sin "No está" en las terminadas.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="item" id="m6">
+    <h2><small>6</small>Cabecera en una fila</h2>
+    <p class="why">A 375 px la cabecera ocupa tres filas antes del contenido, y la copia de seguridad vive al pie de la página. Un menú junta lo que se toca poco.</p>
+    <div class="board">
+      <div class="col">
+        <span class="tag now-tag">Hoy</span>
+        <div class="app">
+          <div class="row"><span class="brand"><i></i>Ronda</span><span class="push lang"><b>ES</b><span>EN</span></span><span class="ibtn">▭</span></div>
+          <b class="sm">¿Cómo funciona?</b>
+          <div class="row"><span class="tab cur">Equipo 6</span><span class="tab add">+ Nueva lista</span></div>
+          <p class="muted xs">… y al final de la página:</p>
+          <div style="display:grid;gap:var(--s2);padding-top:var(--s3);border-top:1px solid var(--line)">
+            <span class="head" style="font-size:var(--t-lg)">Copia de seguridad</span>
+            <div class="row"><span class="btn ghost small">Exportar</span><span class="btn ghost small">Importar</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="col">
+        <span class="tag new-tag">Propuesta</span>
+        <div class="app">
+          <div class="row"><span class="brand"><i></i>Ronda</span><span class="push ibtn on" aria-label="Menú">⋯</span></div>
+          <div class="menu">
+            <div><b>¿Cómo funciona?</b><span class="muted">→</span></div>
+            <div><span>Idioma</span><span class="lang"><b>ES</b><span>EN</span></span></div>
+            <div><span>Tema</span><span class="muted">Sistema ▾</span></div>
+            <div><span>Copia de seguridad</span><span class="row"><span class="btn ghost small">Exportar</span><span class="btn ghost small">Importar</span></span></div>
+          </div>
+          <div class="row"><span class="tab cur">Equipo 6</span><span class="tab add">+ Nueva lista</span></div>
+        </div>
+        <p class="note">Menú abierto en el dibujo. Cerrado, la cabecera es una fila de 52 px. Desde 900 px puede quedar como hoy: hay lugar.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="item" id="m7">
+    <h2><small>7</small>Empates que no lo son</h2>
+    <p class="why">Dos personas con el mismo porcentaje aparecen en puestos 1 y 2 (en la prueba, las dos con "0%"):el redondeo esconde la diferencia que las ordena.</p>
+    <div class="board">
+      <div class="col">
+        <span class="tag now-tag">Hoy</span>
+        <div class="app">
+          <table class="rank">
+            <thead><tr><th>Puesto</th><th>Persona</th><th>Promedio</th></tr></thead>
+            <tbody>
+              <tr class="first"><td>1</td><td>Carla</td><td>42%</td></tr>
+              <tr><td>2</td><td>Elena</td><td>42%</td></tr>
+              <tr><td>3</td><td>Fede</td><td>57%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="col">
+        <span class="tag new-tag">Propuesta</span>
+        <div class="app">
+          <table class="rank">
+            <thead><tr><th>Puesto</th><th>Persona</th><th>Promedio</th></tr></thead>
+            <tbody>
+              <tr class="first"><td>1</td><td>Carla</td><td>41,6%</td></tr>
+              <tr><td>2</td><td>Elena</td><td>42,3%</td></tr>
+              <tr><td>3</td><td>Fede</td><td>57%</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">Un decimal solo en las filas que, redondeadas, se verían iguales con distinto puesto. Lo mismo en el podio y en la imagen para compartir.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8 -->
+  <section class="item" id="m8">
+    <h2><small>8</small>Podio recién con tres días</h2>
+    <p class="why">Con un día guardado el podio se ve definitivo y todavía no dice nada. Hasta el tercer día, la tabla sola y un aviso.</p>
+    <div class="board">
+      <div class="col">
+        <span class="tag now-tag">Hoy · 1 día guardado</span>
+        <div class="app">
+          <div class="podium">
+            <div class="p2">Elena<b>42%</b></div><div class="p1">Carla<b>38%</b></div><div class="p3">Fede<b>57%</b></div>
+          </div>
+          <table class="rank"><tbody>
+            <tr class="first"><td>1</td><td>Carla</td><td>38%</td></tr><tr><td>2</td><td>Elena</td><td>42%</td></tr><tr><td>3</td><td>Fede</td><td>57%</td></tr>
+          </tbody></table>
+        </div>
+      </div>
+      <div class="col">
+        <span class="tag new-tag">Propuesta · 1 día guardado</span>
+        <div class="app">
+          <p class="callout">Va 1 día. El podio aparece al tercero, cuando el promedio ya dice algo.</p>
+          <table class="rank"><tbody>
+            <tr><td>1</td><td>Carla</td><td>38%</td></tr><tr><td>2</td><td>Elena</td><td>42%</td></tr><tr><td>3</td><td>Fede</td><td>57%</td></tr>
+          </tbody></table>
+        </div>
+        <p class="note">Sin negrita en el primero hasta que haya podio. El umbral (3) es una propuesta; puede seguir al "mínimo de días" que ya existe.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9 -->
+  <section class="item" id="m9">
+    <h2><small>9</small>Fila de hoy, más angosta en desktop</h2>
+    <p class="why">A 1280 px cada fila mide unos 650 px: el nombre queda a la izquierda y sus botones lejos, a la derecha. Con un tope de 32 rem quedan a la vista juntos.</p>
+    <div class="board">
+      <div class="col wide">
+        <span class="tag now-tag">Hoy</span>
+        <div class="app desk">
+          <div class="queue">
+            <div class="qrow"><i>1</i><b>Ana</b><span>⊘ ↑ ↓</span></div>
+            <div class="qrow"><i>2</i><b>Bruno</b><span>⊘ ↑ ↓</span></div>
+            <div class="qrow"><i>3</i><b>Carla</b><span>⊘ ↑ ↓</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="col wide">
+        <span class="tag new-tag">Propuesta</span>
+        <div class="app desk">
+          <div class="queue" style="max-width:32rem">
+            <div class="qrow"><i>1</i><b>Ana</b><span>⊘ ↑ ↓</span></div>
+            <div class="qrow"><i>2</i><b>Bruno</b><span>⊘ ↑ ↓</span></div>
+            <div class="qrow"><i>3</i><b>Carla</b><span>⊘ ↑ ↓</span></div>
+          </div>
+        </div>
+        <p class="note">Una línea de CSS: <code>max-width: 32rem</code> en <code>.queue-list</code>.</p>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>
