@@ -3,7 +3,7 @@
 import { messages } from '../i18n/messages';
 import { ICONS } from '../lib/icons';
 import type { SavedList } from '../lib/lists';
-import { MAX_MIN_DAYS, ranking, removeSession, resetSessions, setMinDays, type ListTurns, type Ranking, type Session } from '../lib/turns';
+import { MAX_MIN_DAYS, PODIUM_MIN_DAYS, rankPercents, ranking, removeSession, resetSessions, setMinDays, type ListTurns, type Ranking, type Session } from '../lib/turns';
 import { confirmAction } from './confirm';
 import { canCopyImage, canShareImageFile, copyImage, downloadBlob, shareImage } from './share';
 import { MAX_IMAGE_ROWS, renderRankingImage } from './share-image';
@@ -19,13 +19,13 @@ const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as 
 const lang = document.documentElement.lang === 'en' ? 'en' : 'es';
 const t = messages[lang];
 const dayFormat = new Intl.DateTimeFormat(lang, { weekday: 'short', day: 'numeric', month: 'short' });
-const percentOf = (score: number) => Math.round(score * 100);
 
 export function initRanking(host: RankingHost) {
   const empty = $('rank-empty');
   const body = $('rank-body');
   const meta = $('rank-meta');
   const podium = $('podium');
+  const early = $('rank-early');
   const none = $('rank-none');
   const table = $('rank-scroll'); // the scrollable wrapper of the table: hiding it hides both
   const rows = $('rank-rows');
@@ -50,33 +50,33 @@ export function initRanking(host: RankingHost) {
     return node;
   };
 
-  function renderPodium(top: Ranking['rows']) {
+  function renderPodium(top: Ranking['rows'], percent: Map<string, string>) {
     // Lowest in the middle, second on the left, third on the right.
     const slots = [top[1], top[0], top[2]].filter((row): row is Ranking['rows'][number] => row !== undefined);
     podium.replaceChildren(
       ...slots.map((row) => {
         const item = el('div', 'podium-item');
         item.dataset.pos = String(row.position);
-        item.append(el('span', 'podium-av', ([...row.name][0] ?? '').toLocaleUpperCase()), el('span', 'podium-name', row.name), el('span', 'podium-step', `${percentOf(row.score)}%`));
+        item.append(el('span', 'podium-av', ([...row.name][0] ?? '').toLocaleUpperCase()), el('span', 'podium-name', row.name), el('span', 'podium-step', percent.get(row.personId) ?? ''));
         return item;
       }),
     );
     podium.hidden = slots.length === 0;
   }
 
-  function renderRows(list: Ranking['rows']) {
+  function renderRows(list: Ranking['rows'], percent: Map<string, string>, podiumShown: boolean) {
     rows.replaceChildren(
       ...list.map((row) => {
         const tr = el('tr');
-        tr.dataset.first = String(row.position === 1);
+        tr.dataset.first = String(podiumShown && row.position === 1);
         const avg = el('td');
-        avg.title = t.rankAvgLabel(percentOf(row.score));
+        avg.title = t.rankAvgLabel(percent.get(row.personId) ?? '');
         const cell = el('div', 'rank-avg');
         const bar = el('span', 'bar');
         const fill = el('i');
         fill.style.transform = `scaleX(${Math.min(1, row.score)})`;
         bar.append(fill);
-        cell.append(bar, el('span', undefined, `${percentOf(row.score)}%`));
+        cell.append(bar, el('span', undefined, percent.get(row.personId) ?? ''));
         avg.append(cell);
         tr.append(el('td', undefined, String(row.position)), el('td', undefined, row.name), avg, el('td', undefined, String(row.days)));
         return tr;
@@ -102,7 +102,7 @@ export function initRanking(host: RankingHost) {
     );
   }
 
-  function prepareImage(list: SavedList, rk: Ranking, turns: ListTurns) {
+  function prepareImage(list: SavedList, rk: Ranking, turns: ListTurns, percent: Map<string, string>) {
     if (rk.rows.length === 0) return null;
     const shown = rk.rows.slice(0, MAX_IMAGE_ROWS);
     const last = turns.sessions.at(-1);
@@ -110,7 +110,7 @@ export function initRanking(host: RankingHost) {
       title: list.name,
       subtitle: t.imageSubtitle,
       dateLabel: last ? dayFormat.format(new Date(last.endedAt)) : '',
-      rows: shown.map((row) => ({ position: row.position, name: row.name, percent: `${percentOf(row.score)}%`, days: t.imageDays(row.days) })),
+      rows: shown.map((row) => ({ position: row.position, name: row.name, percent: percent.get(row.personId) ?? '', days: t.imageDays(row.days) })),
       more: rk.rows.length > shown.length ? t.imageMore(rk.rows.length - shown.length) : null,
       footer: location.host,
     });
@@ -134,13 +134,18 @@ export function initRanking(host: RankingHost) {
     meta.textContent = t.rankMeta(turns.sessions.length, turns.minDays);
     none.hidden = rk.rows.length > 0;
     table.hidden = rk.rows.length === 0;
-    renderPodium(rk.rows.slice(0, 3));
-    renderRows(rk.rows);
+    const percents = rankPercents(rk.rows, lang);
+    const percent = new Map(rk.rows.map((row, i) => [row.personId, percents[i]!]));
+    const podiumShown = turns.sessions.length >= PODIUM_MIN_DAYS;
+    early.hidden = podiumShown || rk.rows.length === 0;
+    early.textContent = t.rankEarly(turns.sessions.length);
+    renderPodium(podiumShown ? rk.rows.slice(0, 3) : [], percent);
+    renderRows(rk.rows, percent, podiumShown);
     few.hidden = rk.fewData.length === 0;
     fewHint.textContent = t.rankFewHint(turns.minDays);
     fewList.replaceChildren(...rk.fewData.map((row) => el('li', undefined, `${row.name} · ${t.imageDays(row.days)}`)));
     renderHistory(turns);
-    prepared = prepareImage(list, rk, turns);
+    prepared = prepareImage(list, rk, turns, percent);
     shareButton.hidden = prepared === null || !shareable;
     copyButton.hidden = prepared === null || !copyable;
     downloadButton.hidden = prepared === null;

@@ -108,7 +108,18 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
             <path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z" />
           </svg>
         </button>
+        <button type="button" id="menu-toggle" class="menu-btn" popovertarget="theme-menu" aria-label={t.menuLabel}>
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
+        </button>
         <div id="theme-menu" class="theme-menu" popover>
+          <!-- Help and language: only shown here under 40rem, where the header has no room for them. -->
+          <div class="menu-extra">
+            <a class="help" href={lang === 'es' ? '/documentation/' : '/en/documentation/'} aria-current={help ? 'page' : undefined}>{t.helpLink}</a>
+            <nav class="lang" aria-label={t.langLabel}>
+              <a href={paths.es} lang="es" hreflang="es" data-lang="es" aria-current={lang === 'es' ? 'true' : undefined}>ES</a>
+              <a href={paths.en} lang="en" hreflang="en" data-lang="en" aria-current={lang === 'en' ? 'true' : undefined}>EN</a>
+            </nav>
+          </div>
           <fieldset>
             <legend>{t.themeLegend}</legend>
             <label><input type="radio" name="theme" value="system" /> {t.themeSystem}</label>

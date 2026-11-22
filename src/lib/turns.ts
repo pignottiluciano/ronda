@@ -39,6 +39,7 @@ export interface ListTurns {
   budgetMs: number; // equal for everyone
   order: TurnOrder;
   minDays: number; // used by the ranking
+  draft: string[] | null; // a drawn order waiting to be reviewed (moved around) before the day starts
   absent: string[]; // not here today; they stay out of the draw and of the turns
   sessions: Session[];
   current: CurrentSession | null;
@@ -54,6 +55,7 @@ export const emptyTurns = (): ListTurns => ({
   budgetMs: DEFAULT_BUDGET_MINUTES * MINUTE,
   order: 'draw',
   minDays: 1,
+  draft: null,
   absent: [],
   sessions: [],
   current: null,
@@ -67,7 +69,31 @@ export function setBudgetMinutes(turns: ListTurns, minutes: number): ListTurns {
   return turns.current || !isValidBudgetMinutes(minutes) ? turns : { ...turns, budgetMs: minutes * MINUTE };
 }
 
-export const setOrder = (turns: ListTurns, order: TurnOrder): ListTurns => ({ ...turns, order });
+/** Changing how the order is set drops a drawn order that was waiting. */
+export const setOrder = (turns: ListTurns, order: TurnOrder): ListTurns => ({ ...turns, order, draft: null });
+
+/** Keeps a drawn order for review. Everyone is in it: the absent keep their place and are skipped when speaking. */
+export function drawDraft(turns: ListTurns, order: readonly string[]): ListTurns {
+  return turns.current ? turns : { ...turns, draft: [...order] };
+}
+
+export const clearDraft = (turns: ListTurns): ListTurns => (turns.draft === null ? turns : { ...turns, draft: null });
+
+/** The drawn order as it is now: people who left the list are out, newcomers go last. Null when nothing was drawn. */
+export function draftOrder(turns: ListTurns, ids: readonly string[]): string[] | null {
+  if (turns.draft === null) return null;
+  const known = turns.draft.filter((id) => ids.includes(id));
+  return [...known, ...ids.filter((id) => !known.includes(id))];
+}
+
+/** Moves one person inside the drawn order. Only the order of today changes; the list does not. */
+export function moveDraft(turns: ListTurns, ids: readonly string[], id: string, toIndex: number): ListTurns {
+  const line = draftOrder(turns, ids);
+  const from = line?.indexOf(id) ?? -1;
+  if (!line || from < 0 || toIndex < 0 || toIndex >= line.length || toIndex === from) return turns;
+  line.splice(toIndex, 0, ...line.splice(from, 1));
+  return { ...turns, draft: line };
+}
 
 /** Adds the running turn to the person who had it and stops the clock. */
 function settle(current: CurrentSession, now: number): CurrentSession {
@@ -88,7 +114,7 @@ export function startSession(turns: ListTurns, ids: readonly string[], now: numb
     activeId: null,
     activeSince: null,
   };
-  return { ...turns, current };
+  return { ...turns, draft: null, current };
 }
 
 /** Who is up, in order, without the people who are not here. Newcomers to the list go last. */
@@ -248,6 +274,19 @@ export function ranking(turns: ListTurns, people: readonly { id: string; name: s
   return { rows, fewData: all.filter((r) => r.days < minDays).sort(byScore) };
 }
 
+/** Days saved before the podium is worth showing: one day says nothing yet. */
+export const PODIUM_MIN_DAYS = 3;
+
+/** The percent to print for each row: whole numbers, with one decimal only where rounding would make two different places look equal. */
+export function rankPercents(rows: Ranking['rows'], locale: string): string[] {
+  const whole = rows.map((r) => Math.round(r.score * 100));
+  return rows.map((r, i) =>
+    whole.some((w, j) => w === whole[i] && rows[j]!.position !== r.position)
+      ? `${(r.score * 100).toLocaleString(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
+      : `${whole[i]}%`,
+  );
+}
+
 // ---- Validating what comes back from storage ----
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -293,7 +332,8 @@ function parseListTurns(v: unknown): ListTurns | null {
   const current = v.current === null ? null : parseCurrent(v.current);
   if (v.current !== null && !current) return null;
   const order: TurnOrder = v.order === 'list' ? 'list' : 'draw'; // saved before the setting existed: drawn, as it always was
-  return { budgetMs: v.budgetMs, order, minDays: v.minDays as number, absent: v.absent, sessions, current };
+  const draft = v.current === null && isStrings(v.draft) ? v.draft : null;
+  return { budgetMs: v.budgetMs, order, minDays: v.minDays as number, draft, absent: v.absent, sessions, current };
 }
 
 /** Keeps the valid lists, and only those in `listIds` when given (turn data of a deleted list goes away). */

@@ -32,6 +32,8 @@ const listNameInput = $<HTMLInputElement>('list-name-input');
 const saved = $('saved');
 const deleteDialog = $<HTMLDialogElement>('delete-dialog');
 const turnsToggle = $<HTMLButtonElement>('turns-toggle');
+const lede = $('lede');
+const peopleSummary = $('people-summary-text');
 
 const t = messages[document.documentElement.lang === 'en' ? 'en' : 'es'];
 const emptyState = output.firstElementChild!.cloneNode(true);
@@ -96,6 +98,12 @@ const present = () => people().filter((p) => !turns.absent().has(p.id));
 function updateCount() {
   const away = people().length - present().length;
   count.textContent = away ? t.participantsAway(present().length, away) : t.participant(people().length);
+  peopleSummary.textContent = count.textContent;
+}
+
+// The text under the title follows the mode: a list with turns has no draw or groups to talk about.
+function updateLede() {
+  lede.textContent = activeList(store).turns ? t.ledeTurns : t.lede;
 }
 
 /** Shows a problem under the box (and announces it), or restores the usual hint. */
@@ -319,6 +327,7 @@ function loadActive() {
   personInput.value = '';
   warn(null);
   turnsToggle.setAttribute('aria-pressed', String(list.turns));
+  updateLede();
   turns.open();
   renderPeople();
   groups.value = String(list.groups);
@@ -455,6 +464,7 @@ turnsToggle.addEventListener('click', () => {
   store = setTurns(store, list.id, !list.turns);
   persist();
   turnsToggle.setAttribute('aria-pressed', String(!list.turns));
+  updateLede();
   turns.refresh();
   renderPeople();
   updateCount();

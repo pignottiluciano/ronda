@@ -28,6 +28,7 @@ function applyTheme(theme: Theme) {
 }
 
 const toggle = document.getElementById('theme-toggle') as HTMLButtonElement;
+const menuButton = document.getElementById('menu-toggle') as HTMLButtonElement;
 const menu = document.getElementById('theme-menu') as HTMLElement;
 
 const current = readTheme();
@@ -42,7 +43,8 @@ menu.addEventListener('change', (event) => {
 // Popovers render in the top layer, so anchor the menu under its button by hand.
 menu.addEventListener('beforetoggle', (event) => {
   if ((event as ToggleEvent).newState !== 'open') return;
-  const rect = toggle.getBoundingClientRect();
+  // Two buttons open this menu; the one in view (the other is display: none) is where it anchors.
+  const rect = (toggle.offsetParent ? toggle : menuButton).getBoundingClientRect();
   menu.style.top = `${rect.bottom + 8}px`;
   menu.style.right = `${document.documentElement.clientWidth - rect.right}px`;
 });

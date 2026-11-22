@@ -36,7 +36,7 @@ const t = messages[lang];
           </button>
         </div>
       </div>
-      <p class="lede">{t.lede}</p>
+      <p id="lede" class="lede">{t.lede}</p>
 
       <fieldset id="modes" class="seg" hidden>
         <legend class="sr-only">{t.modeLabel}</legend>
@@ -44,6 +44,11 @@ const t = messages[lang];
         <label><input type="radio" name="mode" value="turns" /><span>{t.modeTurns}</span></label>
         <label><input type="radio" name="mode" value="ranking" /><span>{t.modeRanking}</span></label>
       </fieldset>
+
+      <div class="people-summary">
+        <p id="people-summary-text" class="label"></p>
+        <button type="button" id="people-edit" class="btn btn-small btn-ghost" aria-controls="draw-form" aria-expanded="false">{t.peopleEdit}</button>
+      </div>
 
       <form id="draw-form" class="form" novalidate>
         <div class="field">
@@ -144,19 +149,23 @@ const t = messages[lang];
         <p id="turns-days" class="hint" hidden></p>
         <p class="hint"><span id="order-hint">{t.turnsHintDraw}</span> {t.turnsStartHint}</p>
         <div class="actions">
+          <button type="button" id="turns-redraw" class="btn btn-ghost" hidden>{t.turnsRedraw}</button>
           <button type="button" id="turns-start" class="btn btn-primary">{t.turnsStart}</button>
         </div>
       </div>
 
       <div id="turns-live" class="turns-live" hidden>
         <div id="now" class="now" data-state="idle">
-          <div class="now-head">
+          <!-- Read in this order (who, then the clock); the grid puts the clock first on screen. -->
+          <div class="now-who">
             <p id="now-label" class="now-label"></p>
-            <button type="button" id="turns-float" class="btn btn-ghost btn-small" hidden>{t.floatOpen}</button>
+            <p id="now-name" class="now-name"></p>
+            <p id="now-of" class="now-of"></p>
           </div>
-          <p id="now-name" class="now-name"></p>
           <p id="now-clock" class="now-clock" role="timer" aria-live="off">00:00</p>
-          <p id="now-of" class="now-of"></p>
+          <button type="button" id="turns-float" class="icon-btn now-float" aria-label={t.floatOpen} title={t.floatOpen} hidden>
+            <Fragment set:html={ICONS.float} />
+          </button>
           <div id="now-bar" class="bar" aria-hidden="true"><i></i></div>
           <div class="now-controls">
             <button type="button" id="turns-pause" class="btn btn-clock" data-act="pause" aria-label={t.turnsPause} title={t.turnsPause} hidden>
@@ -193,6 +202,7 @@ const t = messages[lang];
         <p id="rank-meta" class="count"></p>
         <p class="hint">{t.rankHow}</p>
         <div id="podium" class="podium" aria-hidden="true"></div>
+        <p id="rank-early" class="callout" hidden></p>
         <p id="rank-none" class="hint" hidden>{t.rankNoRows}</p>
         <div id="rank-scroll" class="rank-scroll" role="region" tabindex="0" aria-label={t.rankTableLabel}>
         <table id="rank-table" class="rank-table">
