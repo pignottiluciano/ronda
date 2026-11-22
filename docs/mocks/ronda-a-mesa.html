@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Mock de rediseño de Ronda: turnos para hablar con el mismo tiempo para todos.">
+<title>Ronda · Mock A, La mesa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&display=swap" rel="stylesheet">
+<style>
+/* Hallmark · shape: app screen · genre: editorial · theme: brand · redesign: full
+ * paper: oklch(0.975 0.008 70) · accent: oklch(0.55 0.16 33) · display: Fraunces · body: Figtree
+ * nav: top bar, list tabs inline · signature: la mesa, the round drawn as a table with the clock at its centre · states: speaking, up next, paused, over, done, absent
+ * axes: light+dark/roman-serif/coral · posture: restrained · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H5 E4 S5 R4 V4 · weakest: E, seats crowd past about 12 people; the line on the left stays the full record and the table drops names to numbers there */
+
+/* ---------- Tokens: Tinta y coral, verbatim from src/styles/global.css ---------- */
+:root {
+  --s1: 0.25rem; --s2: 0.5rem; --s3: 0.75rem; --s4: 1rem; --s5: 1.5rem; --s6: 2rem; --s7: 3rem; --s8: 4rem;
+  --font: "Figtree", system-ui, sans-serif;
+  --font-head: "Fraunces", Georgia, serif;
+  --t-xs: 0.833rem; --t-sm: 0.9375rem; --t-md: 1rem; --t-lg: 1.2rem; --t-xl: 1.44rem;
+  --t-title: clamp(1.75rem, 5vw, 2.074rem);
+  --t-clock: clamp(3rem, 9vw, 4.75rem);
+
+  --bg: light-dark(oklch(0.975 0.008 70), oklch(0.18 0.015 255));
+  --surface: light-dark(oklch(0.995 0.004 70), oklch(0.25 0.018 255));
+  --ink: light-dark(oklch(0.24 0.015 40), oklch(0.93 0.008 250));
+  --muted: light-dark(oklch(0.5 0.02 45), oklch(0.77 0.015 250));
+  --line: light-dark(oklch(0.89 0.012 60), oklch(0.42 0.02 255));
+  --accent: light-dark(oklch(0.55 0.16 33), oklch(0.75 0.14 38));
+  --accent-ink: light-dark(oklch(0.53 0.16 33), oklch(0.77 0.13 38));
+  --accent-soft: light-dark(oklch(0.94 0.04 40), oklch(0.32 0.045 38));
+  --on-accent: light-dark(oklch(0.99 0.005 60), oklch(0.2 0.02 40));
+  --danger: light-dark(oklch(0.45 0.18 27), oklch(0.7 0.18 25));
+  --go: light-dark(oklch(0.5 0.13 150), oklch(0.8 0.15 160));
+  --on-go: light-dark(oklch(0.99 0.01 150), oklch(0.2 0.04 160));
+  --go-soft: light-dark(oklch(0.94 0.05 150), oklch(0.31 0.05 165));
+  --hold: light-dark(oklch(0.82 0.15 82), oklch(0.86 0.14 88));
+  --on-hold: oklch(0.25 0.05 70);
+  --hold-ink: light-dark(oklch(0.48 0.1 70), oklch(0.86 0.14 88));
+  --hold-soft: light-dark(oklch(0.95 0.06 85), oklch(0.32 0.04 85));
+  --control: light-dark(oklch(0.62 0.02 50), oklch(0.62 0.02 255));
+
+  --radius: 1rem;
+  --radius-sm: 0.625rem;
+  --tap: 2.75rem;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 150ms; --dur-base: 250ms;
+  color-scheme: light dark;
+}
+:root[data-theme='light'] { color-scheme: light; }
+:root[data-theme='dark'] { color-scheme: dark; }
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { overflow-x: clip; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: var(--t-md); line-height: 1.55; -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { margin: 0; font-family: var(--font-head); font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; overflow-wrap: break-word; min-width: 0; text-wrap: balance; }
+p { margin: 0; }
+ol, ul { margin: 0; padding: 0; list-style: none; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+svg { display: block; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.num { font-variant-numeric: tabular-nums; }
+
+.page { max-width: 76rem; margin: 0 auto; padding: var(--s4) var(--s4) var(--s8); }
+
+/* ---------- Top bar ---------- */
+.top { display: flex; align-items: center; gap: var(--s3); min-height: 3.5rem; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: var(--s2); font-family: var(--font-head); font-weight: 600; font-size: var(--t-lg); color: var(--ink); text-decoration: none; letter-spacing: -0.02em; }
+.brand svg { width: 1.75rem; height: 1.75rem; color: var(--accent); }
+.lists { display: flex; gap: var(--s1); min-width: 0; overflow-x: auto; scrollbar-width: none; margin-left: var(--s4); }
+.lists a { flex: none; display: inline-flex; align-items: center; gap: var(--s2); min-height: var(--tap); padding: 0 var(--s3); border-radius: var(--radius-sm); color: var(--muted); font-size: var(--t-sm); font-weight: 600; text-decoration: none; transition: background-color var(--dur-fast) ease-out, color var(--dur-fast) ease-out; }
+.lists a small { font-weight: 500; font-size: var(--t-xs); }
+.lists a:hover { background: var(--accent-soft); color: var(--ink); }
+.lists a[aria-current='page'] { color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); border-radius: 0; }
+.top-end { margin-left: auto; display: flex; align-items: center; gap: var(--s2); }
+.link { min-height: var(--tap); display: inline-flex; align-items: center; padding: 0 var(--s2); color: var(--ink); font-size: var(--t-sm); font-weight: 600; text-decoration: none; border-radius: var(--radius-sm); }
+.link:hover { background: var(--accent-soft); }
+@media (max-width: 40rem) { .lists { order: 3; flex-basis: 100%; margin-left: 0; } .top-end .link { display: none; } }
+
+/* ---------- Buttons ---------- */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--s2); min-height: var(--tap); padding: 0 var(--s4); border-radius: var(--radius-sm); border: 1px solid var(--control); background: var(--surface); font-weight: 600; font-size: var(--t-sm); transition: background-color var(--dur-fast) ease-out, border-color var(--dur-fast) ease-out, transform var(--dur-fast) ease-out; }
+.btn:hover { background: var(--accent-soft); border-color: var(--accent); }
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn-primary:hover { background: var(--accent-ink); border-color: var(--accent-ink); }
+.btn-text { border-color: transparent; background: none; color: var(--danger); }
+.btn-text:hover { background: none; border-color: transparent; text-decoration: underline; }
+.icon-btn { width: var(--tap); height: var(--tap); display: grid; place-items: center; border-radius: var(--radius-sm); border: 1px solid transparent; background: none; color: var(--muted); transition: background-color var(--dur-fast) ease-out, color var(--dur-fast) ease-out; }
+.icon-btn svg { width: 1.25rem; height: 1.25rem; }
+.icon-btn:hover { background: var(--accent-soft); color: var(--ink); }
+.icon-btn[aria-pressed='true'] { border-color: var(--accent); color: var(--accent-ink); background: var(--accent-soft); }
+
+/* ---------- Layout: the line on the left, the table on the right ---------- */
+.day { display: grid; gap: var(--s6); margin-top: var(--s5); grid-template-areas: 'head' 'mesa' 'line'; }
+.day-head { grid-area: head; display: grid; gap: var(--s4); }
+.mesa-wrap { grid-area: mesa; }
+.line-wrap { grid-area: line; }
+@media (min-width: 56.25rem) {
+  .day { grid-template-columns: minmax(20rem, 24rem) minmax(0, 1fr); grid-template-areas: 'head mesa' 'line mesa'; align-items: start; column-gap: var(--s8); }
+  .mesa-wrap { position: sticky; top: var(--s4); }
+}
+
+.title-row { display: flex; align-items: center; gap: var(--s1); }
+.title-row h1 { font-size: var(--t-title); margin-right: auto; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--control); border-radius: var(--radius-sm); padding: 4px; gap: 4px; margin: 0; }
+.seg label { position: relative; }
+.seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.seg span { display: grid; place-items: center; min-height: calc(var(--tap) - 8px); border-radius: calc(var(--radius-sm) - 4px); font-size: var(--t-sm); font-weight: 600; color: var(--muted); transition: background-color var(--dur-fast) ease-out, color var(--dur-fast) ease-out; }
+.seg input:checked + span { background: var(--accent); color: var(--on-accent); }
+.seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.seg label:hover input:not(:checked) + span { background: var(--accent-soft); color: var(--ink); }
+.who { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); color: var(--muted); font-size: var(--t-sm); }
+
+/* ---------- The line (one list, speaking order) ---------- */
+.line-wrap h2 { font-size: var(--t-lg); display: flex; justify-content: space-between; align-items: baseline; }
+.line-wrap h2 small { font-family: var(--font); font-weight: 500; font-size: var(--t-sm); color: var(--muted); letter-spacing: 0; }
+.line { margin-top: var(--s3); border-top: 1px solid var(--line); }
+.row { display: grid; grid-template-columns: 2rem minmax(0, 1fr) auto; align-items: center; gap: var(--s3); min-height: 3.5rem; border-bottom: 1px solid var(--line); }
+.row button.give { all: unset; display: contents; cursor: pointer; }
+.row .pos { font-family: var(--font-head); font-size: var(--t-lg); color: var(--muted); text-align: center; }
+.row .name { font-weight: 600; }
+.row .state { display: block; font-size: var(--t-xs); color: var(--muted); font-weight: 500; }
+.row .time { text-align: right; font-weight: 600; }
+.row .time small { display: block; font-size: var(--t-xs); color: var(--muted); font-weight: 500; }
+.row[data-state='done'] .name { color: var(--muted); }
+.row[data-state='speaking'] { background: var(--go-soft); box-shadow: inset 3px 0 0 var(--go); }
+.row[data-state='speaking'] .state, .row[data-state='speaking'] .time { color: var(--go); }
+.row[data-state='paused'] { background: var(--hold-soft); box-shadow: inset 3px 0 0 var(--hold); }
+.row[data-state='paused'] .state { color: var(--hold-ink); }
+.row[data-state='next'] .state { color: var(--accent-ink); font-weight: 700; }
+.row[data-over] .time { color: var(--danger); }
+.row[data-state='absent'] .name { text-decoration: line-through; color: var(--muted); font-weight: 500; }
+.row:has(button.give:hover) .name { text-decoration: underline; text-underline-offset: 0.2em; }
+.row:has(button.give:focus-visible) { outline: 2px solid var(--accent); outline-offset: -2px; }
+.line-end { display: flex; gap: var(--s2); margin-top: var(--s4); flex-wrap: wrap; }
+
+/* ---------- La mesa: the signature ---------- */
+.mesa { --n: 6; --r: calc(50% - 3.25rem); position: relative; aspect-ratio: 1; width: min(100%, 36rem); margin-inline: auto; container-type: inline-size; }
+.mesa::before { content: ''; position: absolute; inset: 3.25rem; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); }
+.ring { position: absolute; inset: calc(3.25rem + 0.75rem); width: auto; height: auto; transform: rotate(-90deg); }
+.ring circle { fill: none; stroke-width: 6; }
+.ring .track { stroke: var(--line); }
+.ring .left { stroke: var(--go); stroke-linecap: round; stroke-dasharray: 100 100; stroke-dashoffset: calc(100 - var(--left, 0.64) * 100); transition: stroke-dashoffset var(--dur-base) linear, stroke var(--dur-base) ease-out; }
+.mesa[data-state='paused'] .ring .left { stroke: var(--hold); }
+.mesa[data-over] .ring .left { stroke: var(--danger); stroke-dashoffset: 0; }
+
+.centre { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: var(--s1); padding: 6rem; }
+.centre .label { font-size: var(--t-sm); font-weight: 600; color: var(--go); order: -2; }
+.mesa[data-state='paused'] .centre .label { color: var(--hold-ink); }
+.centre .who-now { font-family: var(--font-head); font-size: var(--t-xl); line-height: 1.1; order: -1; }
+.centre .clock { font-size: var(--t-clock); font-weight: 700; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; order: -3; }
+.mesa[data-over] .centre .clock { color: var(--danger); }
+.centre .of { font-size: var(--t-sm); color: var(--muted); }
+
+.seats { position: absolute; inset: 0; }
+.seat { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(calc(var(--i) / var(--n) * 1turn)) translateY(calc(-50cqi + 1.75rem)) rotate(calc(var(--i) / var(--n) * -1turn)); }
+.seat button { display: grid; justify-items: center; gap: 0; min-width: var(--tap); min-height: var(--tap); padding: var(--s1) var(--s3); border: 1px solid var(--control); border-radius: 999px; background: var(--surface); font-size: var(--t-sm); font-weight: 600; line-height: 1.2; white-space: nowrap; transition: background-color var(--dur-fast) ease-out, border-color var(--dur-fast) ease-out; }
+.seat button small { font-size: var(--t-xs); font-weight: 500; color: var(--muted); }
+.seat button:hover { border-color: var(--accent); background: var(--accent-soft); }
+.seat[data-state='done'] button { border-color: var(--line); color: var(--muted); }
+.seat[data-state='speaking'] button { background: var(--go); border-color: var(--go); color: var(--on-go); }
+.seat[data-state='speaking'] button small { color: var(--on-go); }
+.seat[data-state='paused'] button { background: var(--hold); border-color: var(--hold); color: var(--on-hold); }
+.seat[data-state='paused'] button small { color: var(--on-hold); }
+.seat[data-state='next'] button { border: 2px solid var(--accent); color: var(--accent-ink); }
+.seat[data-state='absent'] button { border-style: dashed; color: var(--muted); text-decoration: line-through; background: var(--bg); }
+.seat[data-over] button small { color: var(--danger); }
+
+.controls { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s2); width: min(100%, 26rem); margin: var(--s4) auto 0; }
+.btn-clock { width: 3.25rem; min-height: 3.25rem; padding: 0; border-color: var(--control); }
+.btn-clock svg { width: 1.25rem; height: 1.25rem; fill: currentColor; }
+.btn-clock .i-play { display: none; }
+.mesa-wrap[data-state='paused'] .btn-clock { background: var(--hold); border-color: var(--hold); color: var(--on-hold); }
+.mesa-wrap[data-state='paused'] .btn-clock .i-play { display: block; }
+.mesa-wrap[data-state='paused'] .btn-clock .i-pause { display: none; }
+.btn-next { min-height: 3.25rem; font-size: var(--t-md); }
+@media (max-width: 40rem) { .keys { display: none; } }
+.keys { text-align: center; margin-top: var(--s3); font-size: var(--t-xs); color: var(--muted); }
+kbd { font-family: var(--font); font-weight: 600; border: 1px solid var(--line); border-radius: 0.3rem; padding: 0 0.35rem; }
+
+@container (max-width: 22rem) {
+  .seat button { padding: var(--s1) var(--s2); font-size: var(--t-xs); }
+  .centre { padding: 4.5rem; }
+}
+
+/* ---------- Ranking ---------- */
+.rank { margin-top: var(--s8); border-top: 1px solid var(--line); padding-top: var(--s6); display: grid; gap: var(--s5); }
+@media (min-width: 56.25rem) { .rank { grid-template-columns: minmax(20rem, 24rem) minmax(0, 1fr); column-gap: var(--s8); } }
+.rank h2 { font-size: var(--t-title); }
+.rank-intro p { margin-top: var(--s3); color: var(--muted); max-width: 34ch; }
+.rank-intro .btn { margin-top: var(--s4); }
+table { width: 100%; border-collapse: collapse; font-size: var(--t-sm); }
+th { text-align: left; font-weight: 600; color: var(--muted); font-size: var(--t-xs); padding: 0 var(--s2) var(--s2); border-bottom: 1px solid var(--control); }
+td { padding: var(--s3) var(--s2); border-bottom: 1px solid var(--line); vertical-align: middle; }
+td.pos { font-family: var(--font-head); font-size: var(--t-lg); width: 3rem; }
+tr:first-child td { font-weight: 700; }
+.bar { position: relative; height: 6px; border-radius: 999px; background: var(--line); overflow: hidden; flex: 1; }
+.bar i { position: absolute; inset: 0; background: var(--accent); transform-origin: left; transform: scaleX(var(--v)); }
+.bar[data-over] i { background: var(--danger); }
+.avg { display: flex; align-items: center; gap: var(--s3); min-width: 9rem; }
+.avg span { width: 3.5rem; text-align: right; }
+
+.foot { margin-top: var(--s7); display: flex; flex-wrap: wrap; gap: var(--s3); align-items: center; justify-content: space-between; color: var(--muted); font-size: var(--t-sm); border-top: 1px solid var(--line); padding-top: var(--s4); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <a class="brand" href="#">
+      <svg viewBox="0 0 32 32" aria-hidden="true" fill="currentColor"><circle cx="16" cy="5" r="3.2"/><circle cx="25.5" cy="10.5" r="3.2"/><circle cx="25.5" cy="21.5" r="3.2"/><circle cx="16" cy="27" r="3.2"/><circle cx="6.5" cy="21.5" r="3.2"/><circle cx="6.5" cy="10.5" r="3.2"/></svg>
+      Ronda
+    </a>
+    <nav class="lists" aria-label="Listas guardadas">
+      <a href="#" aria-current="page">Equipo lunes <small>6</small></a>
+      <a href="#">Taller <small>14</small></a>
+      <a href="#">+ Nueva lista</a>
+    </nav>
+    <div class="top-end">
+      <a class="link" href="#">Cómo funciona</a>
+      <button type="button" class="icon-btn" id="theme" aria-label="Cambiar a tema oscuro" title="Tema">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="day">
+    <div class="day-head">
+      <div class="title-row">
+        <h1>Equipo lunes</h1>
+        <button type="button" class="icon-btn" aria-pressed="true" aria-label="Usar turnos en esta lista" title="Usar turnos en esta lista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg></button>
+        <button type="button" class="icon-btn" aria-label="Renombrar lista" title="Renombrar lista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>
+        <button type="button" class="icon-btn" aria-label="Borrar lista" title="Borrar lista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+      </div>
+      <fieldset class="seg">
+        <legend class="sr-only">Modo</legend>
+        <label><input type="radio" name="mode"><span>Sorteo</span></label>
+        <label><input type="radio" name="mode" checked><span>Turnos</span></label>
+        <label><input type="radio" name="mode"><span>Ranking</span></label>
+      </fieldset>
+      <div class="who">
+        <p>6 participantes, 1 no está</p>
+        <button type="button" class="btn">Editar</button>
+      </div>
+    </div>
+
+    <section class="mesa-wrap" id="mesa-wrap" data-state="speaking" aria-labelledby="mesa-title">
+      <h2 id="mesa-title" class="sr-only">La mesa de hoy</h2>
+      <div class="mesa" id="mesa" data-state="speaking" style="--left: 0.64">
+        <svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="track" cx="50" cy="50" r="46" pathLength="100"/><circle class="left" cx="50" cy="50" r="46" pathLength="100"/></svg>
+        <div class="centre">
+          <p class="who-now" id="now-name">Ana</p>
+          <p class="clock" id="now-clock" role="timer" aria-live="off">03:12</p>
+          <p class="label" id="now-label">Habla ahora</p>
+          <p class="of num">de 05:00</p>
+        </div>
+        <ol class="seats" aria-label="Lugares en la mesa, en orden">
+          <li class="seat" style="--i:0" data-state="done"><button type="button">Carla <small class="num">4:38</small></button></li>
+          <li class="seat" style="--i:1" data-state="done" data-over><button type="button">Diego <small class="num">+0:21</small></button></li>
+          <li class="seat" style="--i:2" data-state="speaking"><button type="button">Ana <small class="num">3:12</small></button></li>
+          <li class="seat" style="--i:3" data-state="next"><button type="button">Fede <small>sigue</small></button></li>
+          <li class="seat" style="--i:4" data-state="waiting"><button type="button">Bruno <small>espera</small></button></li>
+          <li class="seat" style="--i:5" data-state="absent"><button type="button">Elena <small>no está</small></button></li>
+        </ol>
+      </div>
+      <div class="controls">
+        <button type="button" class="btn btn-clock" id="pause" aria-label="Pausar" title="Pausar">
+          <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z"/></svg>
+          <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>
+        </button>
+        <button type="button" class="btn btn-primary btn-next">Siguiente: Fede</button>
+      </div>
+      <p class="keys"><kbd>Espacio</kbd> pausa, <kbd>→</kbd> pasa la palabra</p>
+    </section>
+
+    <section class="line-wrap" aria-labelledby="line-title">
+      <h2 id="line-title">Fila de hoy <small class="num">Total 13:11</small></h2>
+      <ol class="line">
+        <li class="row" data-state="done"><button type="button" class="give"><span class="pos">1</span><span><span class="name">Carla</span><span class="state">Listo</span></span><span class="time num">4:38<small>usó</small></span></button></li>
+        <li class="row" data-state="done" data-over><button type="button" class="give"><span class="pos">2</span><span><span class="name">Diego</span><span class="state">Se pasó</span></span><span class="time num">+0:21<small>de más</small></span></button></li>
+        <li class="row" data-state="speaking" aria-current="true"><button type="button" class="give"><span class="pos">3</span><span><span class="name">Ana</span><span class="state">Habla</span></span><span class="time num">3:12<small>le queda</small></span></button></li>
+        <li class="row" data-state="next"><button type="button" class="give"><span class="pos">4</span><span><span class="name">Fede</span><span class="state">Sigue</span></span><span class="time num">5:00</span></button></li>
+        <li class="row" data-state="waiting"><button type="button" class="give"><span class="pos">5</span><span><span class="name">Bruno</span><span class="state">Espera</span></span><span class="time num">5:00</span></button></li>
+        <li class="row" data-state="absent"><button type="button" class="give"><span class="pos"></span><span><span class="name">Elena</span><span class="state">No está</span></span><span class="time"></span></button></li>
+      </ol>
+      <div class="line-end">
+        <button type="button" class="btn">Terminar y guardar el día</button>
+        <button type="button" class="btn btn-text">Descartar día</button>
+      </div>
+    </section>
+  </main>
+
+  <section class="rank" aria-labelledby="rank-title">
+    <div class="rank-intro">
+      <h2 id="rank-title">Ranking</h2>
+      <p>Gana quien habló menos, en promedio, sobre los días que estuvo. Van 4 días.</p>
+      <button type="button" class="btn">Copiar como imagen</button>
+    </div>
+    <table>
+      <caption class="sr-only">Ranking de quién habló menos</caption>
+      <thead><tr><th scope="col">Puesto</th><th scope="col">Persona</th><th scope="col">Promedio</th><th scope="col">Días</th></tr></thead>
+      <tbody>
+        <tr><td class="pos">1</td><td>Bruno</td><td><div class="avg"><div class="bar"><i style="--v:.71"></i></div><span class="num">71%</span></div></td><td class="num">4</td></tr>
+        <tr><td class="pos">2</td><td>Ana</td><td><div class="avg"><div class="bar"><i style="--v:.78"></i></div><span class="num">78%</span></div></td><td class="num">4</td></tr>
+        <tr><td class="pos">3</td><td>Fede</td><td><div class="avg"><div class="bar"><i style="--v:.84"></i></div><span class="num">84%</span></div></td><td class="num">4</td></tr>
+        <tr><td class="pos">4</td><td>Elena</td><td><div class="avg"><div class="bar"><i style="--v:.88"></i></div><span class="num">88%</span></div></td><td class="num">3</td></tr>
+        <tr><td class="pos">5</td><td>Carla</td><td><div class="avg"><div class="bar"><i style="--v:.92"></i></div><span class="num">92%</span></div></td><td class="num">4</td></tr>
+        <tr><td class="pos">6</td><td>Diego</td><td><div class="avg"><div class="bar" data-over><i style="--v:1"></i></div><span class="num">104%</span></div></td><td class="num">4</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer class="foot">
+    <p>Mock A, La mesa. Paleta Tinta y coral. Datos de ejemplo.</p>
+    <p>Tus listas viven solo en este navegador.</p>
+  </footer>
+</div>
+
+<script>
+  // Mock only: the clock ticks, Space or the square button pauses. Everything is already drawn in the HTML.
+  const BUDGET = 300;
+  let left = 192, paused = false;
+  const wrap = document.getElementById('mesa-wrap'), mesa = document.getElementById('mesa');
+  const clock = document.getElementById('now-clock'), label = document.getElementById('now-label');
+  const seat = document.querySelector('.seat[data-state="speaking"], .seat[data-state="paused"]');
+  const row = document.querySelector('.row[aria-current]');
+  const pauseBtn = document.getElementById('pause');
+  const fmt = (s) => { const a = Math.abs(s); return (s < 0 ? '+' : '') + String(Math.floor(a / 60)).padStart(2, '0') + ':' + String(a % 60).padStart(2, '0'); };
+  function paint() {
+    clock.textContent = fmt(left);
+    mesa.style.setProperty('--left', Math.max(left, 0) / BUDGET);
+    mesa.toggleAttribute('data-over', left < 0);
+    const st = paused ? 'paused' : 'speaking';
+    for (const el of [wrap, mesa, seat, row]) el.dataset.state = st;
+    label.textContent = paused ? 'En pausa' : 'Habla ahora';
+    seat.querySelector('small').textContent = fmt(left).replace(/^0/, '');
+    row.querySelector('.state').textContent = paused ? 'En pausa' : 'Habla';
+    row.querySelector('.time').firstChild.textContent = fmt(left).replace(/^0/, '');
+    pauseBtn.setAttribute('aria-label', paused ? 'Reanudar' : 'Pausar');
+  }
+  const toggle = () => { paused = !paused; paint(); };
+  pauseBtn.addEventListener('click', toggle);
+  document.addEventListener('keydown', (e) => { if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); toggle(); } });
+  setInterval(() => { if (!paused) { left--; paint(); } }, 1000);
+  const themeBtn = document.getElementById('theme');
+  themeBtn.addEventListener('click', () => {
+    const root = document.documentElement;
+    const nowDark = root.dataset.theme === 'dark' || (root.dataset.theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+    root.dataset.theme = nowDark ? 'light' : 'dark';
+    themeBtn.setAttribute('aria-label', nowDark ? 'Cambiar a tema oscuro' : 'Cambiar a tema claro');
+  });
+</script>
+</body>
+</html>

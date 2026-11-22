@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Mock de rediseño de Ronda: turnos para hablar con el mismo tiempo para todos.">
+<title>Ronda · Mock B, Pliego</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,500..800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+/* Hallmark · shape: app screen · genre: editorial · theme: Editorial (deal 3/3, seed app-para-turnos-palabra-bba7·0a1cac9d·2026-11-22·r0) · redesign: full
+ * nav: masthead with lists as text tabs · signature: the speaker's clock set as a cover headline over the day's line as a contents table · states: speaking, up next, paused, over, done, absent
+ * axes: light+dark/display-condensed/chromatic-green · posture: restrained · contrast: pass · v2.0.0 */
+/* Hallmark · pre-emit critique: P5 H5 E4 S4 R5 V5 · weakest: E, green is both the theme signal and the speaking state; made it mean only speaking, ink carries the primary action and up next */
+/* Hallmark · answered F4 · the amber fill on the clock button is the paused state from DESIGN.md, not a second primary · answered 49 · the long labels are whole rows that give the floor, they wrap by design */
+
+/* ---------- Tokens: Editorial, with Ronda's state roles and a dark night ---------- */
+:root {
+  --space-3xs: 2px; --space-2xs: 4px; --space-xs: 8px; --space-sm: 12px; --space-md: 16px; --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px; --space-3xl: 96px;
+  --text-xs: 0.8125rem; --text-sm: 0.9375rem; --text-md: 1.0625rem; --text-lg: 1.2rem; --text-xl: 1.44rem; --text-2xl: 1.728rem; --text-3xl: 2.488rem;
+  --text-clock: clamp(5.5rem, 28vw, 14rem);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --dur-micro: 120ms; --dur-short: 220ms;
+  --container: 76rem; --gutter: 2.5rem;
+  --tap: 2.75rem;
+
+  --color-paper: light-dark(oklch(97% 0.007 86), oklch(17% 0.010 280));
+  --color-paper-2: light-dark(oklch(94% 0.010 86), oklch(21% 0.012 280));
+  --color-ink: light-dark(oklch(16% 0.012 280), oklch(95% 0.007 86));
+  --color-ink-2: light-dark(oklch(29% 0.011 280), oklch(86% 0.008 86));
+  --color-muted: light-dark(oklch(48% 0.010 75), oklch(72% 0.010 80));
+  --color-rule: light-dark(oklch(85% 0.009 85), oklch(32% 0.010 280));
+  --color-rule-2: light-dark(oklch(64% 0.010 80), oklch(52% 0.010 280));
+  --color-focus: light-dark(oklch(52% 0.135 152), oklch(76% 0.14 152));
+  /* State roles. Green means only "speaking"; ink is the primary action and "up next"; amber is paused; red is over time. */
+  --color-go: light-dark(oklch(49% 0.130 152), oklch(76% 0.140 152));
+  --color-on-go: light-dark(oklch(98% 0.005 88), oklch(18% 0.03 152));
+  --color-hold: light-dark(oklch(82% 0.15 82), oklch(86% 0.14 88));
+  --color-on-hold: oklch(25% 0.05 70);
+  --color-hold-ink: light-dark(oklch(48% 0.10 70), oklch(86% 0.14 88));
+  --color-danger: light-dark(oklch(48% 0.19 27), oklch(72% 0.17 25));
+
+  --font-display: "Bricolage Grotesque", ui-sans-serif, sans-serif; --font-body: "Source Serif 4", ui-serif, Georgia, serif;
+  --rule-hair: 1px; --rule-heavy: 4px;
+  --tracking-display: -0.012em; --display-weight: 800;
+  color-scheme: light dark;
+}
+:root[data-theme='light'] { color-scheme: light; }
+:root[data-theme='dark'] { color-scheme: dark; }
+@media (max-width: 40rem) { :root { --gutter: 1rem; } }
+
+/* ---------- Base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { overflow-x: clip; }
+body { margin: 0; background: var(--color-paper); color: var(--color-ink-2); font-family: var(--font-body); font-size: var(--text-md); line-height: 1.55; font-optical-sizing: auto; -webkit-font-smoothing: antialiased; }
+::selection { background: color-mix(in oklab, var(--color-go) 22%, transparent); }
+:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+h1, h2, h3 { margin: 0; font-family: var(--font-display); font-weight: var(--display-weight); font-variation-settings: "wdth" 75, "opsz" 96; letter-spacing: var(--tracking-display); line-height: 1; color: var(--color-ink); overflow-wrap: break-word; min-width: 0; text-wrap: balance; }
+p { margin: 0; }
+ol, ul { margin: 0; padding: 0; list-style: none; }
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+svg { display: block; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+small, th, nav, label, .btn, .ui { font-family: var(--font-display); font-weight: 500; font-variation-settings: "opsz" 12; }
+.fig { font-family: var(--font-display); font-weight: var(--display-weight); font-variation-settings: "wdth" 75, "opsz" 96; font-variant-numeric: lining-nums tabular-nums; color: var(--color-ink); letter-spacing: var(--tracking-display); }
+.page { max-width: var(--container); margin: 0 auto; padding: var(--space-md) var(--gutter) var(--space-3xl); }
+.opens { border-top: var(--rule-heavy) solid var(--color-ink); }
+
+/* ---------- Masthead ---------- */
+.mast { display: flex; align-items: center; gap: var(--space-lg); flex-wrap: wrap; padding-bottom: var(--space-sm); }
+.mast .name { font-family: var(--font-display); font-weight: 800; font-variation-settings: "wdth" 75, "opsz" 96; font-size: var(--text-3xl); line-height: 1; color: var(--color-ink); text-decoration: none; letter-spacing: var(--tracking-display); }
+.lists { display: flex; gap: var(--space-md); overflow-x: auto; scrollbar-width: none; min-width: 0; }
+.lists a, .mast-end a { flex: none; display: inline-flex; align-items: center; min-height: var(--tap); color: var(--color-ink); font-size: var(--text-sm); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 0.35em; text-decoration-thickness: 1px; transition: text-decoration-color var(--dur-short) var(--ease-out); }
+.lists a:hover, .mast-end a:hover { text-decoration-color: var(--color-go); }
+.lists a[aria-current='page'] { text-decoration-color: var(--color-ink); text-decoration-thickness: 2px; }
+.lists a small { color: var(--color-muted); margin-left: var(--space-2xs); }
+.mast-end { margin-left: auto; display: flex; align-items: center; gap: var(--space-md); }
+@media (max-width: 40rem) { .lists { order: 3; flex-basis: 100%; } .mast-end a { display: none; } }
+
+/* ---------- Controls ---------- */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-xs); min-height: 3rem; padding: 0 var(--space-lg); border: var(--rule-hair) solid var(--color-ink); border-radius: 0; background: none; color: var(--color-ink); font-size: var(--text-sm); transition: background-color var(--dur-micro) ease-out, color var(--dur-micro) ease-out, transform var(--dur-micro) ease-out; }
+.btn:hover { background: var(--color-paper-2); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+.btn-primary { background: var(--color-ink); color: var(--color-paper); }
+.btn-primary:hover { background: var(--color-ink-2); }
+.btn-text { border-color: transparent; color: var(--color-danger); padding-inline: var(--space-xs); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 0.3em; }
+.btn-text:hover { background: none; text-decoration-color: currentColor; }
+.icon-btn { width: var(--tap); height: var(--tap); display: grid; place-items: center; border: var(--rule-hair) solid transparent; border-radius: 0; background: none; color: var(--color-ink); transition: background-color var(--dur-micro) ease-out, border-color var(--dur-micro) ease-out; }
+.icon-btn svg { width: 1.2rem; height: 1.2rem; }
+.icon-btn:hover { background: var(--color-paper-2); }
+.icon-btn[aria-pressed='true'] { border-color: var(--color-ink); }
+
+/* ---------- List head ---------- */
+.head { display: grid; gap: var(--space-md); padding-top: var(--space-lg); grid-template-columns: minmax(0, 1fr) auto; align-items: end; }
+.head h1 { font-size: var(--text-3xl); }
+.tools { display: flex; }
+.modes { grid-column: 1 / -1; display: flex; gap: var(--space-lg); flex-wrap: wrap; align-items: center; border-bottom: var(--rule-hair) solid var(--color-rule); }
+.modes fieldset { display: flex; gap: var(--space-lg); border: 0; margin: 0; padding: 0; }
+.modes label { position: relative; display: inline-flex; align-items: center; min-height: var(--tap); color: var(--color-muted); font-size: var(--text-sm); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color var(--dur-micro) ease-out, border-color var(--dur-micro) ease-out; }
+.modes input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+.modes label:has(input:checked) { color: var(--color-ink); border-bottom-color: var(--color-ink); }
+.modes label:has(input:focus-visible) { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+.modes label:hover { color: var(--color-ink); }
+.modes .who { margin-left: auto; display: flex; align-items: center; gap: var(--space-sm); color: var(--color-muted); font-size: var(--text-sm); }
+.linkbtn { border: 0; background: none; min-height: var(--tap); padding: 0; color: var(--color-ink); text-decoration: underline; text-decoration-color: var(--color-rule-2); text-underline-offset: 0.3em; font-size: var(--text-sm); }
+.linkbtn:hover { text-decoration-color: var(--color-go); }
+
+/* ---------- The cover: clock as the headline ---------- */
+.cover { display: grid; gap: var(--space-lg) var(--space-xl); padding-block: var(--space-xl) var(--space-lg); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 56.25rem) { .cover .speaker { grid-template-columns: minmax(0, 1fr) minmax(0, 26rem); column-gap: var(--space-xl); align-items: end; } .speaker .ctl { grid-column: 2; grid-row: 1 / span 3; align-self: end; } }
+.clock { font-size: var(--text-clock); line-height: 0.82; margin: 0; white-space: nowrap; overflow-wrap: normal; }
+.cover[data-over] .clock { color: var(--color-danger); }
+.speaker { display: grid; gap: var(--space-sm); align-content: end; justify-items: start; }
+.speaker .ctl { justify-self: stretch; }
+.tag { justify-self: start; padding: var(--space-3xs) var(--space-xs); background: var(--color-go); color: var(--color-on-go); font-size: var(--text-sm); }
+.cover[data-state='paused'] .tag { background: var(--color-hold); color: var(--color-on-hold); }
+.speaker .who-now { font-family: var(--font-display); font-weight: 800; font-variation-settings: "wdth" 75, "opsz" 96; font-size: clamp(2.5rem, 6vw, 3.6rem); line-height: 0.95; color: var(--color-ink); letter-spacing: var(--tracking-display); }
+.speaker .of { font-size: var(--text-lg); }
+.ctl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-xs); margin-top: var(--space-sm); }
+.btn-clock { width: 3.5rem; min-height: 3.5rem; padding: 0; }
+.btn-clock svg { width: 1.2rem; height: 1.2rem; fill: currentColor; }
+.btn-clock .i-play { display: none; }
+.cover[data-state='paused'] .btn-clock { background: var(--color-hold); border-color: var(--color-hold); color: var(--color-on-hold); }
+.cover[data-state='paused'] .btn-clock .i-play { display: block; }
+.cover[data-state='paused'] .btn-clock .i-pause { display: none; }
+.ctl .btn-primary { min-height: 3.5rem; font-size: var(--text-md); }
+.drain { grid-column: 1 / -1; position: relative; height: 0.5rem; background: var(--color-rule); overflow: hidden; }
+.drain i { position: absolute; inset: 0; background: var(--color-go); transform-origin: left; transform: scaleX(var(--left, 0.64)); transition: transform 250ms linear; }
+.cover[data-state='paused'] .drain i { background: var(--color-hold); }
+.cover[data-over] .drain i { background: var(--color-danger); transform: none; }
+@media (max-width: 40rem) { .keys { display: none; } }
+.keys { grid-column: 1 / -1; font-size: var(--text-xs); color: var(--color-muted); }
+kbd { font-family: var(--font-display); border: var(--rule-hair) solid var(--color-rule-2); padding: 0 0.3rem; }
+
+/* ---------- Today's line as a contents table ---------- */
+.section-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-md); padding-top: var(--space-md); }
+.section-head h2 { font-size: var(--text-2xl); }
+.section-head small { color: var(--color-muted); font-size: var(--text-sm); }
+.line { margin-top: var(--space-md); }
+.row { border-top: var(--rule-hair) solid var(--color-rule); }
+.row:last-child { border-bottom: var(--rule-hair) solid var(--color-rule); }
+.line-end .btn { white-space: nowrap; }
+.give { all: unset; box-sizing: border-box; display: grid; grid-template-columns: 3rem minmax(0, 1fr) auto; gap: var(--space-md); align-items: baseline; width: 100%; min-height: 4rem; padding: var(--space-sm) var(--space-xs); cursor: pointer; }
+@media (min-width: 56.25rem) { .give { grid-template-columns: 4rem minmax(0, 1fr) 12rem 8rem; } }
+.give:focus-visible { outline: 2px solid var(--color-focus); outline-offset: -2px; }
+.give:hover .nm { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.12em; text-decoration-color: var(--color-go); }
+.pos { font-size: var(--text-xl); color: var(--color-muted); }
+.nm { font-size: clamp(1.5rem, 3.4vw, 2rem); }
+.st { font-size: var(--text-sm); color: var(--color-muted); }
+.tm { text-align: right; font-size: var(--text-xl); }
+.tm small { display: block; font-size: var(--text-xs); color: var(--color-muted); font-weight: 500; letter-spacing: 0; }
+@media (max-width: 56.1875rem) { .st { grid-column: 2; grid-row: 2; margin-top: calc(var(--space-xs) * -1); } .tm { grid-column: 3; grid-row: 1 / span 2; align-self: center; } }
+.row[data-state='done'] .nm, .row[data-state='done'] .tm { color: var(--color-muted); }
+.row[data-state='speaking'], .row[data-state='paused'] { background: var(--color-paper-2); }
+.row[data-state='speaking'] .st { color: var(--color-go); font-weight: 700; }
+.row[data-state='speaking'] .pos { color: var(--color-go); }
+.row[data-state='paused'] .st { color: var(--color-hold-ink); font-weight: 700; }
+.row[data-state='next'] .st { color: var(--color-ink); font-weight: 700; }
+.row[data-over] .tm { color: var(--color-danger); }
+.row[data-state='absent'] .nm { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--color-muted); }
+.line-end { display: flex; gap: var(--space-xs); flex-wrap: wrap; margin-top: var(--space-lg); }
+
+/* ---------- Ranking ---------- */
+.rank { margin-top: var(--space-3xl); display: grid; gap: var(--space-xl); padding-top: var(--space-md); }
+@media (min-width: 56.25rem) { .rank { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); } }
+.rank h2 { font-size: var(--text-2xl); }
+.standfirst { margin-top: var(--space-md); font-size: var(--text-xl); line-height: 1.25; color: var(--color-ink); max-width: 24ch; }
+.rank-intro small { display: block; margin-top: var(--space-md); color: var(--color-muted); font-size: var(--text-sm); }
+.rank-intro .btn { margin-top: var(--space-lg); }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: var(--text-xs); color: var(--color-muted); padding: 0 var(--space-xs) var(--space-xs); border-bottom: var(--rule-hair) solid var(--color-rule-2); }
+td { padding: var(--space-sm) var(--space-xs); border-bottom: var(--rule-hair) solid var(--color-rule); vertical-align: middle; }
+td.fig { font-size: var(--text-xl); width: 3rem; }
+td.person { font-family: var(--font-display); font-variation-settings: "opsz" 12; font-weight: 500; color: var(--color-ink); }
+tbody tr:first-child td.person { font-weight: 700; }
+.avg { display: flex; align-items: center; gap: var(--space-sm); }
+.bar { position: relative; flex: 1; height: 0.375rem; background: var(--color-rule); overflow: hidden; min-width: 4rem; }
+.bar i { position: absolute; inset: 0; background: var(--color-ink); transform-origin: left; transform: scaleX(var(--v)); }
+.bar[data-over] i { background: var(--color-danger); }
+.avg .fig { width: 3.5rem; text-align: right; font-size: var(--text-lg); }
+
+.foot { margin-top: var(--space-2xl); padding-top: var(--space-sm); border-top: var(--rule-hair) solid var(--color-rule); display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--space-sm); font-size: var(--text-sm); color: var(--color-muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="mast">
+    <a class="name" href="#">Ronda</a>
+    <nav class="lists" aria-label="Listas guardadas">
+      <a href="#" aria-current="page">Equipo lunes<small>6</small></a>
+      <a href="#">Taller<small>14</small></a>
+      <a href="#">Nueva lista</a>
+    </nav>
+    <div class="mast-end">
+      <a href="#">Cómo funciona</a>
+      <button type="button" class="icon-btn" id="theme" aria-label="Cambiar a tema oscuro" title="Tema">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="opens">
+    <div class="head">
+      <h1>Equipo lunes</h1>
+      <div class="tools">
+        <button type="button" class="icon-btn" aria-pressed="true" aria-label="Usar turnos en esta lista" title="Usar turnos en esta lista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6"/></svg></button>
+        <button type="button" class="icon-btn" aria-label="Renombrar lista" title="Renombrar lista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg></button>
+        <button type="button" class="icon-btn" aria-label="Borrar lista" title="Borrar lista"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+      </div>
+      <div class="modes">
+        <fieldset>
+          <legend class="sr-only">Modo</legend>
+          <label><input type="radio" name="mode">Sorteo</label>
+          <label><input type="radio" name="mode" checked>Turnos</label>
+          <label><input type="radio" name="mode">Ranking</label>
+        </fieldset>
+        <p class="who ui">6 participantes, 1 no está <button type="button" class="linkbtn ui">Editar</button></p>
+      </div>
+    </div>
+
+    <section class="cover" id="cover" data-state="speaking" style="--left: 0.64" aria-label="Habla ahora">
+      <p class="clock fig" id="now-clock" role="timer" aria-live="off">03:12</p>
+      <div class="speaker">
+        <p class="tag ui" id="now-label">Habla ahora</p>
+        <p class="who-now" id="now-name">Ana</p>
+        <p class="of">de 05:00 por persona</p>
+        <div class="ctl">
+          <button type="button" class="btn btn-clock" id="pause" aria-label="Pausar" title="Pausar">
+            <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4.5v16H6zM13.5 4H18v16h-4.5z"/></svg>
+            <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>
+          </button>
+          <button type="button" class="btn btn-primary">Siguiente: Fede</button>
+        </div>
+      </div>
+      <div class="drain" aria-hidden="true"><i></i></div>
+      <p class="keys"><kbd>Espacio</kbd> pausa, <kbd>→</kbd> pasa la palabra</p>
+    </section>
+
+    <section class="opens" aria-labelledby="line-title">
+      <div class="section-head">
+        <h2 id="line-title">Fila de hoy</h2>
+        <small class="fig-s">Total 13:11</small>
+      </div>
+      <ol class="line">
+        <li class="row" data-state="done"><button type="button" class="give"><span class="pos fig">01</span><span class="nm fig">Carla</span><small class="st">Listo</small><span class="tm fig">4:38<small>usó</small></span></button></li>
+        <li class="row" data-state="done" data-over><button type="button" class="give"><span class="pos fig">02</span><span class="nm fig">Diego</span><small class="st">Se pasó</small><span class="tm fig">+0:21<small>de más</small></span></button></li>
+        <li class="row" data-state="speaking" aria-current="true"><button type="button" class="give"><span class="pos fig">03</span><span class="nm fig">Ana</span><small class="st">Habla</small><span class="tm fig">3:12<small>le queda</small></span></button></li>
+        <li class="row" data-state="next"><button type="button" class="give"><span class="pos fig">04</span><span class="nm fig">Fede</span><small class="st">Sigue</small><span class="tm fig">5:00</span></button></li>
+        <li class="row" data-state="waiting"><button type="button" class="give"><span class="pos fig">05</span><span class="nm fig">Bruno</span><small class="st">Espera</small><span class="tm fig">5:00</span></button></li>
+        <li class="row" data-state="absent"><button type="button" class="give"><span class="pos fig"></span><span class="nm fig">Elena</span><small class="st">No está</small><span class="tm fig"></span></button></li>
+      </ol>
+      <div class="line-end">
+        <button type="button" class="btn">Terminar y guardar el día</button>
+        <button type="button" class="btn btn-text">Descartar día</button>
+      </div>
+    </section>
+
+    <section class="rank opens" aria-labelledby="rank-title">
+      <div class="rank-intro">
+        <h2 id="rank-title">Ranking</h2>
+        <p class="standfirst">Gana quien habló menos, en promedio, sobre los días que estuvo.</p>
+        <small>Van 4 días guardados.</small>
+        <button type="button" class="btn">Copiar como imagen</button>
+      </div>
+      <table>
+        <caption class="sr-only">Ranking de quién habló menos</caption>
+        <thead><tr><th scope="col">Puesto</th><th scope="col">Persona</th><th scope="col">Promedio</th><th scope="col">Días</th></tr></thead>
+        <tbody>
+          <tr><td class="fig">1</td><td class="person">Bruno</td><td><div class="avg"><div class="bar"><i style="--v:.71"></i></div><span class="fig">71%</span></div></td><td class="fig">4</td></tr>
+          <tr><td class="fig">2</td><td class="person">Ana</td><td><div class="avg"><div class="bar"><i style="--v:.78"></i></div><span class="fig">78%</span></div></td><td class="fig">4</td></tr>
+          <tr><td class="fig">3</td><td class="person">Fede</td><td><div class="avg"><div class="bar"><i style="--v:.84"></i></div><span class="fig">84%</span></div></td><td class="fig">4</td></tr>
+          <tr><td class="fig">4</td><td class="person">Elena</td><td><div class="avg"><div class="bar"><i style="--v:.88"></i></div><span class="fig">88%</span></div></td><td class="fig">3</td></tr>
+          <tr><td class="fig">5</td><td class="person">Carla</td><td><div class="avg"><div class="bar"><i style="--v:.92"></i></div><span class="fig">92%</span></div></td><td class="fig">4</td></tr>
+          <tr><td class="fig">6</td><td class="person">Diego</td><td><div class="avg"><div class="bar" data-over><i style="--v:1"></i></div><span class="fig">104%</span></div></td><td class="fig">4</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>Mock B, Pliego. Paleta tinta y verde imprenta. Datos de ejemplo.</p>
+    <p>Tus listas viven solo en este navegador.</p>
+  </footer>
+</div>
+
+<script>
+  // Mock only: the clock ticks, Space or the square button pauses. Everything is already drawn in the HTML.
+  const BUDGET = 300;
+  let left = 192, paused = false;
+  const cover = document.getElementById('cover');
+  const clock = document.getElementById('now-clock'), label = document.getElementById('now-label');
+  const row = document.querySelector('.row[aria-current]');
+  const pauseBtn = document.getElementById('pause');
+  const fmt = (s) => { const a = Math.abs(s); return (s < 0 ? '+' : '') + String(Math.floor(a / 60)).padStart(2, '0') + ':' + String(a % 60).padStart(2, '0'); };
+  function paint() {
+    clock.textContent = fmt(left);
+    cover.style.setProperty('--left', Math.max(left, 0) / BUDGET);
+    cover.toggleAttribute('data-over', left < 0);
+    cover.dataset.state = row.dataset.state = paused ? 'paused' : 'speaking';
+    label.textContent = paused ? 'En pausa' : 'Habla ahora';
+    row.querySelector('.st').textContent = paused ? 'En pausa' : 'Habla';
+    row.querySelector('.tm').firstChild.textContent = fmt(left).replace(/^0/, '');
+    pauseBtn.setAttribute('aria-label', paused ? 'Reanudar' : 'Pausar');
+  }
+  const toggle = () => { paused = !paused; paint(); };
+  pauseBtn.addEventListener('click', toggle);
+  document.addEventListener('keydown', (e) => { if (e.code === 'Space' && e.target === document.body) { e.preventDefault(); toggle(); } });
+  setInterval(() => { if (!paused) { left--; paint(); } }, 1000);
+  const themeBtn = document.getElementById('theme');
+  themeBtn.addEventListener('click', () => {
+    const root = document.documentElement;
+    const nowDark = root.dataset.theme === 'dark' || (root.dataset.theme !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+    root.dataset.theme = nowDark ? 'light' : 'dark';
+    themeBtn.setAttribute('aria-label', nowDark ? 'Cambiar a tema oscuro' : 'Cambiar a tema claro');
+  });
+</script>
+</body>
+</html>
