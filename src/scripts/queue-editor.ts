@@ -6,7 +6,7 @@ import { ICONS } from '../lib/icons';
 import type { Person } from '../lib/lists';
 
 const t = messages[document.documentElement.lang === 'en' ? 'en' : 'es'];
-
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 type Act = 'away' | 'up' | 'down';
 
@@ -17,6 +17,25 @@ export interface QueueEditorOptions {
 }
 
 export function createQueueEditor({ list, onMove, onToggleAway }: QueueEditorOptions) {
+  // Rows slide to their new place (FLIP): note where each row was, change the DOM, then animate from the old spot.
+  // Offsets are taken from the list's top, so text above the list changing height does not move the rows.
+  type Tops = Map<string, number>;
+  let carried: Tops | null = null; // where the rows were when a drag ended, for the redraw that follows
+
+  function tops(): Tops {
+    const base = list.getBoundingClientRect().top;
+    return new Map([...list.children].map((li) => [(li as HTMLElement).dataset.id!, li.getBoundingClientRect().top - base]));
+  }
+
+  function slide(from: Tops) {
+    if (reduceMotion.matches) return;
+    const now = tops();
+    for (const li of list.children as HTMLCollectionOf<HTMLElement>) {
+      const dy = (from.get(li.dataset.id!) ?? 0) - now.get(li.dataset.id!)!;
+      if (Math.abs(dy) > 0.5) li.animate([{ transform: `translateY(${dy}px)` }, { transform: 'none' }], { duration: 200, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
+    }
+  }
+
   function button(act: Act, label: string, icon: string, disabled = false) {
     const b = document.createElement('button');
     b.type = 'button';
@@ -57,7 +76,9 @@ export function createQueueEditor({ list, onMove, onToggleAway }: QueueEditorOpt
     const focused = document.activeElement instanceof HTMLElement && list.contains(document.activeElement) ? document.activeElement : null;
     const focusedId = focused?.closest<HTMLElement>('.queue-row')?.dataset.id;
     const focusedAct = focused?.dataset.act as Act | undefined;
+    const from = carried ?? tops();
     list.replaceChildren(...people.map((p, i) => row(p, i, people.length, absent.has(p.id))));
+    slide(from);
     if (!focusedId || !focusedAct) return;
     const target = list.querySelector<HTMLElement>(`[data-id="${CSS.escape(focusedId)}"]`);
     const own = target?.querySelector<HTMLButtonElement>(`[data-act="${focusedAct}"]`);
@@ -89,8 +110,10 @@ export function createQueueEditor({ list, onMove, onToggleAway }: QueueEditorOpt
     const middle = (el: Element) => { const r = el.getBoundingClientRect(); return r.top + r.height / 2; };
     const onMoveEvent = (ev: PointerEvent) => {
       // A fast pointer can cross several rows between two events.
+      const from = tops();
       for (let prev; (prev = dragged.previousElementSibling) && ev.clientY < middle(prev);) list.insertBefore(dragged, prev);
       for (let next; (next = dragged.nextElementSibling) && ev.clientY > middle(next);) list.insertBefore(next, dragged);
+      slide(from);
     };
     const end = (ev: PointerEvent) => {
       list.removeEventListener('pointermove', onMoveEvent);
@@ -98,8 +121,13 @@ export function createQueueEditor({ list, onMove, onToggleAway }: QueueEditorOpt
       list.removeEventListener('pointercancel', end);
       dragged.classList.remove('is-dragging');
       const to = indexOf(id);
+      const from = tops();
       list.replaceChildren(...before); // back to the saved order; onMove redraws from the store
-      if (ev.type === 'pointerup' && to !== before.indexOf(dragged)) onMove(id, to);
+      if (ev.type === 'pointerup' && to !== before.indexOf(dragged)) {
+        carried = from; // the redraw slides from where the drag left the rows, not from the saved order
+        onMove(id, to);
+        carried = null;
+      } else slide(from);
     };
     list.addEventListener('pointermove', onMoveEvent);
     list.addEventListener('pointerup', end);

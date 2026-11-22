@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ronda · Mover el orden sorteado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+/* Page chrome: fixed neutral, same as the other mocks in docs/. */
+* { box-sizing: border-box; margin: 0; }
+body { background: #111; color: #eee; font-family: "Figtree", sans-serif; line-height: 1.5; padding: 0 16px 80px; }
+.wrap { max-width: 1180px; margin: 0 auto; }
+.bar-top { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; padding: 16px 0; background: #111; border-bottom: 1px solid #333; }
+@media (max-width: 700px) { .bar-top { position: static; } }
+h1 { font-family: "Fraunces", serif; font-weight: 500; font-size: 1.75rem; letter-spacing: -0.02em; }
+.pick { display: flex; gap: 4px; border: 0; padding: 0; }
+.pick label { position: relative; }
+.pick input { position: absolute; opacity: 0; inset: 0; }
+.pick span { display: block; padding: 6px 12px; border: 1px solid #444; border-radius: 8px; font-size: 0.875rem; cursor: pointer; }
+.pick input:checked + span { background: #eee; color: #111; border-color: #eee; font-weight: 600; }
+.pick input:focus-visible + span { outline: 2px solid #8cf; outline-offset: 2px; }
+.intro { margin-top: 24px; color: #bbb; max-width: 75ch; display: grid; gap: 8px; }
+.intro b { color: #fff; }
+.item { margin-top: 56px; padding-top: 24px; border-top: 1px solid #333; }
+.item > h2 { font-family: "Fraunces", serif; font-weight: 600; font-size: 1.5rem; color: #fff; letter-spacing: -0.02em; }
+.item > h2 small { font: 600 0.75rem "Figtree", sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: #999; margin-right: 8px; }
+.rec { display: inline-block; margin-left: 8px; padding: 2px 10px; border-radius: 999px; background: #eee; color: #111; font: 700 0.75rem "Figtree", sans-serif; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; }
+.why { margin-top: 6px; color: #bbb; max-width: 75ch; }
+.board { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; margin-top: 20px; }
+.col { display: grid; gap: 8px; width: min(360px, 100%); }
+.step { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #999; }
+.note { font-size: 0.8125rem; color: #aaa; }
+.notes { flex: 1 1 280px; max-width: 420px; display: grid; gap: 12px; color: #ccc; font-size: 0.9rem; }
+.notes h3 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: #999; }
+.notes ul { padding-left: 1.1em; display: grid; gap: 4px; }
+/* Linking to #desktop (used for the PNG) unpins the top bar so it does not cover the frame. */
+body:has(#desktop:target) .bar-top { position: static; }
+.rec.off { background: transparent; color: #999; border: 1px solid #555; }
+.scroller { overflow-x: auto; margin-top: 20px; padding-bottom: 8px; }
+.callouts { margin-top: 16px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px 24px; color: #ccc; font-size: 0.9rem; }
+.callouts p b { color: #fff; }
+.callouts span { display: inline-grid; place-items: center; width: 22px; height: 22px; margin-right: 6px; border-radius: 50%; background: #eee; color: #111; font-size: 0.75rem; font-weight: 700; }
+
+/* App frame with Ronda's real tokens (light and "Noche tinta" dark). */
+.app {
+  --bg: light-dark(oklch(0.975 0.008 70), oklch(0.18 0.015 255));
+  --surface: light-dark(oklch(0.995 0.004 70), oklch(0.25 0.018 255));
+  --ink: light-dark(oklch(0.24 0.015 40), oklch(0.93 0.008 250));
+  --muted: light-dark(oklch(0.5 0.02 45), oklch(0.77 0.015 250));
+  --line: light-dark(oklch(0.89 0.012 60), oklch(0.42 0.02 255));
+  --accent: light-dark(oklch(0.55 0.16 33), oklch(0.75 0.14 38));
+  --accent-ink: light-dark(oklch(0.53 0.16 33), oklch(0.77 0.13 38));
+  --accent-soft: light-dark(oklch(0.94 0.04 40), oklch(0.32 0.045 38));
+  --on-accent: light-dark(oklch(0.99 0.005 60), oklch(0.2 0.02 40));
+  --go: light-dark(oklch(0.5 0.13 150), oklch(0.8 0.15 160));
+  --go-soft: light-dark(oklch(0.94 0.05 150), oklch(0.31 0.05 165));
+  --control: light-dark(oklch(0.62 0.02 50), oklch(0.62 0.02 255));
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px;
+  --t-xs: 0.833rem; --t-sm: 0.9375rem; --t-lg: 1.2rem; --t-xl: 1.44rem; --radius: 16px; --radius-sm: 10px; --tap: 44px;
+  color-scheme: dark;
+  border: 1px solid #333; border-radius: 28px; background: var(--bg); color: var(--ink);
+  padding: 16px; display: grid; align-content: start; gap: var(--s3); min-height: 640px;
+}
+body:has(#t-light:checked) .app { color-scheme: light; }
+.app button { font: inherit; color: inherit; cursor: pointer; }
+.app button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.muted { color: var(--muted); }
+.xs { font-size: var(--t-xs); }
+.row { display: flex; align-items: center; gap: var(--s2); }
+.push { margin-left: auto; }
+.h2 { font-family: "Fraunces", serif; font-weight: 600; font-size: var(--t-xl); letter-spacing: -0.02em; }
+.label { font-weight: 600; font-size: var(--t-sm); }
+.chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.chip { min-height: 36px; min-width: 36px; padding: 0 var(--s3); border: 1px solid var(--control); border-radius: 999px; background: transparent; font-size: var(--t-sm); }
+.chip.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: 3px; border: 1px solid var(--control); border-radius: var(--radius-sm); background: var(--surface); }
+.seg span { display: grid; place-items: center; min-height: 40px; border-radius: 7px; font-weight: 600; font-size: var(--t-sm); color: var(--muted); }
+.seg .cur { background: var(--accent); color: var(--on-accent); }
+.hint { font-size: var(--t-xs); color: var(--muted); }
+.actions { display: flex; flex-wrap: wrap; gap: var(--s3); }
+.btn { min-height: var(--tap); padding: 0 var(--s5); border: 1px solid transparent; border-radius: var(--radius-sm); font-weight: 600; }
+.btn.primary { flex: 1 1 auto; background: var(--accent); color: var(--on-accent); }
+.btn.ghost { background: transparent; border-color: var(--line); }
+
+/* Today's line rows (copy of .queue-row in global.css). */
+.queue { list-style: none; padding: 0; display: grid; gap: var(--s2); counter-reset: q; }
+.qrow { counter-increment: q; display: flex; align-items: center; gap: var(--s1); min-height: 52px; padding-left: var(--s2); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
+.qrow::before { content: counter(q); flex: none; display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); font-size: var(--t-xs); font-weight: 700; font-variant-numeric: tabular-nums; }
+.qrow.away { counter-increment: none; border: 1px dashed var(--control); background: transparent; }
+.qrow.away::before { content: '–'; background: transparent; color: var(--muted); }
+.qrow.moved { border-color: var(--accent); }
+.grip { flex: none; display: grid; place-items: center; width: 28px; height: var(--tap); color: var(--muted); letter-spacing: -2px; }
+.qname { flex: 1; min-width: 0; font-weight: 600; }
+.qrow.away .qname { color: var(--muted); text-decoration: line-through; }
+.ib { flex: none; display: grid; place-items: center; width: var(--tap); height: var(--tap); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--muted); }
+.ib:hover { color: var(--ink); background: var(--accent-soft); }
+.ib:disabled { color: var(--line); background: transparent; cursor: default; }
+.ib svg { width: 20px; height: 20px; }
+.live { min-height: 1.5em; font-size: var(--t-xs); color: var(--accent-ink); font-weight: 600; }
+
+/* Desktop frame: fixed width so a narrow pane scrolls instead of stacking. */
+.app.desk { width: 1120px; min-height: 0; border-radius: 16px; padding: 16px 32px 40px; gap: 0; }
+.top { display: flex; align-items: center; gap: var(--s3); min-height: 52px; }
+.brand { display: flex; align-items: center; gap: var(--s2); font-family: "Fraunces", serif; font-weight: 600; font-size: var(--t-lg); letter-spacing: -0.02em; }
+.brand i { width: 22px; height: 22px; border-radius: 50%; border: 5px dotted var(--accent); }
+.helplink { font-size: var(--t-sm); font-weight: 600; padding: var(--s2); }
+.lang { display: flex; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; font-size: var(--t-sm); font-weight: 600; }
+.lang b, .lang span { display: grid; place-items: center; min-width: 44px; height: 42px; }
+.lang b { background: var(--accent); color: var(--on-accent); }
+.lang span { color: var(--muted); }
+.ibtn { display: grid; place-items: center; width: var(--tap); height: var(--tap); border: 1px solid var(--line); border-radius: var(--radius-sm); color: var(--muted); }
+.ibtn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-ink); }
+.dtabs { display: flex; align-items: flex-end; gap: var(--s1); margin-top: var(--s5); border-bottom: 1px solid var(--line); }
+.dtab { display: inline-flex; align-items: center; gap: var(--s2); min-height: 44px; padding: 0 var(--s4); border: 1px solid transparent; border-bottom: 0; border-radius: var(--radius-sm) var(--radius-sm) 0 0; color: var(--muted); font-size: var(--t-sm); }
+.dtab.cur { background: var(--surface); border-color: var(--line); color: var(--ink); font-weight: 600; margin-bottom: -1px; box-shadow: inset 0 2px 0 var(--accent); }
+.dtab.add { color: var(--accent-ink); font-weight: 600; }
+.cols { display: grid; grid-template-columns: 25rem minmax(0, 1fr); gap: 64px; margin-top: 32px; align-items: start; }
+.panel { display: grid; gap: var(--s3); }
+.title { font-family: "Fraunces", serif; font-weight: 500; font-size: 2rem; letter-spacing: -0.02em; line-height: 1.2; }
+.lede { color: var(--muted); }
+.tagbox { display: flex; flex-wrap: wrap; gap: 6px; padding: var(--s3); background: var(--surface); border: 1px solid var(--control); border-radius: var(--radius-sm); }
+.person { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 var(--s2) 0 var(--s3); border-radius: 999px; background: var(--accent-soft); font-weight: 600; font-size: var(--t-sm); }
+.person em { font-style: normal; color: var(--muted); font-weight: 400; letter-spacing: 4px; }
+.person.away { background: transparent; border: 1px dashed var(--control); color: var(--muted); }
+.person.away b { text-decoration: line-through; }
+.saved { font-size: var(--t-xs); color: var(--muted); }
+.saved::before { content: '● '; color: var(--accent); }
+/* Right column: every setup control stops at the line's 32rem, so the line, the hint and the buttons share one edge. */
+.setup { display: grid; gap: var(--s4); max-width: 32rem; }
+.setup .field { display: grid; gap: var(--s2); }
+.otro { display: inline-flex; align-items: center; gap: var(--s4); min-height: 36px; padding: 0 var(--s3); border: 1px solid var(--control); border-radius: var(--radius-sm); font-size: var(--t-sm); }
+.mark { outline: 2px dashed #e0b400; outline-offset: 4px; border-radius: var(--radius-sm); position: relative; }
+.mark::after { content: attr(data-n); position: absolute; top: -12px; right: -12px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #e0b400; color: #111; font: 700 0.75rem "Figtree", sans-serif; }
+
+/* Option B: pin control per row. */
+.pin { display: flex; padding: 2px; border: 1px solid var(--control); border-radius: 999px; }
+.pin span { display: grid; place-items: center; min-height: 32px; padding: 0 var(--s2); border-radius: 999px; font-size: var(--t-xs); font-weight: 600; color: var(--muted); }
+.pin .on { background: var(--accent-soft); color: var(--accent-ink); }
+
+/* Option C: rows of a day in progress (phone). */
+.now { display: grid; gap: var(--s1); padding: var(--s3) var(--s4); background: var(--surface); border: 1px solid var(--go); border-radius: var(--radius); }
+.now-label { font-size: var(--t-xs); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; color: var(--go); }
+.now-name { font-family: "Fraunces", serif; font-size: var(--t-lg); font-weight: 600; }
+.now-clock { font-size: 2.5rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.trows { display: grid; gap: var(--s2); }
+.trow { display: grid; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); overflow: hidden; }
+.trow.speaking { background: var(--go-soft); border-color: var(--go); }
+.trow.open { border-color: var(--accent); }
+.tmain { display: flex; align-items: center; gap: var(--s3); min-height: 54px; padding: 0 0 0 var(--s3); }
+.ring { flex: none; width: 34px; height: 34px; border-radius: 50%; background: conic-gradient(var(--a, var(--accent)) calc(var(--p, 100) * 1%), var(--line) 0); display: grid; place-items: center; }
+.ring::after { content: ''; width: 24px; height: 24px; border-radius: 50%; background: var(--surface); }
+.speaking .ring { --a: var(--go); }
+.speaking .ring::after { background: var(--go-soft); }
+.who { flex: 1; min-width: 0; display: grid; line-height: 1.25; }
+.who b { font-size: var(--t-sm); }
+.who span { font-size: var(--t-xs); color: var(--muted); }
+.speaking .who span { color: var(--go); font-weight: 600; }
+.time { font-weight: 700; font-size: var(--t-sm); font-variant-numeric: tabular-nums; }
+.tmore { display: flex; gap: var(--s2); padding: 0 var(--s3) var(--s3); }
+.tmore .btn { flex: 1; min-height: var(--tap); padding: 0 var(--s3); font-size: var(--t-sm); }
+.tmore .btn.ghost { border-color: var(--control); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar-top">
+    <h1>Ronda · Mover el orden sorteado</h1>
+    <fieldset class="pick">
+      <label><input type="radio" name="theme" id="t-dark" checked><span>Oscuro</span></label>
+      <label><input type="radio" name="theme" id="t-light"><span>Claro</span></label>
+    </fieldset>
+  </div>
+
+  <div class="intro">
+    <p><b>El problema.</b> Con el orden "Sorteado", "Empezar turnos" sortea y arranca en el mismo toque: el orden no se ve hasta que ya empezó. Si alguien se tiene que ir antes, no hay cómo ponerlo primero sin perder el sorteo.</p>
+    <p><b>Elegida: A.</b> B y C quedan abajo como opciones no elegidas, por registro. Nombres de ejemplo.</p>
+  </div>
+
+  <!-- A -->
+  <section class="item">
+    <h2><small>A</small>Revisar antes de empezar <span class="rec">Elegida</span></h2>
+    <p class="why">Sortear y empezar pasan a ser dos pasos. El orden sorteado aparece con los mismos controles de la Fila de hoy: arrastrar, flechas y "no está". La segunda pantalla funciona: probá subir a Diego.</p>
+    <div class="board">
+      <div class="col">
+        <span class="step">Teléfono · 1 · Antes de sortear</span>
+        <div class="app">
+          <span class="h2">Turnos</span>
+          <span class="label">Tiempo por persona</span>
+          <div class="chips"><span class="chip">2</span><span class="chip">3</span><span class="chip on">5</span><span class="chip">10</span><span class="chip">15</span></div>
+          <span class="label">Orden</span>
+          <div class="seg"><span class="cur">Sorteado</span><span>Como la lista</span></div>
+          <p class="hint">Sorteá y revisá el orden antes de empezar: podés mover a quien necesite hablar primero o al final.</p>
+          <div class="actions"><button class="btn primary">Sortear orden</button></div>
+        </div>
+        <p class="note">El botón cambia de "Empezar turnos" a "Sortear orden" solo con el orden sorteado. Con "Como la lista" queda como hoy.</p>
+      </div>
+
+      <div class="col">
+        <span class="step">Teléfono · 2 · Orden sorteado, editable</span>
+        <div class="app" data-line="phone">
+          <span class="h2">Turnos</span>
+          <div class="row"><span class="label">Orden de hoy</span><span class="push muted xs js-count">5 presentes</span></div>
+          <ol class="queue js-queue" aria-label="Orden de hoy"></ol>
+          <p class="live js-live" aria-live="polite"></p>
+          <p class="hint">Hablan en este orden. Moverlas acá cambia solo el orden de hoy; la lista queda igual.</p>
+          <div class="actions">
+            <button class="btn ghost js-redraw">Volver a sortear</button>
+            <button class="btn primary js-start">Empezar con Bruno</button>
+          </div>
+        </div>
+        <p class="note">"Empezar con …" nombra a quien abre, para que el cambio se note antes del toque. "Volver a sortear" pide confirmación si moviste a alguien. Tiempo y Orden siguen arriba de la fila, como en desktop (recortados en el dibujo).</p>
+      </div>
+
+      <div class="notes">
+        <h3>Reglas</h3>
+        <ul>
+          <li>Mover acá no toca el orden de la lista. En "Como la lista" sí, como hoy; el texto de ayuda lo dice en cada caso.</li>
+          <li>El borrador se guarda: una recarga no vuelve a sortear. Se borra al empezar, al pasar a "Como la lista" o al volver a sortear.</li>
+          <li>Quien no está aparece tachado y sin número, igual que en la Fila de hoy.</li>
+          <li>Alguien agregado después del sorteo entra al final.</li>
+          <li>Lector de pantalla: "Diego, posición 1 de 5".</li>
+          <li>Código: <code>startSession</code> ya acepta un orden; recibe el borrador en vez de un <code>shuffle</code> nuevo. El editor de la fila se reutiliza tal cual.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="step" id="desktop" style="margin-top:40px;scroll-margin-top:16px">Desktop · 1280 px · orden sorteado, con Diego movido al primer lugar (se puede mover)</h3>
+    <div class="scroller">
+      <div class="app desk" data-line="desk">
+        <header class="top">
+          <span class="brand"><i></i>Ronda</span><span class="muted sm" style="font-size:var(--t-sm)">Turnos, sorteos y grupos</span>
+          <span class="push helplink">¿Cómo funciona?</span><span class="lang"><b>ES</b><span>EN</span></span><span class="ibtn">▭</span>
+        </header>
+        <nav class="dtabs"><span class="dtab cur">Equipo <small class="muted">6</small></span><span class="dtab add">+ Nueva lista</span></nav>
+
+        <div class="cols">
+          <section class="panel">
+            <div class="row"><span class="title">Equipo</span><span class="push ibtn on">◷</span><span class="ibtn">✎</span><span class="ibtn">🗑</span></div>
+            <p class="lede">Sumá a las personas, elegí cuánto tiempo tiene cada una y empezá. Habla una por vez.</p>
+            <div class="seg"><span class="cur">Turnos</span><span>Ranking</span></div>
+            <div class="row" style="margin-top:var(--s3)"><span class="label">Participantes</span><span class="push muted xs">5 participantes · 1 no está</span></div>
+            <div class="tagbox mark" data-n="1">
+              <span class="person"><b>Ana</b><em>⊘×</em></span><span class="person"><b>Bruno</b><em>⊘×</em></span>
+              <span class="person away"><b>Carla</b><em>⊘×</em></span><span class="person"><b>Diego</b><em>⊘×</em></span>
+              <span class="person"><b>Elena</b><em>⊘×</em></span><span class="person"><b>Fede</b><em>⊘×</em></span>
+              <span class="muted" style="flex-basis:100%;font-size:var(--t-sm)">Agregar persona…</span>
+            </div>
+            <p class="hint">Enter agrega. Pegá varias líneas para sumar de una vez. Tocá un nombre para editarlo.</p>
+            <p class="saved">Guardada en este navegador</p>
+          </section>
+
+          <section>
+            <div class="row" style="margin-bottom:var(--s5)"><span class="h2">Turnos</span></div>
+            <div class="setup">
+              <div class="field mark" data-n="2">
+                <span class="label">Tiempo por persona</span>
+                <div class="row"><div class="chips"><span class="chip">2</span><span class="chip">3</span><span class="chip on">5</span><span class="chip">10</span><span class="chip">15</span></div><span class="otro">Otro <span class="muted">min</span></span></div>
+                <span class="label" style="margin-top:var(--s2)">Orden</span>
+                <div class="seg"><span class="cur">Sorteado</span><span>Como la lista</span></div>
+              </div>
+              <div class="field">
+                <div class="row"><span class="label">Orden de hoy · sorteado</span><span class="push muted xs js-count">5 presentes</span></div>
+                <ol class="queue js-queue mark" data-n="3" aria-label="Orden de hoy"></ol>
+                <p class="live js-live" aria-live="polite"></p>
+              </div>
+              <p class="hint">Hablan en este orden. Moverlas acá cambia solo el orden de hoy; la lista de la izquierda queda igual.</p>
+              <div class="actions mark" data-n="4">
+                <button class="btn ghost js-redraw">Volver a sortear</button>
+                <button class="btn primary js-start">Empezar con Diego</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+    <div class="callouts">
+      <p><span>1</span><b>La lista no cambia.</b> Los badges siguen en el orden de la lista (Ana, Bruno…) aunque hoy hable primero Diego. Carla, que no está, aparece tachada en los dos lugares: es el mismo dato.</p>
+      <p><span>2</span><b>Tiempo y Orden siguen a mano.</b> Cambiar el tiempo conserva el orden sorteado. Pasar a "Como la lista" lo descarta, con confirmación si moviste a alguien. En el teléfono, igual.</p>
+      <p><span>3</span><b>La fila es la misma de "Como la lista"</b>, con el tope de 32 rem: número, arrastre, no está, subir y bajar. Solo cambia el título ("Orden de hoy · sorteado") y la ayuda.</p>
+      <p><span>4</span><b>Todo termina en el mismo borde.</b> Hoy el selector de orden y "Empezar" ocupan toda la columna (624 px) y la fila 512 px. Acá todo el bloque toma el tope de 32 rem: un solo borde derecho y el botón principal debajo de la fila que confirma.</p>
+    </div>
+  </section>
+
+  <!-- B -->
+  <section class="item">
+    <h2><small>B</small>Fijar antes del sorteo <span class="rec off">No elegida</span></h2>
+    <p class="why">Cada persona se puede marcar "1º" o "Último" antes de sortear; el sorteo mezcla solo al resto. Expresa la intención ("se va temprano") y sobrevive a volver a sortear.</p>
+    <div class="board">
+      <div class="col">
+        <span class="step">Setup con fijados</span>
+        <div class="app">
+          <span class="h2">Turnos</span>
+          <div class="seg"><span class="cur">Sorteado</span><span>Como la lista</span></div>
+          <span class="label">¿Alguien tiene que hablar primero o al final?</span>
+          <ul class="queue" style="counter-reset:none">
+            <li class="qrow" style="counter-increment:none;padding-right:4px"><span class="qname" style="padding-left:4px">Ana</span><span class="pin"><span class="on">—</span><span>1º</span><span>Último</span></span></li>
+            <li class="qrow" style="counter-increment:none;padding-right:4px"><span class="qname" style="padding-left:4px">Bruno</span><span class="pin"><span class="on">—</span><span>1º</span><span>Último</span></span></li>
+            <li class="qrow" style="counter-increment:none;padding-right:4px"><span class="qname" style="padding-left:4px">Diego</span><span class="pin"><span>—</span><span class="on">1º</span><span>Último</span></span></li>
+            <li class="qrow" style="counter-increment:none;padding-right:4px"><span class="qname" style="padding-left:4px">Elena</span><span class="pin"><span class="on">—</span><span>1º</span><span>Último</span></span></li>
+          </ul>
+          <p class="hint">Diego habla primero; el resto se sortea.</p>
+          <div class="actions"><button class="btn primary">Empezar turnos</button></div>
+        </div>
+      </div>
+      <div class="notes">
+        <h3>A favor</h3>
+        <ul><li>Un toque por persona, sin arrastrar.</li><li>Si se vuelve a sortear, Diego sigue primero.</li></ul>
+        <h3>En contra</h3>
+        <ul><li>Concepto nuevo para aprender.</li><li>No sirve para un orden fino (que Ana vaya tercera).</li><li>Una fila más de controles por persona en un teléfono.</li></ul>
+        <h3>Cuándo sumarla</h3>
+        <ul><li>Solo si aparece el caso recurrente: la misma persona siempre se va temprano.</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- C -->
+  <section class="item">
+    <h2><small>C</small>"Que siga" durante el día <span class="rec off">No elegida</span></h2>
+    <p class="why">Ya empezado, alguien avisa que se tiene que ir. Hoy tocar su fila le da la palabra y corta a quien habla. Propuesta: tocar la fila de alguien que espera abre dos opciones, y "Que siga" lo pone como próximo sin interrumpir.</p>
+    <div class="board">
+      <div class="col">
+        <span class="step">Día en curso · Fede tiene que irse</span>
+        <div class="app">
+          <div class="now"><p class="now-label">Habla ahora</p><p class="now-name">Bruno</p><p class="now-clock">03:12</p></div>
+          <div class="trows">
+            <div class="trow speaking"><div class="tmain"><span class="ring" style="--p:64"></span><span class="who"><b>Bruno</b><span>Habla · le queda</span></span><span class="time" style="padding-right:12px">03:12</span></div></div>
+            <div class="trow"><div class="tmain"><span class="ring"></span><span class="who"><b>Ana</b><span>Sigue</span></span><span class="time" style="padding-right:12px">05:00</span></div></div>
+            <div class="trow"><div class="tmain"><span class="ring"></span><span class="who"><b>Elena</b><span>Espera</span></span><span class="time" style="padding-right:12px">05:00</span></div></div>
+            <div class="trow open">
+              <div class="tmain"><span class="ring"></span><span class="who"><b>Fede</b><span>Espera</span></span><span class="time" style="padding-right:12px">05:00</span></div>
+              <div class="tmore"><button class="btn primary">Que siga</button><button class="btn ghost">Hablar ya</button></div>
+            </div>
+          </div>
+        </div>
+        <p class="note">"Que siga" lo pone después de Bruno, sin tocar el reloj. "Hablar ya" es lo que hoy hace tocar la fila.</p>
+      </div>
+      <div class="notes">
+        <h3>Por qué como complemento</h3>
+        <ul>
+          <li>Cubre lo que A no puede: el aviso llega con el día empezado.</li>
+          <li>Arregla un riesgo actual: tocar una fila por error corta a quien habla.</li>
+          <li>Abrir con un toque y elegir es más claro que un toque largo, que nadie descubre.</li>
+        </ul>
+        <h3>Costo</h3>
+        <ul><li>Una función pura en <code>src/lib/turns.ts</code> (mover a alguien detrás de quien habla en <code>current.order</code>) con su test, y el panel en la fila.</li></ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+// Working copies of option A's line (phone and desktop), so the moves can be tried. Each frame has its own state.
+const icon = (d) => `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+const UP = icon('<path d="m6 15 6-6 6 6" />');
+const DOWN = icon('<path d="m6 9 6 6 6-6" />');
+const AWAY = icon('<circle cx="12" cy="12" r="8" /><path d="M6.3 6.3l11.4 11.4" />');
+
+function line(root, order, movedAtStart) {
+  const away = new Set(['Carla']);
+  const moved = new Set(movedAtStart); // only the people someone moved get the accent border
+  const queueEl = root.querySelector('.js-queue');
+  const live = root.querySelector('.js-live');
+  const start = root.querySelector('.js-start');
+
+  function render(focus) {
+    queueEl.replaceChildren(...order.map((name, i) => {
+      const li = document.createElement('li');
+      li.className = 'qrow' + (away.has(name) ? ' away' : '') + (moved.has(name) ? ' moved' : '');
+      li.innerHTML = `<span class="grip" aria-hidden="true">⋮⋮</span><span class="qname"></span>
+        <button class="ib" data-act="away" aria-label="${name} no está">${AWAY}</button>
+        <button class="ib" data-act="up" aria-label="Subir a ${name}" ${i === 0 ? 'disabled' : ''}>${UP}</button>
+        <button class="ib" data-act="down" aria-label="Bajar a ${name}" ${i === order.length - 1 ? 'disabled' : ''}>${DOWN}</button>`;
+      li.querySelector('.qname').textContent = name;
+      li.dataset.name = name;
+      return li;
+    }));
+    const present = order.filter((n) => !away.has(n));
+    root.querySelector('.js-count').textContent = `${present.length} presentes`;
+    start.textContent = `Empezar con ${present[0] ?? '…'}`;
+    if (focus) {
+      const row = queueEl.querySelector(`[data-name="${focus.name}"]`);
+      (row.querySelector(`[data-act="${focus.act}"]:not(:disabled)`) ?? row.querySelector('[data-act]:not(:disabled)'))?.focus();
+    }
+  }
+
+  queueEl.addEventListener('click', (event) => {
+    const button = event.target.closest('button');
+    if (!button) return;
+    const name = button.closest('li').dataset.name;
+    const i = order.indexOf(name);
+    if (button.dataset.act === 'away') {
+      away.has(name) ? away.delete(name) : away.add(name);
+      live.textContent = away.has(name) ? `${name} no está hoy.` : `${name} vuelve.`;
+    } else {
+      const j = button.dataset.act === 'up' ? i - 1 : i + 1;
+      [order[i], order[j]] = [order[j], order[i]];
+      moved.add(name);
+      const present = order.filter((n) => !away.has(n));
+      live.textContent = `${name}, posición ${present.indexOf(name) + 1} de ${present.length}.`;
+    }
+    render({ name, act: button.dataset.act });
+  });
+
+  root.querySelector('.js-redraw').addEventListener('click', () => {
+    if (moved.size && !confirm('¿Volver a sortear? Se pierden los cambios de orden.')) return;
+    for (let i = order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [order[i], order[j]] = [order[j], order[i]]; }
+    moved.clear();
+    live.textContent = 'Orden sorteado de nuevo.';
+    render();
+  });
+
+  render();
+}
+
+line(document.querySelector('[data-line="phone"]'), ['Bruno', 'Elena', 'Ana', 'Carla', 'Fede', 'Diego'], []);
+line(document.querySelector('[data-line="desk"]'), ['Diego', 'Bruno', 'Elena', 'Ana', 'Carla', 'Fede'], ['Diego']);
+</script>
+</body>
+</html>

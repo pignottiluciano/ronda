@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  cancelSession, emptyTurns, finish, handOver, nextId, parseTurnsStore, pause, queue, ranking, removeSession, resetSessions,
+  cancelSession, clearDraft, draftOrder, drawDraft, emptyTurns, finish, handOver, moveDraft, nextId, parseTurnsStore, pause, queue, rankPercents, ranking, removeSession, resetSessions,
   setAbsent, setBudgetMinutes, setMinDays, setOrder, speak, spokenMs, startSession, syncPeople,
 } from '../src/lib/turns.ts';
 
@@ -209,4 +209,36 @@ test('the order setting is drawn by default, kept per list across reloads, and o
   const parsed = parseTurnsStore(JSON.parse(JSON.stringify({ L: t, O: old, X: { ...t, order: 'nope' } })), ['L', 'O', 'X']);
   assert.deepEqual([parsed.L.order, parsed.O.order, parsed.X.order], ['list', 'draw', 'draw']);
   assert.deepEqual(startSession(t, ids, 0).current.order, ids); // list order: no draw passed in
+});
+
+test('rankPercents: one decimal only when whole numbers would hide a different place', () => {
+  const row = (position, score) => ({ position, score });
+  assert.deepEqual(rankPercents([row(1, 0.416), row(2, 0.423), row(3, 0.57)], 'en'), ['41.6%', '42.3%', '57%']);
+  assert.deepEqual(rankPercents([row(1, 0.4), row(1, 0.4), row(3, 0.6)], 'en'), ['40%', '40%', '60%']); // a real tie stays whole
+});
+
+test('a drawn order can be reviewed: moved without touching anyone else, kept across reloads, used when the day starts', () => {
+  assert.equal(draftOrder(emptyTurns(), ids), null);
+  let t = drawDraft(emptyTurns(), ['c', 'a', 'd', 'b']);
+  assert.deepEqual(draftOrder(t, ids), ['c', 'a', 'd', 'b']);
+  t = moveDraft(t, ids, 'd', 0);
+  assert.deepEqual(draftOrder(t, ids), ['d', 'c', 'a', 'b']);
+  assert.equal(moveDraft(t, ids, 'd', -1), t); // out of range: unchanged
+  assert.equal(moveDraft(t, ids, 'zzz', 0), t); // not in the list: unchanged
+  assert.deepEqual(draftOrder(t, ['a', 'b', 'c', 'd', 'e']), ['d', 'c', 'a', 'b', 'e']); // a newcomer goes last
+  assert.deepEqual(draftOrder(t, ['a', 'c', 'd']), ['d', 'c', 'a']); // someone who left is out
+  const reloaded = parseTurnsStore(JSON.parse(JSON.stringify({ L: t })), ['L']).L;
+  assert.deepEqual(reloaded.draft, ['d', 'c', 'a', 'b']);
+  const running = startSession(reloaded, ids, 0, draftOrder(reloaded, ids));
+  assert.equal(running.draft, null);
+  assert.deepEqual(queue(running, ids), ['d', 'c', 'a', 'b']);
+  assert.equal(drawDraft(running, ['a']), running); // a day is in progress: nothing to review
+});
+
+test('the drawn order is dropped when the way of ordering changes, and old saves have none', () => {
+  const t = drawDraft(emptyTurns(), ['b', 'a']);
+  assert.equal(setOrder(t, 'list').draft, null);
+  assert.equal(clearDraft(t).draft, null);
+  const { draft: _none, ...old } = emptyTurns();
+  assert.equal(parseTurnsStore({ L: old }, ['L']).L.draft, null);
 });

@@ -4,7 +4,7 @@ Source of truth for tokens is `src/styles/global.css`. This file records the dec
 the rules for the turns and ranking feature. Mocks: `docs/turnos.html` (proposals A, B, C; chosen: A with B's turns and podium) and `docs/inicio-y-paletas.html`
 (turn order control and dark palettes; chosen: B, the per-list "Order" control, with palette 2, "Noche tinta") and
 `docs/ordenar.html` (reordering the list; chosen: C, the editable line in the turns setup, plus an away toggle per row) and
-`docs/documentacion.html` (the help page).
+`docs/documentacion.html` (the help page) and `docs/mejoras-diseno.html` (nine refinements, all built: header menu, one clock, rows on phones, ranking).
 
 ## Direction
 Utility app for groups, mobile first, used live in meetings and classes. Calm editorial: warm near-neutral
@@ -51,7 +51,7 @@ New sizes use existing tokens plus two display sizes, both with `font-variant-nu
 
 | Use | Size | Weight |
 | --- | --- | --- |
-| Speaker clock, active card | `clamp(3rem, 14vw, 4rem)` | 700 |
+| Speaker clock, active card | `3rem` (the floor for reading it from across a table) | 700 |
 | Tile clock inside a ring | `--t-sm` | 700 |
 | Podium score | `--t-xl`, Fraunces | 600 |
 | Table numbers | `--t-sm` | 400, 700 for the first row |
@@ -88,11 +88,14 @@ Labels: x is "Remove Ana"; the live region announces "Ana added" and "Ana remove
 keyboard and screen reader behavior is free. Shown only on lists with turns on; otherwise the list shows today's draw
 form with no control. The switch "Use turns" lives in the list tools next to rename and delete.
 
-**Turn tile.** Card with a conic-gradient ring (76px = 4.75rem, 62px = 3.875rem inner), clock text inside, name below, state label
-("Done", "Speaking", "Next", "Waiting", "Absent", "Over time"). Tapping gives the floor to that person and pauses the previous one.
-Active tile: `--accent` border and `--accent-soft` fill. Absent: dashed border, no fill. Over time: ring full, label `+m:ss`.
-The tile is a `<button>`; the ring is `aria-hidden`; the active one has `aria-current="true"`.
-Controls: a square icon button for the clock (▶ green to start, ⏸ neutral to pause, ▶ amber to resume) and a wide Next button (coral; outlined while the clock is the next press, so two filled buttons never sit together). "Not here" lives on each tile; Finish is secondary and Discard is red text. State colors: `--go` speaking, `--accent` up now, `--hold` paused, `--danger` over time. The floating card (320×170) drops the label, "of 05:00" and the Float button, and puts name and clock on one row.
+**Turn row.** Every screen shows the people of the day as one list (chosen from `docs/turnos-lista.html`, option 1; not chosen: sections "coming up / done / not here", option 2). Each person is a 56px row in speaking order: a 36px conic ring (`aria-hidden`), name and state, the time on the right, and the away toggle as a 44px icon. Tiles in a grid were dropped: at 1280px they took the same height (400px for six) but read in a zigzag and repeated "Not here" on each one.
+One clock everywhere, like the card: time left for whoever is speaking, paused or waiting (the ring drains), time used for whoever already spoke ("Done · used"). Over time: ring full and `+m:ss` in `--danger`. State labels: "Done · used", "Speaking · left", "Paused · left", "Up now", "Next" (in `--accent-ink`), "Waiting", "Not here" (name struck through, dashed border). A done person has no away toggle.
+The row's main part is a `<button>` that gives the floor to that person and pauses the previous one; the active one has `aria-current="true"`.
+Controls: a square icon button for the clock (▶ green to start, ⏸ neutral to pause, ▶ amber to resume) and a wide Next button (coral; outlined while the clock is the next press, so two filled buttons never sit together). "Not here" lives on each row; Finish is secondary and Discard is red text. State colors: `--go` speaking, `--accent` up now, `--hold` paused, `--danger` over time. **Speaker card.** One strip (chosen from `docs/tarjeta-compacta.html`, option B; not chosen: name and clock side by side under a header, option A): the clock first at 3rem, then the label, the name and "of 05:00", and Float as a 44px icon button (its name as label and title). The bar and the controls go below. About 163px high instead of 300. In the DOM the name comes before the clock, so it is read first.
+**Time steps.** The clock and the bar change together: green while there is time, amber (`--hold-ink`) in the last 20% (`LATE_SHARE`, `data-late`), red once over, with the bar full again. Each color means one thing; the clock text stays the data. Not chosen: a continuous green-to-red mix (it looked red before anyone was over). Color changes fade in 600ms and the bar drains with a 250ms linear transition; reduced motion keeps the colors and drops the transitions.
+The floating card (320×170) uses the same strip without the label, "of 05:00" and the Float button.
+
+**Drawn order review.** With the order "Drawn" the button reads "Draw the order"; pressing it shows the same line (title "Today's order · drawn") with a "Draw again" ghost button and "Start with <name>" as the primary. Moves change only today's order (`ListTurns.draft`, kept across reloads, dropped on start or when the order setting changes); the list is untouched. Drawing again or switching to "As listed" asks first only if someone was moved. Chosen from `docs/orden-sorteado.html` (A); not chosen: pinning first/last before the draw (B) and "let them go next" during the day (C). The setup block stops at 32rem so the line, the hint and the buttons share one right edge.
 
 **Today's line (Fila de hoy).** Shown in the turns setup only when the order is "As listed" and no day is in progress,
 because that is the only place where list order changes anything (the draw shuffles anyway). One row per person in list
@@ -106,9 +109,13 @@ restores the order. Height caps at `min(60vh, 28rem)` with scroll for long lists
 Not chosen: a separate "Sort" mode on the badges (A: one more mode, far from where order matters) and tap-to-place (B: less
 obvious the first time).
 
-**Podium.** The three lowest averages, lowest in the middle and tallest, Fraunces percentages inside the steps; fewer than
+**Podium.** Shown from the third saved day (`PODIUM_MIN_DAYS`); before that, a note and the table alone, with no bold first row. The three lowest averages, lowest in the middle and tallest, Fraunces percentages inside the steps; fewer than
 three people shows only those. Below it, the ranking table: position, name, bar plus percent, days present.
 People under the minimum days appear after the table under "Not enough data". Ties share a position.
+
+**Percentages** are whole numbers, with one decimal only on rows that rounding would make look equal while holding different places (`rankPercents`); real ties stay whole.
+
+**Folded people (phones).** While a day is in progress the people box and the lede fold into one line, "5 participants · 1 not here" plus an Edit button, so the clock is on the first screen. Wide screens keep the box.
 
 **Ranking table.** Columns: position, person, average (bar plus text), days. Row of the first place in bold. Absent-only people are not ranked.
 
@@ -118,7 +125,7 @@ Ronda mark at the bottom. Uses the light palette always (it leaves the app), Fra
 ## Layout and responsive
 Breakpoint 900px = 56.25rem (existing). Below it everything stacks; the mode control sits under the list title and the badge box is
 full width. From 56.25rem the list column is `minmax(20rem, 25rem)` and the right column shows the selected mode; Ranking
-replaces Turns in that column rather than adding a third one. Tiles are two per row on phones and four per row on desktop.
+replaces Turns in that column rather than adding a third one. The people of a day in progress are one list of rows on every width.
 Verify at 320, 375, 768 and 1280px, and with the text size at 125% and 150%: no horizontal scroll, 44px targets.
 
 ## Content
@@ -129,8 +136,7 @@ Voice: plain, direct, Spanish first (`es`) with `en` parity in `src/i18n/message
 sections. Text only, written for the person using the app, with the app's own icons inline (`.ic`, a 1.4em box centered
 on the line) and keys as `<kbd>`. Button names match the labels in `messages.ts` so people find them on screen; when a
 feature changes, update `DocsEs.astro` and `DocsEn.astro`. Not chosen: screenshots (they go stale) and live mocks (cost).
-The header link "¿Cómo funciona?" always shows its full text; under 400px it takes its own row (brand, ES/EN, theme and
-the link need 364px at 375px wide).
+Under 640px (40rem) the header is the brand and one "⋯" menu button: the help link, ES/EN and the theme live in that menu (brand, ES/EN, theme and the link needed 364px). From 40rem they sit in the header, the link with its full text.
 
 ## Generic-tells review
 - Podium: kept because it makes the score scannable and is the base of the share image; there are no medals or confetti.

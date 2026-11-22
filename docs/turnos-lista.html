@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ronda · Turnos en lista</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap" rel="stylesheet">
+<style>
+/* Page chrome: fixed neutral, same as the other mocks in docs/. */
+* { box-sizing: border-box; margin: 0; }
+body { background: #111; color: #eee; font-family: "Figtree", sans-serif; line-height: 1.5; padding: 0 16px 80px; }
+.wrap { max-width: 1260px; margin: 0 auto; }
+.bar-top { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: center; justify-content: space-between; padding: 16px 0; background: #111; border-bottom: 1px solid #333; }
+@media (max-width: 700px) { .bar-top { position: static; } }
+h1 { font-family: "Fraunces", serif; font-weight: 500; font-size: 1.75rem; letter-spacing: -0.02em; }
+.pick { display: flex; gap: 4px; border: 0; padding: 0; }
+.pick label { position: relative; }
+.pick input { position: absolute; opacity: 0; inset: 0; }
+.pick span { display: block; padding: 6px 12px; border: 1px solid #444; border-radius: 8px; font-size: 0.875rem; cursor: pointer; }
+.pick input:checked + span { background: #eee; color: #111; border-color: #eee; font-weight: 600; }
+.pick input:focus-visible + span { outline: 2px solid #8cf; outline-offset: 2px; }
+.intro { margin-top: 24px; color: #bbb; max-width: 80ch; display: grid; gap: 8px; }
+.intro b { color: #fff; }
+.board { display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start; margin-top: 32px; }
+.col { display: grid; gap: 10px; width: min(600px, 100%); }
+.col > h2 { font-family: "Fraunces", serif; font-weight: 600; font-size: 1.4rem; color: #fff; letter-spacing: -0.02em; }
+.col > h2 small { font: 600 0.75rem "Figtree", sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: #999; margin-right: 8px; }
+.rec { display: inline-block; margin-left: 8px; padding: 2px 10px; border-radius: 999px; background: #eee; color: #111; font: 700 0.75rem "Figtree", sans-serif; letter-spacing: 0.06em; text-transform: uppercase; vertical-align: middle; }
+.why { color: #bbb; font-size: 0.9375rem; }
+.notes { display: grid; gap: 4px; padding-left: 1.1em; color: #ccc; font-size: 0.875rem; }
+
+/* App frame with Ronda's real tokens (light and "Noche tinta" dark). The frame is the right column at 1280px. */
+.app {
+  --bg: light-dark(oklch(0.975 0.008 70), oklch(0.18 0.015 255));
+  --surface: light-dark(oklch(0.995 0.004 70), oklch(0.25 0.018 255));
+  --ink: light-dark(oklch(0.24 0.015 40), oklch(0.93 0.008 250));
+  --muted: light-dark(oklch(0.5 0.02 45), oklch(0.77 0.015 250));
+  --line: light-dark(oklch(0.89 0.012 60), oklch(0.42 0.02 255));
+  --accent: light-dark(oklch(0.55 0.16 33), oklch(0.75 0.14 38));
+  --accent-ink: light-dark(oklch(0.53 0.16 33), oklch(0.77 0.13 38));
+  --accent-soft: light-dark(oklch(0.94 0.04 40), oklch(0.32 0.045 38));
+  --on-accent: light-dark(oklch(0.99 0.005 60), oklch(0.2 0.02 40));
+  --go: light-dark(oklch(0.5 0.13 150), oklch(0.8 0.15 160));
+  --go-soft: light-dark(oklch(0.94 0.05 150), oklch(0.31 0.05 165));
+  --control: light-dark(oklch(0.62 0.02 50), oklch(0.62 0.02 255));
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px;
+  --t-xs: 0.833rem; --t-sm: 0.9375rem; --t-lg: 1.2rem; --t-xl: 1.44rem; --radius: 16px; --radius-sm: 10px; --tap: 44px;
+  color-scheme: dark;
+  border: 1px solid #333; border-radius: 16px; background: var(--bg); color: var(--ink);
+  padding: 24px; display: grid; align-content: start; gap: var(--s4);
+}
+body:has(#t-light:checked) .app { color-scheme: light; }
+.app button { font: inherit; color: inherit; cursor: pointer; }
+.row { display: flex; align-items: center; gap: var(--s2); }
+.push { margin-left: auto; }
+.muted { color: var(--muted); }
+.xs { font-size: var(--t-xs); }
+.h2 { font-family: "Fraunces", serif; font-weight: 600; font-size: var(--t-xl); letter-spacing: -0.02em; }
+.btn { min-height: var(--tap); padding: 0 var(--s5); border: 1px solid transparent; border-radius: var(--radius-sm); font-weight: 600; }
+.btn.ghost { background: transparent; border-color: var(--line); }
+.btn.small { min-height: 36px; padding: 0 var(--s4); font-size: var(--t-sm); }
+.btn.text { background: transparent; color: light-dark(oklch(0.45 0.18 27), oklch(0.7 0.18 25)); }
+
+/* The speaker card (as in the app). */
+.now { display: grid; gap: var(--s2); padding: var(--s4) var(--s5) var(--s5); background: var(--surface); border: 1px solid var(--go); border-radius: var(--radius); }
+.now-label { font-size: var(--t-xs); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; color: var(--go); }
+.now-name { font-family: "Fraunces", serif; font-size: var(--t-xl); font-weight: 600; letter-spacing: -0.02em; }
+.now-clock { font-size: 4rem; font-weight: 700; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.bar { height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; border-radius: 4px; background: var(--go); }
+.ctl { display: flex; gap: var(--s3); margin-top: var(--s2); }
+.clock-btn { flex: none; width: 56px; min-height: var(--tap); display: grid; place-items: center; border: 1px solid var(--control); border-radius: var(--radius-sm); background: transparent; }
+.next { flex: 1; min-height: var(--tap); border: 1px solid var(--accent); border-radius: var(--radius-sm); background: var(--accent); color: var(--on-accent); font-weight: 600; }
+
+/* Option 1: the phone rows, on every width. */
+.rows { list-style: none; padding: 0; display: grid; gap: var(--s2); }
+.r { --tile-bg: var(--surface); --arc: var(--accent); display: flex; align-items: center; background: var(--tile-bg); border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.r.speaking { --tile-bg: var(--go-soft); --arc: var(--go); border-color: var(--go); }
+.r.absent { --tile-bg: transparent; border-style: dashed; color: var(--muted); }
+.r-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--s3); min-height: 56px; padding: var(--s1) var(--s3); border: 0; background: transparent; text-align: left; }
+.ring { flex: none; width: 36px; height: 36px; border-radius: 50%; background: conic-gradient(var(--arc) calc(var(--p, 0) * 1%), var(--line) 0); display: grid; place-items: center; }
+.ring::after { content: ''; width: 26px; height: 26px; border-radius: 50%; background: var(--tile-bg, var(--surface)); }
+.absent .ring::after { background: var(--bg); }
+.who { flex: 1; min-width: 0; display: grid; line-height: 1.25; }
+.who b { font-size: var(--t-sm); }
+.who span { font-size: var(--t-xs); color: var(--muted); }
+.speaking .who span { color: var(--go); font-weight: 600; }
+.next-state { color: var(--accent-ink) !important; font-weight: 600; }
+.absent .who b { text-decoration: line-through; font-weight: 600; }
+.time { font-weight: 700; font-size: var(--t-sm); font-variant-numeric: tabular-nums; }
+.away { flex: none; display: grid; place-items: center; width: var(--tap); height: var(--tap); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--muted); }
+.away svg, .ib svg { width: 18px; height: 18px; }
+.absent .away { color: var(--accent-ink); }
+.r.done .r-main { padding-right: var(--s4); }
+
+/* Option 2: sections in speaking order. */
+.sec { display: grid; gap: var(--s2); }
+.sec-head { display: flex; align-items: baseline; justify-content: space-between; font-size: var(--t-xs); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.q { list-style: none; padding: 0; display: grid; gap: var(--s2); }
+.qr { display: grid; grid-template-columns: 28px minmax(0, 1fr) 52px 44px; align-items: center; gap: var(--s3); min-height: 52px; padding: 0 var(--s1) 0 var(--s3); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-sm); }
+.qr.up { border-color: var(--accent); border-style: dashed; }
+.num { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); font-size: var(--t-xs); font-weight: 700; font-variant-numeric: tabular-nums; }
+.qr .who b { font-size: var(--t-sm); }
+.mini { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.mini i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+.ib { display: grid; place-items: center; width: var(--tap); height: var(--tap); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--muted); }
+.done-list { list-style: none; padding: 0; display: grid; }
+.done-list li { display: grid; grid-template-columns: minmax(0, 1fr) 140px 52px 44px; align-items: center; gap: var(--s3); min-height: 44px; padding-left: var(--s3); border-bottom: 1px solid var(--line); font-size: var(--t-sm); }
+.done-list li:last-child { border-bottom: 0; }
+.done-list .mini i { background: var(--muted); }
+.done-list .t { color: var(--muted); font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; }
+.qr .t { font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; font-size: var(--t-sm); }
+.away-chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.away-chip { display: inline-flex; align-items: center; gap: var(--s2); min-height: 36px; padding: 0 var(--s1) 0 var(--s3); border: 1px dashed var(--control); border-radius: 999px; color: var(--muted); font-size: var(--t-sm); }
+.away-chip s { font-weight: 600; }
+.away-chip button { min-height: 32px; padding: 0 var(--s3); border: 0; border-radius: 999px; background: transparent; color: var(--accent-ink); font-weight: 600; font-size: var(--t-xs); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar-top">
+    <h1>Ronda · Turnos en lista</h1>
+    <fieldset class="pick">
+      <label><input type="radio" name="theme" id="t-dark" checked><span>Oscuro</span></label>
+      <label><input type="radio" name="theme" id="t-light"><span>Claro</span></label>
+    </fieldset>
+  </div>
+
+  <div class="intro">
+    <p><b>Hoy en desktop</b> el día en curso son baldosas de 200 × 194 px, tres por fila (medido a 1280 px, columna de 624 px). Con seis personas ocupan 400 px. El orden se lee en zigzag (izquierda a derecha, después abajo), cada baldosa repite "No está" y el nombre queda lejos de su tiempo.</p>
+    <p>Pasar a lista <b>no ahorra alto</b> con seis personas (las filas ocupan unos 376 px). Lo que gana: el orden se lee de arriba abajo, nombre, estado y tiempo van en una línea, y el teléfono y el desktop pasan a ser la misma pantalla.</p>
+    <p>Las dos opciones muestran la columna derecha a 1280 px, a mitad de un día: Diego ya habló, Ana habla, sigue Elena y Carla no está. Presupuesto 5:00. Nombres de ejemplo.</p>
+  </div>
+
+  <div class="board">
+    <!-- Option 1 -->
+    <div class="col">
+      <h2><small>1</small>Las filas del teléfono, en todos lados <span class="rec">Recomendada</span></h2>
+      <p class="why">Las filas que ya usa el teléfono, también en desktop. Un solo diseño para todas las pantallas. Cada persona se queda en su lugar del orden; cambia su estado.</p>
+      <div class="app">
+        <div class="row"><span class="h2">Turnos</span><span class="push muted xs">Total 05:31</span></div>
+        <div class="now">
+          <div class="row"><p class="now-label">Habla ahora</p><span class="push btn ghost small">Flotar</span></div>
+          <p class="now-name">Ana</p>
+          <p class="now-clock">03:41</p>
+          <p class="muted" style="font-size:var(--t-sm)">de 05:00</p>
+          <div class="bar"><i style="width:74%"></i></div>
+          <div class="ctl"><button class="clock-btn">❚❚</button><button class="next">Siguiente: Elena</button></div>
+        </div>
+        <ul class="rows">
+          <li class="r done"><button class="r-main"><span class="ring" style="--p:84"></span><span class="who"><b>Diego</b><span>Listo · usó</span></span><span class="time">04:12</span></button></li>
+          <li class="r speaking"><button class="r-main"><span class="ring" style="--p:74"></span><span class="who"><b>Ana</b><span>Habla · le queda</span></span><span class="time">03:41</span></button><button class="away" aria-label="Ana no está"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="8"/><path d="M6.3 6.3l11.4 11.4"/></svg></button></li>
+          <li class="r"><button class="r-main"><span class="ring" style="--p:100"></span><span class="who"><b>Elena</b><span class="next-state">Sigue</span></span><span class="time">05:00</span></button><button class="away" aria-label="Elena no está"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="8"/><path d="M6.3 6.3l11.4 11.4"/></svg></button></li>
+          <li class="r"><button class="r-main"><span class="ring" style="--p:100"></span><span class="who"><b>Fede</b><span>Espera</span></span><span class="time">05:00</span></button><button class="away" aria-label="Fede no está"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="8"/><path d="M6.3 6.3l11.4 11.4"/></svg></button></li>
+          <li class="r"><button class="r-main"><span class="ring" style="--p:100"></span><span class="who"><b>Bruno</b><span>Espera</span></span><span class="time">05:00</span></button><button class="away" aria-label="Bruno no está"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="8"/><path d="M6.3 6.3l11.4 11.4"/></svg></button></li>
+          <li class="r absent"><button class="r-main" disabled><span class="ring" style="--p:0"></span><span class="who"><b>Carla</b><span>No está</span></span><span class="time">—</span></button><button class="away" aria-label="Carla vuelve"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="8"/><path d="M6.3 6.3l11.4 11.4"/></svg></button></li>
+        </ul>
+        <div class="row"><span class="btn ghost small">Terminar y guardar el día</span><span class="btn text small">Descartar día</span></div>
+      </div>
+      <ul class="notes">
+        <li>Seis personas en ~376 px, casi lo mismo que las baldosas (400 px): la ganancia es de lectura, no de espacio.</li>
+        <li>Costo mínimo: sacar el <code>@media</code> que hoy limita las filas al teléfono y borrar el CSS de las baldosas. Sin JS nuevo.</li>
+        <li>Tocar la fila sigue dando la palabra; "No está" es el ícono de 44 px, como en el badge.</li>
+        <li>"Sigue" en coral marca a quien le toca, como la tarjeta.</li>
+      </ul>
+    </div>
+
+    <!-- Option 2 -->
+    <div class="col">
+      <h2><small>2</small>Fila en orden, por secciones</h2>
+      <p class="why">La lista se lee como una cola: arriba quién viene, numerado en orden de habla; quien terminó baja a un resumen; quien no está queda en una línea al final.</p>
+      <div class="app">
+        <div class="row"><span class="h2">Turnos</span><span class="push muted xs">Total 05:31</span></div>
+        <div class="now">
+          <div class="row"><p class="now-label">Habla ahora</p><span class="push btn ghost small">Flotar</span></div>
+          <p class="now-name">Ana</p>
+          <p class="now-clock">03:41</p>
+          <p class="muted" style="font-size:var(--t-sm)">de 05:00</p>
+          <div class="bar"><i style="width:74%"></i></div>
+          <div class="ctl"><button class="clock-btn">❚❚</button><button class="next">Siguiente: Elena</button></div>
+        </div>
+
+        <section class="sec">
+          <div class="sec-head"><span>Vienen</span><span>3</span></div>
+          <ol class="q">
+            <li class="qr up"><span class="num">1</span><span class="who"><b>Elena</b><span class="next-state">Sigue</span></span><span class="t">05:00</span><button class="ib" aria-label="Elena no está"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="8"/><path d="M6.3 6.3l11.4 11.4"/></svg></button></li>
+            <li class="qr"><span class="num">2</span><span class="who"><b>Fede</b><span>Espera</span></span><span class="t">05:00</span><button class="ib" aria-label="Fede no está"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="8"/><path d="M6.3 6.3l11.4 11.4"/></svg></button></li>
+            <li class="qr"><span class="num">3</span><span class="who"><b>Bruno</b><span>Espera</span></span><span class="t">05:00</span><button class="ib" aria-label="Bruno no está"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="12" cy="12" r="8"/><path d="M6.3 6.3l11.4 11.4"/></svg></button></li>
+          </ol>
+        </section>
+
+        <section class="sec">
+          <div class="sec-head"><span>Ya hablaron</span><span>1</span></div>
+          <ul class="done-list">
+            <li><b>Diego</b><span class="mini"><i style="width:84%"></i></span><span class="t">04:12</span><span></span></li>
+          </ul>
+        </section>
+
+        <section class="sec">
+          <div class="sec-head"><span>No están</span><span>1</span></div>
+          <div class="away-chips"><span class="away-chip"><s>Carla</s><button>Volver</button></span></div>
+        </section>
+
+        <div class="row"><span class="btn ghost small">Terminar y guardar el día</span><span class="btn text small">Descartar día</span></div>
+      </div>
+      <ul class="notes">
+        <li>El orden queda explícito (1, 2, 3), como en la Fila de hoy: sigue la misma idea del orden sorteado.</li>
+        <li>Quien terminó deja de ocupar lugar arriba; abajo queda lo que usó, con una barra.</li>
+        <li>Costo mayor: agrupar en <code>renderTiles</code>, tres listas en el DOM y textos nuevos. Las filas se mueven de sección durante el día; hay que cuidar el foco del teclado.</li>
+        <li>En el teléfono sería el mismo diseño, con la barra oculta.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</body>
+</html>
