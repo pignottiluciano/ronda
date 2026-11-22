@@ -8,6 +8,7 @@ Notable changes to Ronda. Dates are when a branch was merged.
 - **Review a drawn order before starting.** With the "Drawn" order, the first press draws and shows the order in the same editor as "Today's queue" (drag, arrows, absent). People can be moved so someone who leaves early speaks first. "Draw again" and switching to the list order ask first when the order was moved. The draft survives a reload (`ListTurns.draft`) and only changes today's order, never the list's.
 - **Time steps on the speaker card.** Clock and bar turn amber from 80% of the time used and red once over. The bar empties as time runs out and stays full and red when over. Color changes fade; reduced motion turns the fade off.
 - **History details.** Each saved day shows its end time, attendance, duration and how many went over.
+- **Rows slide when reordered.** In "Today's queue" and the drawn order, rows slide to their new place (200ms) with the arrows and while dragging. Off under reduced motion.
 - **Header menu on phones.** Under 640px the header is the brand plus a "⋯" menu with help, language and theme.
 
 ### Changed
