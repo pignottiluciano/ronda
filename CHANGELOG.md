@@ -21,6 +21,7 @@ Notable changes to Ronda. Versions follow semver; dates are when the release rea
 - **Ranking:** the podium shows from the third saved day (`PODIUM_MIN_DAYS`), with a note before that. Percentages get one decimal only where rounding would make different places look equal (`rankPercents`).
 - **Copy follows the mode:** the intro text speaks about turns on lists that use them. Brand and page title read "Turns, draws and groups".
 - "Today's queue" and the turns setup are capped at 32rem on desktop.
+- Node is pinned to the 22 major (`^22.23.4`), so Vercel no longer jumps to a new major on its own.
 
 ### Data
 - No storage keys change. Stored data without `draft` loads as `draft: null`, so lists, days and a day in progress survive the update. Backups skip the draft.
