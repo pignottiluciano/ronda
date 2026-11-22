@@ -589,8 +589,19 @@ button, input, textarea { font: inherit; color: inherit; }
 .rank-few h3, .rank-history h3 { font-size: var(--t-md); font-family: var(--font); letter-spacing: 0; }
 .few, .history { list-style: none; margin: var(--s2) 0 0; padding: 0; display: grid; }
 .few li { display: flex; justify-content: space-between; gap: var(--s3); padding: var(--s2) 0; border-bottom: 1px solid var(--line); font-size: var(--t-sm); color: var(--muted); }
-.history li { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: var(--tap); border-bottom: 1px solid var(--line); font-size: var(--t-sm); }
-.history .icon-btn { width: var(--tap); height: var(--tap); flex: none; }
+.history-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+.history-head .btn { min-height: var(--tap); border-color: transparent; color: var(--accent-ink); }
+.history { gap: var(--s2); }
+.history li { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4); border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
+.history-main { flex: 1; min-width: 0; display: grid; gap: var(--s1); }
+.history-date { font-size: var(--t-sm); font-weight: 600; }
+.history-time { color: var(--muted); font-weight: 400; }
+.history-facts { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.fact { padding: 0 var(--s2); border: 1px solid var(--line); border-radius: 999px; color: var(--muted); font-size: var(--t-xs); }
+.fact-over { color: var(--hold-ink); border-color: color-mix(in oklch, var(--hold-ink) 50%, transparent); }
+.history-delete { display: none; flex: none; min-height: var(--tap); border-color: color-mix(in oklch, var(--danger) 55%, transparent); background: transparent; color: var(--danger); }
+.history-delete:hover { border-color: var(--danger); }
+.rank-history[data-editing='true'] .history-delete { display: inline-block; }
 .rank-settings { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); margin-top: var(--s5); }
 .rank-settings .budget-custom input { width: 3ch; }
 

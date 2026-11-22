@@ -218,8 +218,11 @@ const t = messages[lang];
           <p id="rank-few-hint" class="hint"></p>
           <ul id="rank-few-list" class="few"></ul>
         </div>
-        <div class="rank-history">
-          <h3>{t.rankHistory}</h3>
+        <div id="rank-history" class="rank-history">
+          <div class="history-head">
+            <h3>{t.rankHistory}</h3>
+            <button type="button" id="history-edit" class="btn btn-small btn-ghost" aria-pressed="false">{t.peopleEdit}</button>
+          </div>
           <ul id="history" class="history"></ul>
         </div>
       </div>

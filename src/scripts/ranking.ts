@@ -1,7 +1,6 @@
 // Ranking UI: podium, table, history and settings for one list. The maths lives in src/lib/turns.ts;
 // turns.ts owns the stored data and hands it over through `RankingHost`.
 import { messages } from '../i18n/messages';
-import { ICONS } from '../lib/icons';
 import type { SavedList } from '../lib/lists';
 import { MAX_MIN_DAYS, PODIUM_MIN_DAYS, rankPercents, ranking, removeSession, resetSessions, setMinDays, type ListTurns, type Ranking, type Session } from '../lib/turns';
 import { confirmAction } from './confirm';
@@ -19,6 +18,7 @@ const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as 
 const lang = document.documentElement.lang === 'en' ? 'en' : 'es';
 const t = messages[lang];
 const dayFormat = new Intl.DateTimeFormat(lang, { weekday: 'short', day: 'numeric', month: 'short' });
+const timeFormat = new Intl.DateTimeFormat(lang, { hour: '2-digit', minute: '2-digit' });
 
 export function initRanking(host: RankingHost) {
   const empty = $('rank-empty');
@@ -33,6 +33,8 @@ export function initRanking(host: RankingHost) {
   const fewHint = $('rank-few-hint');
   const fewList = $('rank-few-list');
   const history = $('history');
+  const historyBox = $('rank-history');
+  const historyEdit = $<HTMLButtonElement>('history-edit');
   const minDays = $<HTMLInputElement>('min-days');
   const shareButton = $<HTMLButtonElement>('rank-share');
   const copyButton = $<HTMLButtonElement>('rank-copy');
@@ -86,17 +88,34 @@ export function initRanking(host: RankingHost) {
 
   const dateOf = (session: Session) => dayFormat.format(new Date(session.endedAt));
 
+  // Deleting a day is rare and cannot be undone, so the buttons only show while editing.
+  function setHistoryEditing(on: boolean) {
+    historyBox.dataset.editing = String(on);
+    historyEdit.setAttribute('aria-pressed', String(on));
+    historyEdit.textContent = on ? t.peopleEditDone : t.peopleEdit;
+  }
+
   function renderHistory(turns: ListTurns) {
     history.replaceChildren(
       ...[...turns.sessions].reverse().map((session) => {
         const item = el('li');
-        const present = session.entries.filter((e) => !e.absent).length;
-        const remove = el('button', 'icon-btn');
+        const date = dateOf(session);
+        const time = timeFormat.format(new Date(session.endedAt));
+        const present = session.entries.filter((e) => !e.absent);
+        const over = present.filter((e) => e.spokenMs > session.budgetMs).length;
+        const minutes = Math.max(1, Math.round(present.reduce((sum, e) => sum + e.spokenMs, 0) / 60_000));
+        const main = el('div', 'history-main');
+        const when = el('span', 'history-date', date);
+        when.append(el('span', 'history-time', ` · ${time}`));
+        const facts = el('div', 'history-facts');
+        facts.append(el('span', 'fact', t.rankDayPresent(present.length, session.entries.length)), el('span', 'fact', t.rankDayMinutes(minutes)));
+        if (over > 0) facts.append(el('span', 'fact fact-over', t.rankDayOver(over)));
+        main.append(when, facts);
+        const remove = el('button', 'btn btn-small history-delete', t.rankDayDeleteConfirm);
         remove.type = 'button';
         remove.dataset.id = session.id;
-        remove.setAttribute('aria-label', t.rankDeleteDay(dateOf(session)));
-        remove.innerHTML = ICONS.trash;
-        item.append(el('span', undefined, t.rankDay(dateOf(session), present, session.entries.length)), remove);
+        remove.setAttribute('aria-label', t.rankDeleteDay(`${date} · ${time}`)); // two days can share a date
+        item.append(main, remove);
         return item;
       }),
     );
@@ -128,7 +147,10 @@ export function initRanking(host: RankingHost) {
     for (const button of [shareButton, copyButton, downloadButton]) button.hidden = true;
     minDays.value = String(turns.minDays);
     prepared = null;
-    if (!has) return;
+    if (!has) {
+      setHistoryEditing(false);
+      return;
+    }
 
     const rk = ranking(turns, list.people);
     meta.textContent = t.rankMeta(turns.sessions.length, turns.minDays);
@@ -178,6 +200,9 @@ export function initRanking(host: RankingHost) {
 
   minDays.max = String(MAX_MIN_DAYS);
   minDays.addEventListener('change', () => host.update(setMinDays(host.turns(), Number(minDays.value)))); // invalid: the field goes back
+
+  setHistoryEditing(false);
+  historyEdit.addEventListener('click', () => setHistoryEditing(historyEdit.getAttribute('aria-pressed') !== 'true'));
 
   history.addEventListener('click', async (event) => {
     const button = (event.target as Element).closest<HTMLElement>('button[data-id]');
