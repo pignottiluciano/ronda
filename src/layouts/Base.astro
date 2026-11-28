@@ -2,6 +2,7 @@
 // Shared page shell: head (theme and language before paint, fonts, SEO) and the header. Each page passes its own
 // path in both languages, so the language switch and the saved-language redirect stay on the same page.
 import { Font } from 'astro:assets';
+import Analytics from '@vercel/analytics/astro';
 import '../styles/global.css';
 import { messages, type Lang } from '../i18n/messages';
 
@@ -133,5 +134,6 @@ const url = (l: Lang) => new URL(paths[l], Astro.site);
     </div>
 
     <slot name="after" />
+    <Analytics />
   </body>
 </html>
